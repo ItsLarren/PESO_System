@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function () {
         clearSearchBtn: document.getElementById('clear-search-btn')
     };
 
-    // Store current edit ID
     let currentEditId = null;
 
     if (elements.searchBtn && elements.clearSearchBtn && elements.searchInput) {
@@ -414,19 +413,71 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function openEditModal(applicant) {
+        console.log("Opening edit modal for applicant:", applicant);
+        console.log("Modal element:", elements.editModal);
+        
         if (!elements.editModal) return;
         
-        // Populate the form fields with applicant data
+        const formInputs = elements.editModal.querySelectorAll('input');
+        formInputs.forEach(input => {
+            input.value = '';
+        });
+        
+        const fieldToIdMap = {
+            'PESO': 'edit-peso',
+            'AREA TYPE': 'edit-area-type',
+            'AREA CLASS': 'edit-area-class',
+            'SRS ID': 'edit-srs-id',
+            'NAME': 'edit-name',
+            'BDATE': 'edit-bdate',
+            'AGE': 'edit-age',
+            'SEX': 'edit-sex',
+            'CIVIL STATUS': 'edit-civil-status',
+            'STREET ADDRESS': 'edit-street-address',
+            'BARANGAY': 'edit-barangay',
+            'CITY/MUNICIPALITY': 'edit-city-municipality',
+            'PROVINCE': 'edit-province',
+            'REGION': 'edit-region',
+            'EMAIL': 'edit-email',
+            'TELEPHONE': 'edit-telephone',
+            'CELLPHONE': 'edit-cellphone',
+            'EMP. STATUS': 'edit-emp-status',
+            'EMP. TYPE': 'edit-emp-type',
+            'EDUC LEVEL': 'edit-educ-level',
+            'COURSE': 'edit-course',
+            '4Ps': 'edit-4ps',
+            'PWD': 'edit-pwd',
+            'DISABILITY': 'edit-disability',
+            'PREFERRED POSITION': 'edit-preferred-position',
+            'SKILLS': 'edit-skills',
+            'WORK EXPERIENCE': 'edit-work-experience',
+            'OFW': 'edit-ofw',
+            'COUNTRY': 'edit-country',
+            'FORMER OFW': 'edit-former-ofw',
+            'LATEST COUNTRY': 'edit-latest-country',
+            'REG. DATE': 'edit-reg-date',
+            'REMARKS': 'edit-remarks',
+            'CREATED BY': 'edit-created-by',
+            'DATE CREATED': 'edit-date-created',
+            'LAST MODIFIED BY': 'edit-last-modified-by',
+            'DATE LAST MODIFIED': 'edit-date-last-modified',
+            'username': 'edit-username',
+            'firstname': 'edit-firstname',
+            'lastname': 'edit-lastname',
+            'email': 'edit-email',
+            'course1': 'edit-course1',
+            'role1': 'edit-role1'
+        };
+        
         for (const field in applicant) {
-            // Convert field name to match the input ID format in the HTML
-            const inputId = `edit-${field.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-').replace(/\./g, '')}`;
-            const input = document.getElementById(inputId);
-            if (input) {
-                input.value = applicant[field] || '';
+            if (fieldToIdMap[field]) {
+                const input = document.getElementById(fieldToIdMap[field]);
+                if (input) {
+                    input.value = applicant[field] || '';
+                }
             }
         }
         
-        // Set date information
         const dateCreatedEl = document.getElementById('edit-date-created');
         const dateModifiedEl = document.getElementById('edit-date-last-modified');
         
@@ -437,10 +488,8 @@ document.addEventListener('DOMContentLoaded', function () {
             dateModifiedEl.textContent = applicant['DATE LAST MODIFIED'] || 'Not available';
         }
         
-        // Show the modal
         elements.editModal.style.display = 'block';
-        
-        // Store the current applicant ID for update
+
         currentEditId = applicant['SRS ID'] || applicant.ID;
     }
     
@@ -453,17 +502,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData(document.getElementById('editApplicantForm'));
         const updatedApplicant = {};
         
-        // Get all form fields and map them back to the original field names
         formData.forEach((value, key) => {
-            // Convert form field names back to original field names
             const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
             updatedApplicant[originalFieldName] = value;
         });
         
-        // Update date modified
         updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
         
-        // Get existing applicants
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
         const updatedApplicants = savedApplicants.map(applicant => {
             if (applicant['SRS ID'] === id || applicant.ID === id) {
@@ -472,19 +517,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return applicant;
         });
         
-        // Save updated data
         saveMainApplicants(updatedApplicants);
         displayMainApplicants(updatedApplicants);
         
-        // Close modal
         elements.editModal.style.display = 'none';
         
         showNotification('Applicant updated successfully!', 'success');
     }
 
-    // Event listeners for edit modal
     if (elements.editModal) {
-        // Close modal when clicking the close button
         const closeBtn = elements.editModal.querySelector('.close');
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
@@ -492,7 +533,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Close modal when clicking cancel button
         const cancelBtn = document.getElementById('cancel-edit');
         if (cancelBtn) {
             cancelBtn.addEventListener('click', function() {
@@ -500,14 +540,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Close modal when clicking outside the modal content
         elements.editModal.addEventListener('click', function(event) {
             if (event.target === elements.editModal) {
                 elements.editModal.style.display = 'none';
             }
         });
         
-        // Handle form submission
         const editForm = document.getElementById('editApplicantForm');
         if (editForm) {
             editForm.addEventListener('submit', function(event) {
