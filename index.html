@@ -1,0 +1,201 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PESO System - Excel Import</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">PESO</div>
+                <h1>Applicant Management System</h1>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Applicants</h2>
+            
+            <div class="search-container">
+                <input type="text" id="search-input" class="search-input" placeholder="Search applicants...">
+                <button class="search-btn" id="search-btn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                <button class="clear-search-btn" id="clear-search-btn">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table class="applicant-table" id="main-applicant-table">
+                    <thead>
+                        <tr>
+                            <th>PESO</th>
+                            <th>AREA TYPE</th>
+                            <th>AREA CLASS</th>
+                            <th>SRS ID</th>
+                            <th>NAME</th>
+                            <th>BDATE</th>
+                            <th>AGE</th>
+                            <th>SEX</th>
+                            <th>CIVIL STATUS</th>
+                            <th>STREET ADDRESS</th>
+                            <th>BARANGAY</th>
+                            <th>CITY/MUNICIPALITY</th>
+                            <th>PROVINCE</th>
+                            <th>REGION</th>
+                            <th>EMAIL</th>
+                            <th>TELEPHONE</th>
+                            <th>CELLPHONE</th>
+                            <th>EMP. STATUS</th>
+                            <th>EMP. TYPE</th>
+                            <th>EDUC LEVEL</th>
+                            <th>COURSE</th>
+                            <th>4Ps</th>
+                            <th>PWD</th>
+                            <th>DISABILITY</th>
+                            <th>PREFERRED POSITION</th>
+                            <th>SKILLS</th>
+                            <th>WORK EXPERIENCE</th>
+                            <th>OFW</th>
+                            <th>COUNTRY</th>
+                            <th>FORMER OFW</th>
+                            <th>LATEST COUNTRY</th>
+                            <th>REG. DATE</th>
+                            <th>REMARKS</th>
+                            <th>CREATED BY</th>
+                            <th>DATE CREATED</th>
+                            <th>LAST MODIFIED BY</th>
+                            <th>DATE LAST MODIFIED</th>
+                            <th>username</th>
+                            <th>firstname</th>
+                            <th>lastname</th>
+                            <th>email</th>
+                            <th>course1</th>
+                            <th>role1</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                    </tbody>
+                </table>
+            </div>
+            <button id="clear-all-applicants-btn" class="clear-all-btn">Clear All Applicants</button>
+        </div>
+
+        <div class="card">
+            <h2>Upload new applicant file</h2>
+            <div class="import-section">
+                <div class="file-input-container">
+                    <input type="text" id="upload-file-name" class="file-input" placeholder="No file chosen" readonly>
+                    <button class="upload-btn" id="upload-browse-btn">
+                        <i class="fas fa-folder-open"></i> Browse
+                    </button>
+                    <input type="file" id="upload-file-input" accept=".xlsx, .xls" style="display: none;">
+                </div>
+                
+                <button class="add-btn" id="add-btn" disabled>
+                    <i class="fas fa-upload"></i> Upload File
+                </button>
+
+                <div id="upload-notification" class="notification"></div>
+                <div id="duplicate-warning" class="duplicate-warning"></div>
+            </div>
+
+            <div class="instructions">
+                <h3>Reminder:</h3>
+                <ol>
+                    <li>Click the "Browse" button to select the excel file you want to add at the applicant list, then click upload.</li>
+                    <li>The file should be an excel file to proceed with uploading</li>
+                    <li>When one of the applicant have a changes on his/her information, you can edit it by clicking the yellow button then save changes.</li>
+                    <li>The Applicant file can be also deleted by clicking the red button.</li>
+                    <li>If you want to download the file of the applicant you can click the green button.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Import Excel File</h2>
+            <div class="import-section">
+                <div class="file-input-container">
+                    <input type="text" id="file-name" class="file-input" placeholder="No file chosen" readonly>
+                    <button class="browse-btn" id="browse-btn">
+                        <i class="fas fa-folder-open"></i> Browse
+                    </button>
+                    <input type="file" id="file-input" accept=".xlsx, .xls" style="display: none;">
+                </div>
+                
+                <button class="import-btn" id="import-btn" disabled>
+                    <i class="fas fa-upload"></i> Import to Database
+                </button>
+
+                <div id="notification" class="notification"></div>
+            </div>
+
+            <div class="instructions">
+                <h3>How to use this system:</h3>
+                <ol>
+                    <li>Click the download icon next to an applicant to export their data as an excel file</li>
+                    <li>Click the "Browse" button to select the excel file you want to import</li>
+                    <li>Click the "Import to Database" button to save the data to the system</li>
+                    <li>The imported data will be displayed in the section below once processed</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Imported Data</h2>
+            <div class="table-container">
+                <table class="applicant-table" id="imported-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Last Name</th>
+                            <th>Given Name</th>
+                            <th>Middle Name</th>
+                            <th>Full Name</th>
+                            <th>Date of Birth</th>
+                            <th>Age</th>
+                            <th>Sex</th>
+                            <th>Civil Status</th>
+                            <th>Street</th>
+                            <th>Barangay</th>
+                            <th>City</th>
+                            <th>Province</th>
+                            <th>Contact No.</th>
+                            <th>Employment Status</th>
+                            <th>If Employed/Self Employment</th>
+                            <th>Educational Attainment</th>
+                            <th>Course</th>
+                            <th>Skills</th>
+                            <th>Work Experience</th>
+                            <th>Sector</th>
+                            <th>Program/Services Provided</th>
+                            <th>Remarks</th>
+                            <th>Registration Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+
+            <button id="reset-data-btn">Reset Imported Data</button>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        
+    </div>
+
+    <script src="scripts/script.js"></script>
+</body>
+</html>
