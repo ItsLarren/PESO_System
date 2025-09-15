@@ -1,3 +1,5 @@
+[file name]: index.html
+[file content begin]
 <!DOCTYPE html> 
 <html lang="en">
 <head>
@@ -19,183 +21,200 @@
     </header>
 
     <div class="container">
-        <div class="card">
-            <h2>Applicants</h2>
-            
-            <div class="search-container">
-                <input type="text" id="search-input" class="search-input" placeholder="Search applicants...">
-                <button class="search-btn" id="search-btn">
-                    <i class="fas fa-search"></i> Search
-                </button>
-                <button class="clear-search-btn" id="clear-search-btn">
-                    <i class="fas fa-times"></i> Clear
-                </button>
-            </div>
-            
-            <div class="table-container">
-                <table class="applicant-table" id="main-applicant-table">
-                    <thead>
-                        <tr>
-                            <th>PESO</th>
-                            <th>AREA TYPE</th>
-                            <th>AREA CLASS</th>
-                            <th>SRS ID</th>
-                            <th>NAME</th>
-                            <th>BDATE</th>
-                            <th>AGE</th>
-                            <th>SEX</th>
-                            <th>CIVIL STATUS</th>
-                            <th>STREET ADDRESS</th>
-                            <th>BARANGAY</th>
-                            <th>CITY/MUNICIPALITY</th>
-                            <th>PROVINCE</th>
-                            <th>REGION</th>
-                            <th>EMAIL</th>
-                            <th>TELEPHONE</th>
-                            <th>CELLPHONE</th>
-                            <th>EMP. STATUS</th>
-                            <th>EMP. TYPE</th>
-                            <th>EDUC LEVEL</th>
-                            <th>COURSE</th>
-                            <th>4Ps</th>
-                            <th>PWD</th>
-                            <th>DISABILITY</th>
-                            <th>PREFERRED POSITION</th>
-                            <th>SKILLS</th>
-                            <th>WORK EXPERIENCE</th>
-                            <th>OFW</th>
-                            <th>COUNTRY</th>
-                            <th>FORMER OFW</th>
-                            <th>LATEST COUNTRY</th>
-                            <th>REG. DATE</th>
-                            <th>REMARKS</th>
-                            <th>CREATED BY</th>
-                            <th>DATE CREATED</th>
-                            <th>LAST MODIFIED BY</th>
-                            <th>DATE LAST MODIFIED</th>
-                            <th>username</th>
-                            <th>firstname</th>
-                            <th>lastname</th>
-                            <th>email</th>
-                            <th>course1</th>
-                            <th>role1</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                    </tbody>
-                </table>
-            </div>
-            <button id="clear-all-applicants-btn" class="clear-all-btn">Clear All Applicants</button>
-        </div>
 
-        <div class="card">
-            <h2>Upload new applicant file</h2>
-            <div class="import-section">
-                <div class="file-input-container">
-                    <input type="text" id="upload-file-name" class="file-input" placeholder="No file chosen" readonly>
-                    <button class="upload-btn" id="upload-browse-btn">
-                        <i class="fas fa-folder-open"></i> Browse
-                    </button>
-                    <input type="file" id="upload-file-input" accept=".xlsx, .xls" style="display: none;">
-                </div>
-                
-                <button class="add-btn" id="add-btn" disabled>
-                    <i class="fas fa-upload"></i> Upload File
-                </button>
-
-                <div id="upload-notification" class="notification"></div>
-                <div id="duplicate-warning" class="duplicate-warning"></div>
-            </div>
-
-            <div class="instructions">
-                <h3>Reminder:</h3>
-                <ol>
-                    <li>Click the "Browse" button to select the excel file you want to add at the applicant list, then click upload.</li>
-                    <li>The file should be an excel file to proceed with uploading</li>
-                    <li>When one of the applicant have a changes on his/her information, you can edit it by clicking the yellow button then save changes.</li>
-                    <li>The Applicant file can be also deleted by clicking the red button.</li>
-                    <li>If you want to download the file of the applicant you can click the green button.</li>
-                </ol>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Import Excel File</h2>
-            <div class="import-section">
-                <div class="file-input-container">
-                    <input type="text" id="file-name" class="file-input" placeholder="No file chosen" readonly>
-                    <button class="browse-btn" id="browse-btn">
-                        <i class="fas fa-folder-open"></i> Browse
-                    </button>
-                    <input type="file" id="file-input" accept=".xlsx, .xls" style="display: none;">
-                </div>
-                
-                <button class="import-btn" id="import-btn" disabled>
-                    <i class="fas fa-upload"></i> Import to Database
-                </button>
-
-                <div id="notification" class="notification"></div>
-            </div>
-
-            <div class="instructions">
-                <h3>How to use this system:</h3>
-                <ol>
-                    <li>Click the download icon next to an applicant to export their data as an excel file</li>
-                    <li>Click the "Browse" button to select the excel file you want to import</li>
-                    <li>Click the "Import to Database" button to save the data to the system</li>
-                    <li>The imported data will be displayed in the section below once processed</li>
-                </ol>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Imported Data</h2>
-            <div class="table-container">
-                <table class="applicant-table" id="imported-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Last Name</th>
-                            <th>Given Name</th>
-                            <th>Middle Name</th>
-                            <th>Full Name</th>
-                            <th>Date of Birth</th>
-                            <th>Age</th>
-                            <th>Sex</th>
-                            <th>Civil Status</th>
-                            <th>Street</th>
-                            <th>Barangay</th>
-                            <th>City</th>
-                            <th>Province</th>
-                            <th>Contact No.</th>
-                            <th>Employment Status</th>
-                            <th>If Employed/Self Employment</th>
-                            <th>Educational Attainment</th>
-                            <th>Course</th>
-                            <th>Skills</th>
-                            <th>Work Experience</th>
-                            <th>Sector</th>
-                            <th>Program/Services Provided</th>
-                            <th>Remarks</th>
-                            <th>Registration Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-
-            <button id="reset-data-btn">Reset Imported Data</button>
-        </div>
     </div>
 
     <div id="editModal" class="modal">
-        
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Edit Applicant</h2>
+            
+            <div class="date-info">
+                <div>Date Created: <span id="edit-date-created">Not available</span></div>
+                <div>Last Modified: <span id="edit-date-last-modified">Not available</span></div>
+            </div>
+            
+            <form id="editApplicantForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-peso">PESO</label>
+                        <input type="text" id="edit-peso" name="edit-peso">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-area-type">AREA TYPE</label>
+                        <input type="text" id="edit-area-type" name="edit-area-type">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-area-class">AREA CLASS</label>
+                        <input type="text" id="edit-area-class" name="edit-area-class">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-srs-id">SRS ID</label>
+                        <input type="text" id="edit-srs-id" name="edit-srs-id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-name">NAME</label>
+                        <input type="text" id="edit-name" name="edit-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bdate">BDATE</label>
+                        <input type="text" id="edit-bdate" name="edit-bdate">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-age">AGE</label>
+                        <input type="number" id="edit-age" name="edit-age">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sex">SEX</label>
+                        <select id="edit-sex" name="edit-sex">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-civil-status">CIVIL STATUS</label>
+                        <select id="edit-civil-status" name="edit-civil-status">
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Divorced">Divorced</option>
+                            <option value="Widowed">Widowed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-street-address">STREET ADDRESS</label>
+                        <input type="text" id="edit-street-address" name="edit-street-address">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-barangay">BARANGAY</label>
+                        <input type="text" id="edit-barangay" name="edit-barangay">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-city-municipality">CITY/MUNICIPALITY</label>
+                        <input type="text" id="edit-city-municipality" name="edit-city-municipality">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-province">PROVINCE</label>
+                        <input type="text" id="edit-province" name="edit-province">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-region">REGION</label>
+                        <input type="text" id="edit-region" name="edit-region">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">EMAIL</label>
+                        <input type="email" id="edit-email" name="edit-email">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-telephone">TELEPHONE</label>
+                        <input type="text" id="edit-telephone" name="edit-telephone">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-cellphone">CELLPHONE</label>
+                        <input type="text" id="edit-cellphone" name="edit-cellphone">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-emp-status">EMP. STATUS</label>
+                        <input type="text" id="edit-emp-status" name="edit-emp-status">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-emp-type">EMP. TYPE</label>
+                        <input type="text" id="edit-emp-type" name="edit-emp-type">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-educ-level">EDUC LEVEL</label>
+                        <input type="text" id="edit-educ-level" name="edit-educ-level">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-course">COURSE</label>
+                        <input type="text" id="edit-course" name="edit-course">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-4ps">4Ps</label>
+                        <input type="text" id="edit-4ps" name="edit-4ps">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-pwd">PWD</label>
+                        <input type="text" id="edit-pwd" name="edit-pwd">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-disability">DISABILITY</label>
+                        <input type="text" id="edit-disability" name="edit-disability">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-preferred-position">PREFERRED POSITION</label>
+                        <input type="text" id="edit-preferred-position" name="edit-preferred-position">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-skills">SKILLS</label>
+                        <input type="text" id="edit-skills" name="edit-skills">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-work-experience">WORK EXPERIENCE</label>
+                        <input type="text" id="edit-work-experience" name="edit-work-experience">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-ofw">OFW</label>
+                        <input type="text" id="edit-ofw" name="edit-ofw">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-country">COUNTRY</label>
+                        <input type="text" id="edit-country" name="edit-country">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-former-ofw">FORMER OFW</label>
+                        <input type="text" id="edit-former-ofw" name="edit-former-ofw">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-latest-country">LATEST COUNTRY</label>
+                        <input type="text" id="edit-latest-country" name="edit-latest-country">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-reg-date">REG. DATE</label>
+                        <input type="text" id="edit-reg-date" name="edit-reg-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-remarks">REMARKS</label>
+                        <input type="text" id="edit-remarks" name="edit-remarks">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-created-by">CREATED BY</label>
+                        <input type="text" id="edit-created-by" name="edit-created-by">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-last-modified-by">LAST MODIFIED BY</label>
+                        <input type="text" id="edit-last-modified-by" name="edit-last-modified-by">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-username">username</label>
+                        <input type="text" id="edit-username" name="edit-username">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-firstname">firstname</label>
+                        <input type="text" id="edit-firstname" name="edit-firstname">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-lastname">lastname</label>
+                        <input type="text" id="edit-lastname" name="edit-lastname">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-course1">course1</label>
+                        <input type="text" id="edit-course1" name="edit-course1">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-role1">role1</label>
+                        <input type="text" id="edit-role1" name="edit-role1">
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" id="cancel-edit" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="scripts/script.js"></script>
 </body>
 </html>
+[file content end]
