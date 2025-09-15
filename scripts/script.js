@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Safely get all elements with null checks
     const elements = {
         fileInput: document.getElementById('file-input'),
         fileName: document.getElementById('file-name'),
@@ -25,9 +24,10 @@ document.addEventListener('DOMContentLoaded', function () {
         clearSearchBtn: document.getElementById('clear-search-btn')
     };
 
-    // Check if elements exist before adding event listeners
+    // Store current edit ID
+    let currentEditId = null;
+
     if (elements.searchBtn && elements.clearSearchBtn && elements.searchInput) {
-        // Add event listeners for search
         elements.searchBtn.addEventListener('click', searchApplicants);
         elements.clearSearchBtn.addEventListener('click', clearSearch);
         elements.searchInput.addEventListener('keyup', function(e) {
@@ -56,15 +56,13 @@ document.addEventListener('DOMContentLoaded', function () {
         rows.forEach(row => {
             const cells = row.querySelectorAll('td');
             let found = false;
-            
-            // Check each cell for the search term
+    
             cells.forEach(cell => {
                 if (cell.textContent.toLowerCase().includes(searchTerm)) {
                     found = true;
                 }
             });
             
-            // Show or hide the row based on search results
             if (found) {
                 row.style.display = '';
                 foundCount++;
@@ -73,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // Show message if no results found
         const noResultsRow = tbody.querySelector('.no-results-row');
         if (foundCount === 0) {
             if (!noResultsRow) {
@@ -103,18 +100,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const rows = tbody.querySelectorAll('tr');
         const noResultsRow = tbody.querySelector('.no-results-row');
         
-        // Show all rows
         rows.forEach(row => {
             row.style.display = '';
         });
         
-        // Remove no results message if it exists
         if (noResultsRow) {
             noResultsRow.remove();
         }
     }
 
-    // FIXED: Only one displayMainApplicants function
     function displayMainApplicants(applicants) {
         if (!elements.mainApplicantTable) return;
         
@@ -134,14 +128,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Filter out any null/undefined applicants
         const validApplicants = applicants.filter(applicant => applicant !== null && applicant !== undefined);
         
         validApplicants.forEach(applicant => {
             addApplicantRow(tbody, applicant);
         });
         
-        // Clear any active search when displaying new applicants
         clearSearch();
     }
     
@@ -263,9 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function saveDataToLocalStorage(data) {
         try {
-            // Get existing data first
             const existingData = JSON.parse(localStorage.getItem('importedData')) || [];
-            // Combine with new data
             const combinedData = [...existingData, ...data];
             
             const jsonData = JSON.stringify(combinedData);
@@ -338,7 +328,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadMainApplicants() {
         try {
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-            // Filter out any null/undefined entries
             const validApplicants = savedApplicants.filter(applicant => applicant !== null && applicant !== undefined);
             displayMainApplicants(validApplicants);
         } catch (error) {
@@ -349,7 +338,6 @@ document.addEventListener('DOMContentLoaded', function () {
     
     function saveMainApplicants(applicants) {
         try {
-            // Filter out any null/undefined entries before saving
             const validApplicants = applicants.filter(applicant => applicant !== null && applicant !== undefined);
             localStorage.setItem('mainApplicants', JSON.stringify(validApplicants));
         } catch (error) {
@@ -428,60 +416,106 @@ document.addEventListener('DOMContentLoaded', function () {
     function openEditModal(applicant) {
         if (!elements.editModal) return;
         
+        // Populate the form fields with applicant data
         for (const field in applicant) {
-            const input = document.getElementById(`edit-${field.toLowerCase().replace(/\s+/g, '-')}`);
+            // Convert field name to match the input ID format in the HTML
+            const inputId = `edit-${field.toLowerCase().replace(/\s+/g, '-').replace(/\//g, '-').replace(/\./g, '')}`;
+            const input = document.getElementById(inputId);
             if (input) {
                 input.value = applicant[field] || '';
             }
         }
         
+        // Set date information
+        const dateCreatedEl = document.getElementById('edit-date-created');
+        const dateModifiedEl = document.getElementById('edit-date-last-modified');
+        
+        if (dateCreatedEl) {
+            dateCreatedEl.textContent = applicant['DATE CREATED'] || 'Not available';
+        }
+        if (dateModifiedEl) {
+            dateModifiedEl.textContent = applicant['DATE LAST MODIFIED'] || 'Not available';
+        }
+        
+        // Show the modal
         elements.editModal.style.display = 'block';
         
-        if (elements.editApplicantForm) {
-            elements.editApplicantForm.onsubmit = function(e) {
-                e.preventDefault();
-                
-                const updatedApplicant = {};
-                for (const field in applicant) {
-                    const input = document.getElementById(`edit-${field.toLowerCase().replace(/\s+/g, '-')}`);
-                    if (input) {
-                        updatedApplicant[field] = input.value;
-                    }
-                }
-                
-                updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
-                
-                const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-                const index = savedApplicants.findIndex(a => a['SRS ID'] === applicant['SRS ID']);
-                if (index !== -1) {
-                    savedApplicants[index] = updatedApplicant;
-                    saveMainApplicants(savedApplicants);
-                    displayMainApplicants(savedApplicants);
-                }
-                
+        // Store the current applicant ID for update
+        currentEditId = applicant['SRS ID'] || applicant.ID;
+    }
+    
+    function updateApplicant(id) {
+        if (!id) {
+            showNotification('Error: No applicant ID found for update', 'error');
+            return;
+        }
+        
+        const formData = new FormData(document.getElementById('editApplicantForm'));
+        const updatedApplicant = {};
+        
+        // Get all form fields and map them back to the original field names
+        formData.forEach((value, key) => {
+            // Convert form field names back to original field names
+            const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
+            updatedApplicant[originalFieldName] = value;
+        });
+        
+        // Update date modified
+        updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
+        
+        // Get existing applicants
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        const updatedApplicants = savedApplicants.map(applicant => {
+            if (applicant['SRS ID'] === id || applicant.ID === id) {
+                return { ...applicant, ...updatedApplicant };
+            }
+            return applicant;
+        });
+        
+        // Save updated data
+        saveMainApplicants(updatedApplicants);
+        displayMainApplicants(updatedApplicants);
+        
+        // Close modal
+        elements.editModal.style.display = 'none';
+        
+        showNotification('Applicant updated successfully!', 'success');
+    }
+
+    // Event listeners for edit modal
+    if (elements.editModal) {
+        // Close modal when clicking the close button
+        const closeBtn = elements.editModal.querySelector('.close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
                 elements.editModal.style.display = 'none';
-                showNotification('Applicant updated successfully!', 'success');
-            };
+            });
+        }
+        
+        // Close modal when clicking cancel button
+        const cancelBtn = document.getElementById('cancel-edit');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                elements.editModal.style.display = 'none';
+            });
+        }
+        
+        // Close modal when clicking outside the modal content
+        elements.editModal.addEventListener('click', function(event) {
+            if (event.target === elements.editModal) {
+                elements.editModal.style.display = 'none';
+            }
+        });
+        
+        // Handle form submission
+        const editForm = document.getElementById('editApplicantForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                updateApplicant(currentEditId);
+            });
         }
     }
-    
-    if (elements.closeModal) {
-        elements.closeModal.addEventListener('click', function() {
-            if (elements.editModal) elements.editModal.style.display = 'none';
-        });
-    }
-    
-    if (elements.cancelEdit) {
-        elements.cancelEdit.addEventListener('click', function() {
-            if (elements.editModal) elements.editModal.style.display = 'none';
-        });
-    }
-    
-    window.addEventListener('click', function(event) {
-        if (elements.editModal && event.target == elements.editModal) {
-            elements.editModal.style.display = 'none';
-        }
-    });
     
     if (elements.browsebtn && elements.fileInput) {
         elements.browsebtn.addEventListener('click', function() {
