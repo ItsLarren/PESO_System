@@ -561,7 +561,6 @@ h2 {
     font-style: italic;
 }
 
-/* Style for date inputs */
 .date-input {
     width: 100%;
     padding: 10px;
@@ -577,7 +576,6 @@ h2 {
     box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
 }
 
-/* Customize the date picker */
 input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     padding: 5px;
@@ -589,13 +587,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     background-color: #e0e0e0;
 }
 
-/* For Firefox */
 input[type="date"] {
     appearance: none;
     -moz-appearance: textfield;
 }
 
-/* For other browsers that support the calendar */
 input[type="date"] {
     position: relative;
 }

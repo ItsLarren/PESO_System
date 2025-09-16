@@ -494,7 +494,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const bdateInput = document.getElementById('edit-bdate');
         if (bdateInput && applicant['BDATE']) {
-            // Convert the date string to YYYY-MM-DD format for date input
             const dateValue = formatDateForInput(applicant['BDATE']);
             bdateInput.value = dateValue;
         }
@@ -506,13 +505,11 @@ document.addEventListener('DOMContentLoaded', function () {
             'PWD': 'edit-pwd',
             'OFW': 'edit-ofw',
             'FORMER OFW': 'edit-former-ofw'
-            // Add other dropdown fields here
         };
     
         for (const field in dropdownFields) {
             const selectElement = document.getElementById(dropdownFields[field]);
             if (selectElement && applicant[field]) {
-                // Find the option with the matching value and select it
                 for (let i = 0; i < selectElement.options.length; i++) {
                     if (selectElement.options[i].value === applicant[field]) {
                         selectElement.selectedIndex = i;
@@ -526,46 +523,37 @@ document.addEventListener('DOMContentLoaded', function () {
     function formatDateForInput(dateString) {
     if (!dateString) return '';
     
-    // Handle different date formats that might be in your data
     let date;
     if (typeof dateString === 'string') {
-        // Try parsing different date formats
+
         if (dateString.includes('/')) {
-            // Format: MM/DD/YYYY or DD/MM/YYYY
             const parts = dateString.split('/');
             if (parts.length === 3) {
-                // Assume MM/DD/YYYY format
                 date = new Date(parts[2], parts[0] - 1, parts[1]);
             }
         } else if (dateString.includes('-')) {
-            // Format: YYYY-MM-DD or DD-MM-YYYY
             const parts = dateString.split('-');
             if (parts.length === 3) {
                 if (parts[0].length === 4) {
-                    // YYYY-MM-DD format
                     date = new Date(parts[0], parts[1] - 1, parts[2]);
                 } else {
-                    // DD-MM-YYYY format
                     date = new Date(parts[2], parts[1] - 1, parts[0]);
                 }
             }
         } else {
-            // Try parsing as is
             date = new Date(dateString);
         }
     } else if (typeof dateString === 'number') {
-        // Excel serial date
         date = excelDateToJSDateObject(dateString);
     }
     
     if (date instanceof Date && !isNaN(date)) {
-        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+        return date.toISOString().split('T')[0]; 
     }
     
     return '';
 }
 
-// Helper function to convert Excel serial date to Date object
 function excelDateToJSDateObject(serial) {
     const utc_days = Math.floor(serial - 25569);
     const utc_value = utc_days * 86400;
@@ -583,11 +571,9 @@ function excelDateToJSDateObject(serial) {
     
     formData.forEach((value, key) => {
         const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
-        
-        // Special handling for date field to store in original format
+
         if (originalFieldName === 'BDATE' && value) {
             const date = new Date(value);
-            // Format as MM/DD/YYYY like the original data
             updatedApplicant[originalFieldName] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
         } else {
             updatedApplicant[originalFieldName] = value;
