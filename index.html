@@ -193,8 +193,56 @@
     </div>
 
     <div id="editModal" class="modal">
-        
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Edit Applicant</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="date-info">
+            <p><strong>Date Created:</strong> <span id="edit-date-created"></span></p>
+            <p><strong>Last Modified:</strong> <span id="edit-date-last-modified"></span></p>
+        </div>
+        <form id="editApplicantForm">
+            <div class="form-grid">
+                <!-- Add all your form fields here based on your applicant data structure -->
+                <div class="form-group">
+                    <label for="edit-peso">PESO</label>
+                    <input type="text" id="edit-peso" name="edit-peso">
+                </div>
+                <div class="form-group">
+                    <label for="edit-area-type">AREA TYPE</label>
+                    <input type="text" id="edit-area-type" name="edit-area-type">
+                </div>
+                <div class="form-group">
+                    <label for="edit-area-class">AREA CLASS</label>
+                    <input type="text" id="edit-area-class" name="edit-area-class">
+                </div>
+                <div class="form-group">
+                    <label for="edit-srs-id">SRS ID</label>
+                    <input type="text" id="edit-srs-id" name="edit-srs-id" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="edit-name">NAME</label>
+                    <input type="text" id="edit-name" name="edit-name">
+                </div>
+                <!-- Add all other fields similarly -->
+                <div class="form-group">
+                    <label for="edit-bdate">BDATE</label>
+                    <input type="text" id="edit-bdate" name="edit-bdate">
+                </div>
+                <div class="form-group">
+                    <label for="edit-age">AGE</label>
+                    <input type="text" id="edit-age" name="edit-age">
+                </div>
+                <!-- Continue with all other fields -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="cancel-edit" class="cancel-btn">Cancel</button>
+                <button type="submit" class="save-btn">Save Changes</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <script src="scripts/script.js"></script>
 </body>
