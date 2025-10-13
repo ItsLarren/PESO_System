@@ -18,7 +18,7 @@ body {
 }
 
 header {
-    background: linear-gradient(135deg, #1e88e5, #0d47A1);
+    background: linear-gradient(135deg, #f86c6c, #a51f41);
     color: white;
     padding: 20px 0;
     border-radius: 8px;
@@ -52,7 +52,7 @@ h1 {
 }
 
 h2 {
-    color: #1e88e5;
+    color: #ee5656;
     margin-bottom: 20px;
     font-size: 22px;
     border-bottom: 2px solid #e3f2fd;
@@ -78,7 +78,7 @@ h2 {
 
 .applicant-table th {
     background-color: #e3f2fd;
-    color: #0d47a1;
+    color: #000000;
     font-weight: 600;
     position: sticky;
     top: 0;
@@ -89,7 +89,7 @@ h2 {
 }
 
 .action-btn {
-    background: #1e88e5;
+    background: #e51e1e;
     color: white;
     border: none;
     padding: 8px 15px;
@@ -452,7 +452,7 @@ h2 {
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #1e88e5;
+    border-color: #e51e1e;
     box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
 }
 
@@ -620,6 +620,227 @@ input[type="date"]:after {
     box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
 }
 
+.photo-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.photo-preview-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px dashed #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+}
+
+.photo-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 14px;
+}
+
+.photo-placeholder i {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+.photo-upload-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.upload-photo-btn {
+    background: #1e88e5;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.upload-photo-btn:hover {
+    background: #0d47a1;
+}
+
+.remove-photo-btn {
+    background: #e57373;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.remove-photo-btn:hover {
+    background: #c62828;
+}
+
+.modal-content {
+    max-height: 85vh;
+}
+
+.photo-cell {
+    text-align: center;
+    padding: 5px;
+}
+
+.photo-thumbnail {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+.photo-icon {
+    color: #ccc;
+    font-size: 20px;
+}
+
+.take-photo-btn {
+    background: #9c27b0;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s;
+}
+
+.take-photo-btn:hover {
+    background: #7b1fa2;
+}
+
+.camera-container {
+    text-align: center;
+    padding: 20px;
+}
+
+#camera-video {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+#camera-canvas {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.capture-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+.capture-btn:hover {
+    background: #388e3c;
+}
+
+.retake-btn {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+.retake-btn:hover {
+    background: #f57c00;
+}
+
+.use-photo-btn {
+    background: #2196f3;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+.use-photo-btn:hover {
+    background: #1976d2;
+}
+
+.camera-permission {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.camera-permission i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ccc;
+}
+
+@media (max-width: 768px) {
+    .camera-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .capture-btn,
+    .retake-btn,
+    .use-photo-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    #camera-video,
+    #camera-canvas {
+        max-width: 100%;
+    }
+}
+
 @media (max-width: 768px) {
     .header-content {
         flex-direction: column;
@@ -657,5 +878,10 @@ input[type="date"]:after {
     .search-btn, .clear-search-btn {
         width: 100%;
         margin-bottom: 5px;
+    }
+
+    .photo-section {
+        flex-direction: column;
+        text-align: center;
     }
 }

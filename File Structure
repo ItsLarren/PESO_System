@@ -1,0 +1,7 @@
+project-folder/
+│
+├── index.html
+├── styles/
+│   └── style.css
+└── scripts/
+    └── script.js

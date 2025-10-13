@@ -21,10 +21,141 @@ document.addEventListener('DOMContentLoaded', function () {
         duplicateWarning: document.getElementById('duplicate-warning'),
         searchInput: document.getElementById('search-input'),
         searchBtn: document.getElementById('search-btn'),
-        clearSearchBtn: document.getElementById('clear-search-btn')
+        clearSearchBtn: document.getElementById('clear-search-btn'),
+        editPhotoInput: document.getElementById('edit-photo-input'),
+        editPhotoPreview: document.getElementById('edit-photo-preview'),
+        photoPlaceholder: document.getElementById('photo-placeholder'),
+        uploadPhotoBtn: document.getElementById('upload-photo-btn'),
+        removePhotoBtn: document.getElementById('remove-photo-btn'),
+        takePhotoBtn: document.getElementById('take-photo-btn'),
+        
+        cameraModal: document.getElementById('cameraModal'),
+        closeCamera: document.querySelector('.close-camera'),
+        cameraVideo: document.getElementById('camera-video'),
+        cameraCanvas: document.getElementById('camera-canvas'),
+        captureBtn: document.getElementById('capture-btn'),
+        retakeBtn: document.getElementById('retake-btn'),
+        usePhotoBtn: document.getElementById('use-photo-btn'),
+        cameraError: document.getElementById('camera-error')
     };
 
     let currentEditId = null;
+    let stream = null;
+    let capturedPhoto = null;
+
+    // Camera functionality
+    if (elements.takePhotoBtn) {
+        elements.takePhotoBtn.addEventListener('click', openCamera);
+    }
+
+    if (elements.closeCamera) {
+        elements.closeCamera.addEventListener('click', closeCamera);
+    }
+
+    if (elements.cameraModal) {
+        elements.cameraModal.addEventListener('click', function(event) {
+            if (event.target === elements.cameraModal) {
+                closeCamera();
+            }
+        });
+    }
+
+    if (elements.captureBtn) {
+        elements.captureBtn.addEventListener('click', capturePhoto);
+    }
+
+    if (elements.retakeBtn) {
+        elements.retakeBtn.addEventListener('click', retakePhoto);
+    }
+
+    if (elements.usePhotoBtn) {
+        elements.usePhotoBtn.addEventListener('click', usePhoto);
+    }
+
+    function openCamera() {
+        elements.cameraModal.style.display = 'block';
+        elements.cameraError.style.display = 'none';
+        elements.cameraVideo.style.display = 'block';
+        elements.cameraCanvas.style.display = 'none';
+        elements.captureBtn.style.display = 'block';
+        elements.retakeBtn.style.display = 'none';
+        elements.usePhotoBtn.style.display = 'none';
+        capturedPhoto = null;
+        
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'user',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            })
+            .then(function(videoStream) {
+                stream = videoStream;
+                elements.cameraVideo.srcObject = stream;
+            })
+            .catch(function(error) {
+                console.error('Camera error:', error);
+                elements.cameraError.textContent = 'Cannot access camera: ' + error.message;
+                elements.cameraError.style.display = 'block';
+            });
+        } else {
+            elements.cameraError.textContent = 'Camera not supported on this device';
+            elements.cameraError.style.display = 'block';
+        }
+    }
+
+    function closeCamera() {
+        elements.cameraModal.style.display = 'none';
+        
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    function capturePhoto() {
+        const video = elements.cameraVideo;
+        const canvas = elements.cameraCanvas;
+        const context = canvas.getContext('2d');
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+        elements.captureBtn.style.display = 'none';
+        elements.retakeBtn.style.display = 'block';
+        elements.usePhotoBtn.style.display = 'block';
+        
+        capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+    }
+
+    function retakePhoto() {
+        elements.cameraVideo.style.display = 'block';
+        elements.cameraCanvas.style.display = 'none';
+        elements.captureBtn.style.display = 'block';
+        elements.retakeBtn.style.display = 'none';
+        elements.usePhotoBtn.style.display = 'none';
+        capturedPhoto = null;
+    }
+
+    function usePhoto() {
+        if (capturedPhoto) {
+            localStorage.setItem(`tempPhoto_${currentEditId}`, capturedPhoto);
+            
+            elements.editPhotoPreview.src = capturedPhoto;
+            elements.editPhotoPreview.style.display = 'block';
+            elements.photoPlaceholder.style.display = 'none';
+            elements.removePhotoBtn.style.display = 'block';
+            
+            closeCamera();
+            
+            showNotification('Photo captured successfully!', 'success');
+        }
+    }
 
     if (elements.searchBtn && elements.clearSearchBtn && elements.searchInput) {
         elements.searchBtn.addEventListener('click', searchApplicants);
@@ -119,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!applicants || !Array.isArray(applicants) || applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 42;
+            cell.colSpan = 43;
             cell.textContent = 'No applicants found. Import data or add manually.';
             cell.className = 'no-results';
             row.appendChild(cell);
@@ -200,7 +331,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return Date.now().toString();
     }
 
-    
     function parseName(fullName) {
         if (!fullName) return { lastName: 'N/A', givenName: 'N/A', middleName: 'N/A' };
         
@@ -220,7 +350,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return { lastName, givenName, middleName };
     }
 
-    
     function mapExcelData(excelRow) {
         const nameParts = parseName(excelRow['NAME'] || excelRow['Full Name']);
         
@@ -268,7 +397,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    
     function showNotification(message, type, notificationElement = elements.notification) {
         if (!notificationElement) return;
         
@@ -347,9 +475,27 @@ document.addEventListener('DOMContentLoaded', function () {
     function addApplicantRow(tbody, applicant) {
         const row = document.createElement('tr');
         
+        const photoCell = document.createElement('td');
+        photoCell.className = 'photo-cell';
+        const photoId = applicant['SRS ID'] || applicant.ID;
+        const savedPhoto = localStorage.getItem(`photo_${photoId}`);
+        
+        if (savedPhoto) {
+            const img = document.createElement('img');
+            img.src = savedPhoto;
+            img.className = 'photo-thumbnail';
+            img.alt = 'Applicant Photo';
+            photoCell.appendChild(img);
+        } else {
+            const icon = document.createElement('i');
+            icon.className = 'fas fa-user photo-icon';
+            photoCell.appendChild(icon);
+        }
+        row.appendChild(photoCell);
+        
         const fields = [
             'PESO', 'AREA TYPE', 'AREA CLASS', 'SRS ID', 'NAME', 'BDATE', 'AGE', 'SEX', 'CIVIL STATUS',
-            'STREET ADDRESS', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROVINE', 'REGION', 'EMAIL', 'TELEPHONE',
+            'STREET ADDRESS', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROVINCE', 'REGION', 'EMAIL', 'TELEPHONE',
             'CELLPHONE', 'EMP. STATUS', 'EMP. TYPE', 'EDUC LEVEL', 'COURSE', '4Ps', 'PWD', 'DISABILITY',
             'PREFERRED POSITION', 'SKILLS', 'WORK EXPERIENCE', 'OFW', 'COUNTRY', 'FORMER OFW', 'LATEST COUNTRY',
             'REG. DATE', 'REMARKS', 'CREATED BY', 'DATE CREATED', 'LAST MODIFIED BY', 'DATE LAST MODIFIED',
@@ -412,10 +558,49 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     
+    if (elements.uploadPhotoBtn && elements.editPhotoInput) {
+        elements.uploadPhotoBtn.addEventListener('click', function() {
+            elements.editPhotoInput.click();
+        });
+    }
+
+    if (elements.editPhotoInput) {
+        elements.editPhotoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const photoData = e.target.result;
+                        localStorage.setItem(`tempPhoto_${currentEditId}`, photoData);
+                        
+                        elements.editPhotoPreview.src = photoData;
+                        elements.editPhotoPreview.style.display = 'block';
+                        elements.photoPlaceholder.style.display = 'none';
+                        elements.removePhotoBtn.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    showNotification('Please select a valid image file.', 'error');
+                }
+            }
+        });
+    }
+
+    if (elements.removePhotoBtn) {
+        elements.removePhotoBtn.addEventListener('click', function() {
+            elements.editPhotoPreview.src = '';
+            elements.editPhotoPreview.style.display = 'none';
+            elements.photoPlaceholder.style.display = 'flex';
+            elements.removePhotoBtn.style.display = 'none';
+            elements.editPhotoInput.value = '';
+            
+            localStorage.removeItem(`tempPhoto_${currentEditId}`);
+            localStorage.removeItem(`photo_${currentEditId}`);
+        });
+    }
+
     function openEditModal(applicant) {
-        console.log("Opening edit modal for applicant:", applicant);
-        console.log("Modal element:", elements.editModal);
-        
         if (!elements.editModal) return;
         
         const formInputs = elements.editModal.querySelectorAll('input');
@@ -464,7 +649,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'username': 'edit-username',
             'firstname': 'edit-firstname',
             'lastname': 'edit-lastname',
-            'email': 'edit-email',
+            'email': 'edit-email2',
             'course1': 'edit-course1',
             'role1': 'edit-role1'
         };
@@ -488,9 +673,23 @@ document.addEventListener('DOMContentLoaded', function () {
             dateModifiedEl.textContent = applicant['DATE LAST MODIFIED'] || 'Not available';
         }
         
-        elements.editModal.style.display = 'block';
+        const photoId = applicant['SRS ID'] || applicant.ID;
+        currentEditId = photoId;
+        const savedPhoto = localStorage.getItem(`photo_${photoId}`);
+        
+        if (savedPhoto) {
+            elements.editPhotoPreview.src = savedPhoto;
+            elements.editPhotoPreview.style.display = 'block';
+            elements.photoPlaceholder.style.display = 'none';
+            elements.removePhotoBtn.style.display = 'block';
+        } else {
+            elements.editPhotoPreview.src = '';
+            elements.editPhotoPreview.style.display = 'none';
+            elements.photoPlaceholder.style.display = 'flex';
+            elements.removePhotoBtn.style.display = 'none';
+        }
 
-        currentEditId = applicant['SRS ID'] || applicant.ID;
+        elements.editModal.style.display = 'block';
 
         const bdateInput = document.getElementById('edit-bdate');
         if (bdateInput && applicant['BDATE']) {
@@ -498,7 +697,7 @@ document.addEventListener('DOMContentLoaded', function () {
             bdateInput.value = dateValue;
         }
 
-            const dropdownFields = {
+        const dropdownFields = {
             'SEX': 'edit-sex',
             'CIVIL STATUS': 'edit-civil-status',
             '4Ps': 'edit-4ps',
@@ -521,65 +720,71 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function formatDateForInput(dateString) {
-    if (!dateString) return '';
-    
-    let date;
-    if (typeof dateString === 'string') {
-
-        if (dateString.includes('/')) {
-            const parts = dateString.split('/');
-            if (parts.length === 3) {
-                date = new Date(parts[2], parts[0] - 1, parts[1]);
-            }
-        } else if (dateString.includes('-')) {
-            const parts = dateString.split('-');
-            if (parts.length === 3) {
-                if (parts[0].length === 4) {
-                    date = new Date(parts[0], parts[1] - 1, parts[2]);
-                } else {
-                    date = new Date(parts[2], parts[1] - 1, parts[0]);
+        if (!dateString) return '';
+        
+        let date;
+        if (typeof dateString === 'string') {
+            if (dateString.includes('/')) {
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    date = new Date(parts[2], parts[0] - 1, parts[1]);
                 }
+            } else if (dateString.includes('-')) {
+                const parts = dateString.split('-');
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) {
+                        date = new Date(parts[0], parts[1] - 1, parts[2]);
+                    } else {
+                        date = new Date(parts[2], parts[1] - 1, parts[0]);
+                    }
+                }
+            } else {
+                date = new Date(dateString);
             }
-        } else {
-            date = new Date(dateString);
+        } else if (typeof dateString === 'number') {
+            date = excelDateToJSDateObject(dateString);
         }
-    } else if (typeof dateString === 'number') {
-        date = excelDateToJSDateObject(dateString);
+        
+        if (date instanceof Date && !isNaN(date)) {
+            return date.toISOString().split('T')[0]; 
+        }
+        
+        return '';
     }
-    
-    if (date instanceof Date && !isNaN(date)) {
-        return date.toISOString().split('T')[0]; 
-    }
-    
-    return '';
-}
 
-function excelDateToJSDateObject(serial) {
-    const utc_days = Math.floor(serial - 25569);
-    const utc_value = utc_days * 86400;
-    return new Date(utc_value * 1000);
-}
+    function excelDateToJSDateObject(serial) {
+        const utc_days = Math.floor(serial - 25569);
+        const utc_value = utc_days * 86400;
+        return new Date(utc_value * 1000);
+    }
     
     function updateApplicant(id) {
         if (!id) {
             showNotification('Error: No applicant ID found for update', 'error');
-        return;
-    }
-    
-    const formData = new FormData(document.getElementById('editApplicantForm'));
-    const updatedApplicant = {};
-    
-    formData.forEach((value, key) => {
-        const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
-
-        if (originalFieldName === 'BDATE' && value) {
-            const date = new Date(value);
-            updatedApplicant[originalFieldName] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
-        } else {
-            updatedApplicant[originalFieldName] = value;
+            return;
         }
-    });
+    
+        const formData = new FormData(document.getElementById('editApplicantForm'));
+        const updatedApplicant = {};
         
+        formData.forEach((value, key) => {
+            const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
+
+            if (originalFieldName === 'BDATE' && value) {
+                const date = new Date(value);
+                updatedApplicant[originalFieldName] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+            } else {
+                updatedApplicant[originalFieldName] = value;
+            }
+        });
+        
+        const tempPhoto = localStorage.getItem(`tempPhoto_${id}`);
+        if (tempPhoto) {
+            localStorage.setItem(`photo_${id}`, tempPhoto);
+            localStorage.removeItem(`tempPhoto_${id}`);
+            updatedApplicant['PHOTO'] = tempPhoto;
+        }
+            
         updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
         
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
@@ -880,6 +1085,12 @@ function excelDateToJSDateObject(serial) {
         elements.clearAllApplicantsBtn.addEventListener('click', function() {
             if (confirm('Are you sure you want to clear all applicants? This action cannot be undone.')) {
                 localStorage.removeItem('mainApplicants');
+                const keys = Object.keys(localStorage);
+                keys.forEach(key => {
+                    if (key.startsWith('photo_') || key.startsWith('tempPhoto_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
                 if (elements.mainApplicantTable) {
                     const tbody = elements.mainApplicantTable.querySelector('tbody');
                     if (tbody) tbody.innerHTML = '';

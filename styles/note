@@ -1,0 +1,23 @@
+This sytem is currently no backend since the system uses LocalStorage for data persistence. However, there are limitations:
+
+Current Limitations (uses LocalStorage only):
+-  Data is stored only is the user's browser
+- No data sharing between different browsers/devices
+limited storage capacity (5-10mb)
+- No server-side validation or sercurity
+- No backup or recovery options
+-No multi-user support
+
+Backend if needed:
+- Multiple users need to access same data
+- Data backup and recovery is important
+- Large datasets exceeding localStorage limits
+Security requirements for sensitive applicant data
+Integration with other systems/databases
+- Advanced features like user authentication, reporting etc.
+
+Backend Options:
+- PHP + MySQL - Traditional web stack
+- Node.js + MongoDB - JavaScript full-stack
+- Python (Django/Flask) + PostgreSQL - Robust and scalable
+- Firebase - Quick setup, real-time database
