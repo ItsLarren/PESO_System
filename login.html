@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fernandino Employment Information System - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/login.css">
+</head>
+<body>
+    <div class="system-header">
+        <div class="logos-container">
+            <div class="logo-left">
+                <img src="assets/CSFP_logo.png" alt="Left Logo" class="logo-img">
+            </div>
+            <div class="header-center">
+                <h1>Fernandino Employment Information System</h1>
+                <p class="subtitle">City Public Employment Services Office</p>
+            </div>
+            <div class="logo-right">
+                <img src="assets/PESO_logo.png" alt="Right Logo" class="logo-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2>System Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" name="username" required placeholder="Enter your username">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login to System
+                </button>
+
+                <div id="login-error" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="scripts/login.js"></script>
+</body>
+</html>

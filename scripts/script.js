@@ -42,6 +42,33 @@ document.addEventListener('DOMContentLoaded', function () {
     let currentEditId = null;
     let stream = null;
     let capturedPhoto = null;
+    
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+        // You can modify your header to show the username
+        const header = document.querySelector('header .header-content');
+        if (header) {
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
+            userInfo.innerHTML = `
+                <span>Welcome, ${currentUser}</span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            `;
+            header.appendChild(userInfo);
+
+            // Add logout functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('currentUser');
+                window.location.href = 'login.html';
+            });
+        }
+    }
 
     // Camera functionality
     if (elements.takePhotoBtn) {
