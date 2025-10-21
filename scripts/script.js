@@ -1,5 +1,3 @@
-// Replace your entire script.js with this updated version
-
 document.addEventListener('DOMContentLoaded', function () {
     const elements = {
         fileInput: document.getElementById('file-input'),
@@ -38,12 +36,410 @@ document.addEventListener('DOMContentLoaded', function () {
         captureBtn: document.getElementById('capture-btn'),
         retakeBtn: document.getElementById('retake-btn'),
         usePhotoBtn: document.getElementById('use-photo-btn'),
-        cameraError: document.getElementById('camera-error')
+        cameraError: document.getElementById('camera-error'),
+        addManualBtn: document.getElementById('add-manual-btn'),
+        manualNotification: document.getElementById('manual-notification'),
+        manualModal: document.getElementById('manualModal'),
+        closeManual: document.querySelector('.close-manual'),
+        cancelManual: document.getElementById('cancel-manual'),
+        manualApplicantForm: document.getElementById('manualApplicantForm'),
+        manualPhotoInput: document.getElementById('manual-photo-input'),
+        manualPhotoPreview: document.getElementById('manual-photo-preview'),
+        manualPhotoPlaceholder: document.getElementById('manual-photo-placeholder'),
+        manualUploadPhotoBtn: document.getElementById('manual-upload-photo-btn'),
+        manualTakePhotoBtn: document.getElementById('manual-take-photo-btn'),
+        manualRemovePhotoBtn: document.getElementById('manual-remove-photo-btn')
     };
 
     let currentEditId = null;
     let stream = null;
     let capturedPhoto = null;
+
+    if (elements.addManualBtn) {
+        elements.addManualBtn.addEventListener('click', openManualModal);
+    }
+
+    if (elements.closeManual) {
+        elements.closeManual.addEventListener('click', closeManualModal);
+    }
+
+    if (elements.cancelManual) {
+        elements.cancelManual.addEventListener('click', closeManualModal);
+    }
+
+    if (elements.manualModal) {
+        elements.manualModal.addEventListener('click', function(event) {
+            if (event.target === elements.manualModal) {
+                closeManualModal();
+            }
+        });
+    }
+
+    // Photo functionality for manual form
+    if (elements.manualUploadPhotoBtn && elements.manualPhotoInput) {
+        elements.manualUploadPhotoBtn.addEventListener('click', function() {
+            elements.manualPhotoInput.click();
+        });
+    }
+
+    if (elements.manualPhotoInput) {
+        elements.manualPhotoInput.addEventListener('change', function(e) {
+            handleManualPhotoUpload(e);
+        });
+    }
+
+    if (elements.manualRemovePhotoBtn) {
+        elements.manualRemovePhotoBtn.addEventListener('click', function() {
+            elements.manualPhotoPreview.src = '';
+            elements.manualPhotoPreview.style.display = 'none';
+            elements.manualPhotoPlaceholder.style.display = 'flex';
+            elements.manualRemovePhotoBtn.style.display = 'none';
+            elements.manualPhotoInput.value = '';
+        });
+    }
+
+    if (elements.manualTakePhotoBtn) {
+        elements.manualTakePhotoBtn.addEventListener('click', function() {
+            currentEditId = 'manual_' + Date.now();
+            openCamera();
+        });
+    }
+
+    function openManualModal() {
+        if (!elements.manualModal) return;
+        
+        // Reset form
+        elements.manualApplicantForm.reset();
+        
+        // Reset photo
+        elements.manualPhotoPreview.src = '';
+        elements.manualPhotoPreview.style.display = 'none';
+        elements.manualPhotoPlaceholder.style.display = 'flex';
+        elements.manualRemovePhotoBtn.style.display = 'none';
+        elements.manualPhotoInput.value = '';
+        
+        elements.manualModal.style.display = 'block';
+    }
+
+    function closeManualModal() {
+        if (!elements.manualModal) return;
+        elements.manualModal.style.display = 'none';
+    }
+
+    function handleManualPhotoUpload(e) {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const photoData = e.target.result;
+                    // Store temporarily for manual entry
+                    localStorage.setItem('tempManualPhoto', photoData);
+                    
+                    elements.manualPhotoPreview.src = photoData;
+                    elements.manualPhotoPreview.style.display = 'block';
+                    elements.manualPhotoPlaceholder.style.display = 'none';
+                    elements.manualRemovePhotoBtn.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                showNotification('Please select a valid image file.', 'error', elements.manualNotification);
+            }
+        }
+    }
+
+    function checkApplicantDuplicate(applicantData) {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        const matches = [];
+        
+        for (const existingApp of savedApplicants) {
+            const nameMatch = applicantData.NAME && existingApp.NAME && 
+                            applicantData.NAME.toLowerCase() === existingApp.NAME.toLowerCase();
+            
+            if (nameMatch) {
+                const matchDetails = {
+                    existingApplicant: existingApp,
+                    matchingFields: ['Name'],
+                    differences: []
+                };
+                
+                // Check other fields for differences
+                const fieldsToCompare = [
+                    'BDATE', 'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY'
+                ];
+                
+                fieldsToCompare.forEach(field => {
+                    const newValue = applicantData[field] || '';
+                    const existingValue = existingApp[field] || '';
+                    
+                    if (newValue && existingValue && newValue.toLowerCase() !== existingValue.toLowerCase()) {
+                        matchDetails.differences.push({
+                            field: field,
+                            newValue: newValue,
+                            existingValue: existingValue
+                        });
+                    }
+                });
+                
+                matches.push(matchDetails);
+            }
+        }
+        
+        return {
+            hasMatches: matches.length > 0,
+            matches: matches
+        };
+    }
+
+    // Function to show detailed duplicate confirmation
+    function showDuplicateConfirmation(applicantData, matches) {
+        return new Promise((resolve) => {
+            // Create modal for duplicate confirmation
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            
+            let message = `<div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2 style="color: #ff9800;">Potential Duplicate Found</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <p><strong>The applicant you're adding has the same name as existing applicant(s):</strong></p>`;
+            
+            matches.forEach((match, index) => {
+                const existing = match.existingApplicant;
+                message += `
+                    <div style="background: #fff3cd; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #ff9800;">
+                        <h4 style="margin: 0 0 10px 0; color: #856404;">
+                            <i class="fas fa-exclamation-triangle"></i> 
+                            Existing Applicant: <span style="background: #ffeb3b; padding: 2px 5px;">${existing.NAME}</span>
+                        </h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">`;
+                
+                // Show matching fields
+                message += `
+                            <div>
+                                <strong>Matching Fields:</strong>
+                                <ul style="margin: 5px 0; padding-left: 20px; color: #d32f2f;">`;
+                match.matchingFields.forEach(field => {
+                    message += `<li>${field}</li>`;
+                });
+                message += `</ul>
+                            </div>`;
+                
+                // Show differences if any
+                if (match.differences.length > 0) {
+                    message += `
+                            <div>
+                                <strong>Differences Found:</strong>
+                                <ul style="margin: 5px 0; padding-left: 20px; color: #388e3c;">`;
+                    match.differences.forEach(diff => {
+                        message += `<li>${diff.field}: New="${diff.newValue}" vs Existing="${diff.existingValue}"</li>`;
+                    });
+                    message += `</ul>
+                            </div>`;
+                }
+                
+                message += `
+                        </div>
+                    </div>`;
+            });
+            
+            message += `
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 4px; margin: 15px 0;">
+                        <p><strong>New Applicant Details:</strong></p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Name:</strong> ${applicantData.NAME}</div>
+                            <div><strong>Birth Date:</strong> ${applicantData.BDATE || 'Not provided'}</div>
+                            <div><strong>Phone:</strong> ${applicantData.CELLPHONE || 'Not provided'}</div>
+                            <div><strong>Email:</strong> ${applicantData.EMAIL || 'Not provided'}</div>
+                        </div>
+                    </div>
+                    
+                    <p><strong>Do you want to proceed with adding this applicant?</strong></p>
+                    <p style="font-size: 14px; color: #666;">If this is a different person, click "Add Anyway". If it's the same person, click "Cancel".</p>
+                </div>
+                <div class="modal-footer">
+                    <button id="cancel-add" class="cancel-btn" style="margin-right: 10px;">Cancel</button>
+                    <button id="add-anyway" class="save-btn" style="background: #ff9800;">Add Anyway</button>
+                </div>
+            </div>`;
+            
+            modal.innerHTML = message;
+            document.body.appendChild(modal);
+            
+            // Add event listeners
+            document.getElementById('cancel-add').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(false);
+            });
+            
+            document.getElementById('add-anyway').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve(true);
+            });
+            
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    resolve(false);
+                }
+            });
+        });
+    }
+
+    // Function to highlight matching applicants in the table
+    function highlightMatchingApplicants(matches) {
+        const tbody = elements.mainApplicantTable.querySelector('tbody');
+        if (!tbody) return;
+        
+        // Remove any existing highlights
+        const existingHighlights = tbody.querySelectorAll('.duplicate-highlight');
+        existingHighlights.forEach(row => {
+            row.classList.remove('duplicate-highlight');
+        });
+        
+        // Highlight matching rows
+        matches.forEach(match => {
+            const rows = tbody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const nameCell = row.querySelector('td:nth-child(3)'); // NAME column
+                if (nameCell && nameCell.textContent.trim().toLowerCase() === match.existingApplicant.NAME.toLowerCase()) {
+                    row.classList.add('duplicate-highlight');
+                    
+                    // Scroll to the first highlighted row
+                    if (!window.hasScrolledToHighlight) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        window.hasScrolledToHighlight = true;
+                    }
+                }
+            });
+        });
+    }
+
+    // Function to remove highlights
+    function removeHighlights() {
+        const tbody = elements.mainApplicantTable.querySelector('tbody');
+        if (!tbody) return;
+        
+        const highlightedRows = tbody.querySelectorAll('.duplicate-highlight');
+        highlightedRows.forEach(row => {
+            row.classList.remove('duplicate-highlight');
+        });
+        
+        window.hasScrolledToHighlight = false;
+    }
+
+    // Manual form submission
+    if (elements.manualApplicantForm) {
+        elements.manualApplicantForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            addManualApplicant();
+        });
+    }
+
+    function addManualApplicant() {
+        const formData = new FormData(elements.manualApplicantForm);
+        const applicantData = {};
+        
+        // Map form fields to applicant data structure
+        formData.forEach((value, key) => {
+            const fieldName = key.replace('manual-', '').toUpperCase();
+            applicantData[fieldName] = value;
+        });
+        
+        // Generate SRS ID
+        applicantData['SRS ID'] = generateUniqueId();
+        
+        // Process date fields
+        if (applicantData['BDATE']) {
+            const date = new Date(applicantData['BDATE']);
+            applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+        }
+        
+        // Set registration date to current date
+        applicantData['REG. DATE'] = new Date().toLocaleDateString();
+        applicantData['DATE CREATED'] = new Date().toLocaleString();
+        applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
+        
+        // Check for name duplicates (even if other fields are different)
+        const duplicateCheck = checkApplicantDuplicate(applicantData);
+        
+        if (duplicateCheck.hasMatches) {
+            // Highlight the matching applicants in the table
+            highlightMatchingApplicants(duplicateCheck.matches);
+            
+            // Show detailed confirmation modal
+            showDuplicateConfirmation(applicantData, duplicateCheck.matches)
+                .then(shouldProceed => {
+                    if (!shouldProceed) {
+                        // Remove highlights if user cancels
+                        removeHighlights();
+                        return;
+                    }
+                    
+                    // User chose to proceed - add the applicant
+                    proceedWithAddingApplicant(applicantData);
+                });
+        } else {
+            // No duplicates found - proceed with adding
+            proceedWithAddingApplicant(applicantData);
+        }
+    }
+
+    // Separate function to handle the actual adding of applicant
+    function proceedWithAddingApplicant(applicantData) {
+        // Handle photo
+        const tempPhoto = localStorage.getItem('tempManualPhoto');
+        if (tempPhoto) {
+            const photoId = applicantData['SRS ID'];
+            localStorage.setItem(`photo_${photoId}`, tempPhoto);
+            localStorage.removeItem('tempManualPhoto');
+            applicantData['PHOTO'] = tempPhoto;
+        }
+        
+        // Save to localStorage
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        savedApplicants.push(applicantData);
+        saveMainApplicants(savedApplicants);
+        
+        // Refresh display and remove highlights
+        displayMainApplicants(savedApplicants);
+        removeHighlights();
+        
+        // Close modal and show success message
+        closeManualModal();
+        showNotification('Applicant added successfully!', 'success', elements.manualNotification);
+        
+        // Clear the temporary photo
+        localStorage.removeItem('tempManualPhoto');
+    }
+
+    // Update the usePhoto function to handle manual form photos
+    function usePhoto() {
+        if (capturedPhoto) {
+            if (currentEditId && currentEditId.startsWith('manual_')) {
+                // For manual form
+                localStorage.setItem('tempManualPhoto', capturedPhoto);
+                elements.manualPhotoPreview.src = capturedPhoto;
+                elements.manualPhotoPreview.style.display = 'block';
+                elements.manualPhotoPlaceholder.style.display = 'none';
+                elements.manualRemovePhotoBtn.style.display = 'block';
+            } else {
+                // For edit form (existing functionality)
+                localStorage.setItem(`tempPhoto_${currentEditId}`, capturedPhoto);
+                elements.editPhotoPreview.src = capturedPhoto;
+                elements.editPhotoPreview.style.display = 'block';
+                elements.photoPlaceholder.style.display = 'none';
+                elements.removePhotoBtn.style.display = 'block';
+            }
+            
+            closeCamera();
+            showNotification('Photo captured successfully!', 'success');
+        }
+    }
     
     if (localStorage.getItem('isLoggedIn') !== 'true') {
         window.location.href = 'login.html';
@@ -70,7 +466,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Camera functionality
     if (elements.takePhotoBtn) {
         elements.takePhotoBtn.addEventListener('click', openCamera);
     }
@@ -941,6 +1336,51 @@ document.addEventListener('DOMContentLoaded', function () {
                     const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
                     
                     const { duplicates, uniqueNewApplicants } = checkForDuplicates(processedData, savedApplicants);
+
+                    if (duplicates.length > 0) {
+                        // Highlight duplicates in the table
+                        highlightMatchingApplicants(duplicates.map(dup => ({
+                            existingApplicant: dup.existing,
+                            matchingFields: ['Possible Duplicate'],
+                            differences: []
+                        })));
+                        
+                        elements.duplicateWarning.innerHTML = `
+                            <strong>Found ${duplicates.length} potential duplicate(s):</strong> 
+                            These applicants appear to already exist in the system. They have been highlighted in the table above.
+                            <br><br>
+                            <button id="proceed-upload" class="save-btn" style="padding: 8px 15px; font-size: 14px;">
+                                Add ${uniqueNewApplicants.length} New Applicants Anyway
+                            </button>
+                        `;
+                        elements.duplicateWarning.style.display = 'block';
+                        
+                        // Add event listener for proceed button
+                        document.getElementById('proceed-upload').addEventListener('click', function() {
+                            uniqueNewApplicants.forEach(applicant => {
+                                if (!applicant['SRS ID']) {
+                                    applicant['SRS ID'] = generateUniqueId();
+                                }
+                                
+                                applicant['DATE CREATED'] = new Date().toLocaleString();
+                                applicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
+                                
+                                savedApplicants.push(applicant);
+                            });
+                            
+                            saveMainApplicants(savedApplicants);
+                            displayMainApplicants(savedApplicants);
+                            removeHighlights();
+                            
+                            showUploadNotification(`Added ${uniqueNewApplicants.length} new applicant(s). ${duplicates.length} duplicate(s) were skipped.`, 'success');
+                            if (elements.uploadFileName) elements.uploadFileName.value = '';
+                            if (elements.addBtn) elements.addBtn.disabled = true;
+                            if (elements.uploadFileInput) elements.uploadFileInput.value = '';
+                            elements.duplicateWarning.style.display = 'none';
+                        });
+                        
+                        return;
+                    }
                     
                     if (elements.duplicateWarning && duplicates.length > 0) {
                         elements.duplicateWarning.innerHTML = `<strong>Found ${duplicates.length} duplicate(s):</strong> These applicants already exist in the system and will not be added.`;
