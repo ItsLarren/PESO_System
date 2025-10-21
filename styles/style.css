@@ -1497,3 +1497,99 @@ input[type="date"]:after {
     content: " *";
     color: #f44336;
 }
+
+/* Enhanced Expandable Section Styles */
+.expandable-section {
+    margin: 15px 0;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.expandable-header {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    padding: 12px 15px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.3s ease;
+}
+
+.expandable-header:hover {
+    background: linear-gradient(135deg, #bbdefb, #90caf9);
+}
+
+.expandable-content {
+    padding: 15px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.expandable-section.expanded .expandable-header {
+    background: linear-gradient(135deg, #bbdefb, #90caf9);
+    border-bottom: 2px solid #2196f3;
+}
+
+/* Course list styles */
+.course-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+}
+
+.course-item:last-child {
+    border-bottom: none;
+}
+
+.course-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.course-count {
+    font-weight: bold;
+    color: #2196f3;
+    margin-right: 10px;
+}
+
+.course-percentage {
+    color: #4caf50;
+    font-size: 12px;
+    background: #e8f5e8;
+    padding: 2px 6px;
+    border-radius: 10px;
+}
+
+.course-summary {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    margin-top: 10px;
+    border-top: 2px solid #2196f3;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Smooth transitions */
+.expandable-content {
+    transition: max-height 0.3s ease;
+}
+
+.expandable-section:not(.expanded) .expandable-content {
+    max-height: 0;
+    padding: 0 15px;
+    overflow: hidden;
+}
+
+.expandable-section.expanded .expandable-content {
+    max-height: 400px;
+}

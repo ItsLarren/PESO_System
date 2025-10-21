@@ -1425,14 +1425,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeExpandableSections() {
         document.querySelectorAll('.expandable-section').forEach(section => {
             const header = section.querySelector('.expandable-header');
+            const content = section.querySelector('.expandable-content');
             const icon = header.querySelector('i');
             
             header.addEventListener('click', function() {
-                section.classList.toggle('expanded');
-                if (section.classList.contains('expanded')) {
-                    icon.className = 'fas fa-chevron-up';
-                } else {
+                const isExpanded = section.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    section.classList.remove('expanded');
+                    content.style.display = 'none';
                     icon.className = 'fas fa-chevron-down';
+                    icon.style.transform = 'rotate(0deg)';
+                } else {
+                    section.classList.add('expanded');
+                    content.style.display = 'block';
+                    icon.className = 'fas fa-chevron-up';
+                    icon.style.transform = 'rotate(180deg)';
                 }
             });
         });
@@ -1501,8 +1509,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const status = applicant['PROGRAM STATUS'] || 'Not Specified';
             const specificProgram = applicant['SPECIFIC PROGRAM'] || 'No Specific Program';
             const education = applicant['EDUC LEVEL'] || 'Not Specified';
-            const course = applicant['COURSE'] || 'No Course Specified';
+            let course = applicant['COURSE'] || 'No Course Specified';
             const age = parseInt(applicant.AGE) || 0;
+            
+            // Clean course data
+            if (course && course !== 'No Course Specified' && course !== 'N/A') {
+                course = course.trim();
+                // Handle common variations
+                if (course.toLowerCase().includes('information technology') || course.toLowerCase().includes('it')) {
+                    course = 'Information Technology';
+                } else if (course.toLowerCase().includes('business') || course.toLowerCase().includes('bussiness')) {
+                    course = 'Business Administration';
+                } else if (course.toLowerCase().includes('education') || course.toLowerCase().includes('educ')) {
+                    course = 'Education';
+                } else if (course.toLowerCase().includes('computer') || course.toLowerCase().includes('comsci')) {
+                    course = 'Computer Science';
+                } else if (course.toLowerCase().includes('engineering')) {
+                    course = 'Engineering';
+                } else if (course.toLowerCase().includes('accounting')) {
+                    course = 'Accounting';
+                } else if (course.toLowerCase().includes('nursing')) {
+                    course = 'Nursing';
+                }
+            }
             
             // Age groups
             if (age < 20) stats.byAgeGroup['Below 20']++;
@@ -2205,7 +2234,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         'Last Name': record['Last Name'] || record['LAST NAME'] || record['last_name'],
                         'Given Name': record['Given Name'] || record['GIVEN NAME'] || record['given_name'] || record['First Name'] || record['FIRST NAME'] || record['first name'],
                         'Middle Name': record['Middle Name'] || record['MIDDLE NAME'] || record['middle_name'],
-                        'Full Name': record['Full Name'] || record['FULL NAME'] || record['full_name'] || record['NAME'],
+                        'NAME': record['Full Name'] || record['FULL NAME'] || record['full name'] || record['NAME'] || record['Name'] || record['name'] || record['Complete Name'] || record['COMPLETE NAME'] || record['complete name'] || record['Applicant Name'] || record['APPLICANT NAME'] || record['applicant name'],
                         'Date of Birth': record['Date of Birth'] || record['DATE OF BIRTH'] || record['date of birth'] || ['Birthday'] || record['BIRTHDAY'] || record['birthday'] || record['Bdate'] || record['BDATE'] || record['bdate'] || record['bDate'],
                         'Age': record['Age'] || record['AGE'] || record['age'],
                         'Sex': record['Sex'] || record['SEX'] || record['sex'] || record['Gender'] || record['GENDER'] || record['gender'],
@@ -2216,15 +2245,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         'Province': record['Province'] || record['PROVINCE'] || record['province'],
                         'Contact No.': record['Contact No.'] || record['CONTACT NO.'] || record['contact no.'] || record['Cellphone'] || record['CELLPHONE'] || record['cellphone'] || record['Phone No.'] || record['PHONE NO.'] || record['phone no.'],
                         'Employment Status': record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Emp. Status'] || record['EMP. STATUS'] || record['emp. status'],
-                        'If Employed/Self Employed': record['If Employed/Self Employed'] || record['IF EMPLOYED/SELF EMPLOYED'] || record['if Employed/self employed'] || record[''],
-                        'Educational Attainment': record['Educational Attainment'] || record['EDUCATIONAL ATTAINMENT'] || record['educational attainment'] || record[''],
-                        'Course': record['Course'] || record['COURSE'] || record['course'] || record[''],
-                        'Skills': record['Skills'] || record['SKILLS'] || record['skills'] || record[''],
-                        'Work Experience': record['Work Experience'] || record['WORK EXPERIENCE'] || record['work experience'] || record[''],
-                        'Sector': record['Sector'] || record['SECTOR'] || record['sector'] || record[''],
-                        'Program/Services Provided': record['Program/Services Provided'] || record['PROGRAM/SERVICES PROVIDED'] || record['program/services provided'] || record[''],
-                        'Remarks': record['Remarks'] || record['REMARKS'] || record['remarks'] || record[''],
-                        'Registration Date': record['Registration Date'] || record['REGISTRATION DATE'] || record['registration date'] || record[''],
+                        'If Employed/Self Employed': record['If Employed/Self Employed'] || record['IF EMPLOYED/SELF EMPLOYED'] || record['if employed/self employed'] || record['If Employed'] || record['IF EMPLOYED'] || record['if employed'] || record['Self Employed'] || record['SELF EMPLOYED'] || record['self employed'],
+                        'Educational Attainment': record['Educational Attainment'] || record['EDUCATIONAL ATTAINMENT'] || record['educational attainment'] || record['Educ Level'] || record['EDUC LEVEL'] || record['educ level'],
+                        'Course': record['Course'] || record['COURSE'] || record['course'],
+                        'Skills': record['Skills'] || record['SKILLS'] || record['skills'],
+                        'Work Experience': record['Work Experience'] || record['WORK EXPERIENCE'] || record['work experience'],
+                        'Sector': record['Sector'] || record['SECTOR'] || record['sector'],
+                        'Program/Services Provided': record['Program/Services Provided'] || record['PROGRAM/SERVICES PROVIDED'] || record['program/services provided'] || record['Program'] || record['PROGRAM'] || record['program'] || record['Services Provided'] || record['SERVICES PROVIDED'] || record['services provided'],
+                        'Remarks': record['Remarks'] || record['REMARKS'] || record['remarks'],
+                        'Registration Date': record['Registration Date'] || record['REGISTRATION DATE'] || record['registration date'] || record['Reg. Date'] || record['REG. DATE'] || record['reg. date'],
                     };
                     
                     value = fieldMap[column] || record[column] || 'N/A';
@@ -2332,37 +2361,71 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function generateExpandableCourseStats(stats) {
-        const collegeGrads = stats.byEducation['College Graduate'] || stats.byEducation['College'] || 0;
-        
+        // Calculate total college graduates
+        const collegeGrads = (stats.byEducation['College Graduate'] || 0) + 
+                            (stats.byEducation['College'] || 0) + 
+                            (stats.byEducation['Bachelor'] || 0) +
+                            (stats.byEducation['Bachelor\'s Degree'] || 0);
+
         if (collegeGrads === 0) {
             return '<p style="text-align: center; color: #666; margin: 10px 0;">No college graduates found.</p>';
         }
         
-        // Get top courses
-        const topCourses = Object.entries(stats.byCourse)
-            .filter(([course, count]) => course !== 'No Course Specified' && course !== 'N/A' && count > 0)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10);
-        
+        // Get all courses with counts
+        const allCourses = Object.entries(stats.byCourse)
+            .filter(([course, count]) => {
+                // Filter out empty or irrelevant course names
+                return course && 
+                    course !== 'No Course Specified' && 
+                    course !== 'N/A' && 
+                    course !== '' && 
+                    course !== 'null' &&
+                    course !== 'undefined' &&
+                    count > 0;
+            })
+            .sort((a, b) => b[1] - a[1]);
+
         let coursesHTML = '';
-        topCourses.forEach(([course, count]) => {
-            const percentage = ((count / collegeGrads) * 100).toFixed(1);
+        
+        if (allCourses.length === 0) {
+            coursesHTML = '<p style="text-align: center; color: #666; padding: 10px;">No course data available for college graduates.</p>';
+        } else {
+            allCourses.forEach(([course, count]) => {
+                const percentage = ((count / collegeGrads) * 100).toFixed(1);
+                coursesHTML += `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; align-items: center;">
+                        <span style="flex: 1;">${course}</span>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="font-weight: bold; color: #2196f3;">${count}</span>
+                            <span style="color: #4caf50; font-size: 12px; background: #e8f5e8; padding: 2px 6px; border-radius: 10px;">${percentage}%</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Add summary row
             coursesHTML += `
-                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
-                    <span>${course}</span>
-                    <span><strong>${count}</strong> (${percentage}%)</span>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0; margin-top: 10px; border-top: 2px solid #2196f3; background: #f8f9fa; border-radius: 4px; font-weight: bold;">
+                    <span>Total College Graduates</span>
+                    <span style="color: #2196f3;">${collegeGrads}</span>
                 </div>
             `;
-        });
-        
+        }
+
         return `
             <div class="expandable-section">
-                <div class="expandable-header">
-                    <span><strong>${collegeGrads} College Graduates - Course Breakdown</strong></span>
-                    <i class="fas fa-chevron-down"></i>
+                <div class="expandable-header" style="cursor: pointer; background: #e3f2fd; padding: 12px 15px; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span style="font-weight: bold; color: #1976d2;">
+                            <i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>
+                            ${collegeGrads} College Graduates - Course Breakdown
+                            ${allCourses.length > 0 ? `<span style="font-size: 12px; color: #666; margin-left: 8px;">(${allCourses.length} courses)</span>` : ''}
+                        </span>
+                        <i class="fas fa-chevron-down" style="transition: transform 0.3s ease;"></i>
+                    </div>
                 </div>
-                <div class="expandable-content">
-                    ${coursesHTML || '<p style="text-align: center; color: #666;">No course data available.</p>'}
+                <div class="expandable-content" style="display: none; padding: 15px; background: white; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 4px 4px;">
+                    ${coursesHTML}
                 </div>
             </div>
         `;
@@ -2469,6 +2532,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
+        // Try with spaces removed and underscores
+        for (const label of possibleLabels) {
+            const cleanLabel = label.toLowerCase().replace(/[\s_]/g, '');
+            for (const recordKey in record) {
+                const cleanRecordKey = recordKey.toLowerCase().replace(/[\s_]/g, '');
+                if (cleanRecordKey === cleanLabel) {
+                    return record[recordKey];
+                }
+            }
+        }
+        
         return null;
     }
 
@@ -2489,8 +2563,15 @@ document.addEventListener('DOMContentLoaded', function () {
             return normalizeBooleanValue(value);
         }
         
+        // Handle numeric fields that might have .0 decimals
+        if (fieldKey === 'AGE' || fieldKey === 'CELLPHONE') {
+            if (value.includes('.0')) {
+                value = value.replace('.0', '');
+            }
+        }
+        
         // Handle empty values
-        if (value === '' || value === 'null' || value === 'undefined') {
+        if (value === '' || value === 'null' || value === 'undefined' || value === 'NaN') {
             return 'N/A';
         }
         
@@ -2501,7 +2582,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dateValue) return 'N/A';
         
         try {
-            // Try to parse as Date object first
+            // Handle Excel serial date numbers (like 45306, 45342 from your file)
+            if (!isNaN(dateValue) && dateValue > 25569) { // Excel date serial numbers
+                const excelEpoch = new Date(1900, 0, 1);
+                const date = new Date(excelEpoch.getTime() + (dateValue - 1) * 24 * 60 * 60 * 1000);
+                return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+            }
+            
+            // Try to parse as Date object
             let dateObj = new Date(dateValue);
             
             if (isNaN(dateObj.getTime())) {
@@ -2550,7 +2638,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Get all field mappings from the manual form
             const fieldMappings = getFormFieldMappings();
             
-            // Try to match each field
+            // First pass: get all basic field values
             Object.keys(fieldMappings).forEach(fieldKey => {
                 const possibleLabels = fieldMappings[fieldKey];
                 let value = findMatchingValue(record, possibleLabels);
@@ -2562,6 +2650,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 processedRecord[fieldKey] = value || 'N/A';
             });
+            
+            // SPECIAL HANDLING FOR NAME FIELD:
+            // If NAME is still 'N/A', try to construct it from individual parts
+            if (!processedRecord['NAME'] || processedRecord['NAME'] === 'N/A') {
+                processedRecord['NAME'] = combineNameFromParts(record, processedRecord);
+            }
             
             // Generate SRS ID if not present
             if (!processedRecord['SRS ID'] || processedRecord['SRS ID'] === 'N/A') {
@@ -2578,6 +2672,91 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         
         return processedData;
+    }
+
+    function combineNameFromParts(record, processedRecord) {
+        // Try to get name parts from the processed record first
+        let lastName = processedRecord['LAST NAME'];
+        let firstName = processedRecord['FIRST NAME'];
+        let middleName = processedRecord['MIDDLE NAME'];
+        
+        // If processed record has 'N/A', try to get from original record
+        if (lastName === 'N/A') {
+            lastName = findMatchingValue(record, ['LAST NAME', 'Last Name', 'LASTNAME', 'last name', 'Surname']);
+        }
+        if (firstName === 'N/A') {
+            firstName = findMatchingValue(record, ['FIRST NAME', 'First Name', 'FIRSTNAME', 'first name', 'Given Name']);
+        }
+        if (middleName === 'N/A') {
+            middleName = findMatchingValue(record, ['MIDDLE NAME', 'Middle Name', 'MIDDLENAME', 'middle name', 'Middle Initial']);
+        }
+        
+        // Clean the values
+        lastName = (lastName && lastName !== 'N/A') ? lastName.trim() : '';
+        firstName = (firstName && firstName !== 'N/A') ? firstName.trim() : '';
+        middleName = (middleName && middleName !== 'N/A') ? middleName.trim() : '';
+        
+        // Construct full name in "Last Name, First Name Middle Name" format
+        if (lastName && firstName) {
+            let fullName = `${lastName}, ${firstName}`;
+            if (middleName) {
+                fullName += ` ${middleName}`;
+            }
+            return fullName;
+        }
+        
+        // If we have individual parts but they're not in the expected fields
+        // Try to find any name-like fields in the original record
+        for (const key in record) {
+            const lowerKey = key.toLowerCase();
+            if ((lowerKey.includes('name') || lowerKey.includes('full') || lowerKey.includes('complete')) && 
+                record[key] && record[key] !== 'N/A') {
+                return record[key];
+            }
+        }
+        
+        return 'N/A';
+    }
+
+    function combineNameParts(record, processedRecord) {
+        // Strategy 1: Look for existing full name first
+        const fullNameFields = ['Name', 'name', 'Full Name', 'full name', 'Complete Name', 'NAME'];
+        for (const field of fullNameFields) {
+            if (record[field] && record[field] !== 'N/A') {
+                return record[field];
+            }
+        }
+        
+        // Strategy 2: Combine from individual parts
+        const lastName = processedRecord['LAST NAME'] !== 'N/A' ? processedRecord['LAST NAME'] : '';
+        const firstName = processedRecord['FIRST NAME'] !== 'N/A' ? processedRecord['FIRST NAME'] : '';
+        const middleName = processedRecord['MIDDLE NAME'] !== 'N/A' ? processedRecord['MIDDLE NAME'] : '';
+        
+        if (lastName && firstName) {
+            // Filipino format: "Last Name, First Name Middle Name"
+            let fullName = `${lastName}, ${firstName}`;
+            if (middleName && middleName.trim()) {
+                fullName += ` ${middleName.trim()}`;
+            }
+            return fullName.trim();
+        }
+        
+        // Strategy 3: Try reverse if fields might be swapped
+        if (firstName && lastName) {
+            return `${lastName}, ${firstName} ${middleName}`.trim();
+        }
+        
+        // Strategy 4: Look for any name-like fields in the original record
+        for (const key in record) {
+            if (typeof record[key] === 'string' && 
+                (key.toLowerCase().includes('name') || 
+                key.toLowerCase().includes('complete') ||
+                key.toLowerCase().includes('full'))) {
+                return record[key];
+            }
+        }
+        
+        return 'N/A';
     }
 
     function showFieldMapping(originalRecord, processedRecord) {
