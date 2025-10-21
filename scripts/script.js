@@ -48,61 +48,132 @@ document.addEventListener('DOMContentLoaded', function () {
         manualPhotoPlaceholder: document.getElementById('manual-photo-placeholder'),
         manualUploadPhotoBtn: document.getElementById('manual-upload-photo-btn'),
         manualTakePhotoBtn: document.getElementById('manual-take-photo-btn'),
-        manualRemovePhotoBtn: document.getElementById('manual-remove-photo-btn')
+        manualRemovePhotoBtn: document.getElementById('manual-remove-photo-btn'),
+        advancedFiltersBtn: document.getElementById('advanced-filters-btn'),
+        advancedFiltersPanel: document.getElementById('advanced-filters-panel'),
+        applyFiltersBtn: document.getElementById('apply-filters-btn'),
+        clearFiltersBtn: document.getElementById('clear-filters-btn'),
+        sortSelect: document.getElementById('sort-select'),
+        sortOrder: document.getElementById('sort-order'),
+        generateReportBtn: document.getElementById('generate-report-btn'),
+        exportReportBtn: document.getElementById('export-report-btn')
     };
 
     let currentEditId = null;
     let stream = null;
     let capturedPhoto = null;
+    let activeFilters = {};
 
-    if (elements.addManualBtn) {
-        elements.addManualBtn.addEventListener('click', openManualModal);
+    // Initialize all functionality
+    function initializeApp() {
+        initializeManualForm();
+        initializeCamera();
+        initializeSearch();
+        initializeEditModal();
+        initializeFileUploads();
+        initializeAdvancedFilters();
+        initializeReporting();
+        loadMainApplicants();
+        loadImportedData();
+        
+        // Check authentication
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Display current user
+        displayCurrentUser();
     }
 
-    if (elements.closeManual) {
-        elements.closeManual.addEventListener('click', closeManualModal);
-    }
+    // Initialize manual form functionality
+    function initializeManualForm() {
+        if (elements.addManualBtn) {
+            elements.addManualBtn.addEventListener('click', openManualModal);
+        }
 
-    if (elements.cancelManual) {
-        elements.cancelManual.addEventListener('click', closeManualModal);
-    }
+        if (elements.closeManual) {
+            elements.closeManual.addEventListener('click', closeManualModal);
+        }
 
-    if (elements.manualModal) {
-        elements.manualModal.addEventListener('click', function(event) {
-            if (event.target === elements.manualModal) {
-                closeManualModal();
-            }
-        });
-    }
+        if (elements.cancelManual) {
+            elements.cancelManual.addEventListener('click', closeManualModal);
+        }
 
-    // Photo functionality for manual form
-    if (elements.manualUploadPhotoBtn && elements.manualPhotoInput) {
-        elements.manualUploadPhotoBtn.addEventListener('click', function() {
-            elements.manualPhotoInput.click();
-        });
-    }
+        if (elements.manualModal) {
+            elements.manualModal.addEventListener('click', function(event) {
+                if (event.target === elements.manualModal) {
+                    closeManualModal();
+                }
+            });
+        }
 
-    if (elements.manualPhotoInput) {
-        elements.manualPhotoInput.addEventListener('change', function(e) {
-            handleManualPhotoUpload(e);
-        });
-    }
+        // Set default values for manual form
+        if (elements.manualApplicantForm) {
+            // Set default values to N/A for optional fields
+            const optionalFields = [
+                'manual-street-address', 'manual-course', 'manual-disability',
+                'manual-preferred-position', 'manual-skills', 'manual-work-experience',
+                'manual-country', 'manual-latest-country', 'manual-remarks'
+            ];
+            
+            optionalFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = 'N/A';
+                }
+            });
+            
+            // Set default values for dropdowns
+            const defaultDropdowns = {
+                'manual-4ps': 'No',
+                'manual-pwd': 'No',
+                'manual-ofw': 'No',
+                'manual-former-ofw': 'No'
+            };
+            
+            Object.keys(defaultDropdowns).forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.value = defaultDropdowns[fieldId];
+                }
+            });
+            
+            elements.manualApplicantForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                addManualApplicant();
+            });
+        }
 
-    if (elements.manualRemovePhotoBtn) {
-        elements.manualRemovePhotoBtn.addEventListener('click', function() {
-            elements.manualPhotoPreview.src = '';
-            elements.manualPhotoPreview.style.display = 'none';
-            elements.manualPhotoPlaceholder.style.display = 'flex';
-            elements.manualRemovePhotoBtn.style.display = 'none';
-            elements.manualPhotoInput.value = '';
-        });
-    }
+        // Photo functionality remains the same
+        if (elements.manualUploadPhotoBtn && elements.manualPhotoInput) {
+            elements.manualUploadPhotoBtn.addEventListener('click', function() {
+                elements.manualPhotoInput.click();
+            });
+        }
 
-    if (elements.manualTakePhotoBtn) {
-        elements.manualTakePhotoBtn.addEventListener('click', function() {
-            currentEditId = 'manual_' + Date.now();
-            openCamera();
-        });
+        if (elements.manualPhotoInput) {
+            elements.manualPhotoInput.addEventListener('change', function(e) {
+                handleManualPhotoUpload(e);
+            });
+        }
+
+        if (elements.manualRemovePhotoBtn) {
+            elements.manualRemovePhotoBtn.addEventListener('click', function() {
+                elements.manualPhotoPreview.src = '';
+                elements.manualPhotoPreview.style.display = 'none';
+                elements.manualPhotoPlaceholder.style.display = 'flex';
+                elements.manualRemovePhotoBtn.style.display = 'none';
+                elements.manualPhotoInput.value = '';
+            });
+        }
+
+        if (elements.manualTakePhotoBtn) {
+            elements.manualTakePhotoBtn.addEventListener('click', function() {
+                currentEditId = 'manual_' + Date.now();
+                openCamera();
+            });
+        }
     }
 
     function openManualModal() {
@@ -156,16 +227,23 @@ document.addEventListener('DOMContentLoaded', function () {
             const nameMatch = applicantData.NAME && existingApp.NAME && 
                             applicantData.NAME.toLowerCase() === existingApp.NAME.toLowerCase();
             
-            if (nameMatch) {
+            const bdateMatch = applicantData.BDATE && existingApp.BDATE && 
+                            applicantData.BDATE === existingApp.BDATE;
+            
+            if (nameMatch || bdateMatch) {
                 const matchDetails = {
                     existingApplicant: existingApp,
-                    matchingFields: ['Name'],
+                    matchingFields: [],
                     differences: []
                 };
                 
+                // Check which fields match
+                if (nameMatch) matchDetails.matchingFields.push('Name');
+                if (bdateMatch) matchDetails.matchingFields.push('Birthday');
+                
                 // Check other fields for differences
                 const fieldsToCompare = [
-                    'BDATE', 'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY'
+                    'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'
                 ];
                 
                 fieldsToCompare.forEach(field => {
@@ -194,18 +272,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Function to show detailed duplicate confirmation
     function showDuplicateConfirmation(applicantData, matches) {
         return new Promise((resolve) => {
-            // Create modal for duplicate confirmation
             const modal = document.createElement('div');
             modal.className = 'modal';
             modal.style.display = 'block';
             modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
             
-            let message = `<div class="modal-content" style="max-width: 700px;">
+            let message = `<div class="modal-content" style="max-width: 800px;">
                 <div class="modal-header">
                     <h2 style="color: #ff9800;">Potential Duplicate Found</h2>
                 </div>
                 <div style="padding: 20px;">
-                    <p><strong>The applicant you're adding has the same name as existing applicant(s):</strong></p>`;
+                    <p><strong>The applicant you're adding matches existing applicant(s):</strong></p>`;
             
             matches.forEach((match, index) => {
                 const existing = match.existingApplicant;
@@ -215,10 +292,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             <i class="fas fa-exclamation-triangle"></i> 
                             Existing Applicant: <span style="background: #ffeb3b; padding: 2px 5px;">${existing.NAME}</span>
                         </h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">`;
-                
-                // Show matching fields
-                message += `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                            <div>
+                                <strong>Current Program:</strong><br>
+                                ${existing['PROGRAM CATEGORY'] || 'Not specified'} - ${existing['PROGRAM STATUS'] || 'No status'}
+                            </div>
                             <div>
                                 <strong>Matching Fields:</strong>
                                 <ul style="margin: 5px 0; padding-left: 20px; color: #d32f2f;">`;
@@ -228,14 +306,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += `</ul>
                             </div>`;
                 
-                // Show differences if any
                 if (match.differences.length > 0) {
                     message += `
-                            <div>
+                            <div colspan="2">
                                 <strong>Differences Found:</strong>
                                 <ul style="margin: 5px 0; padding-left: 20px; color: #388e3c;">`;
                     match.differences.forEach(diff => {
-                        message += `<li>${diff.field}: New="${diff.newValue}" vs Existing="${diff.existingValue}"</li>`;
+                        message += `<li><strong>${diff.field}:</strong> New="${diff.newValue}" vs Existing="${diff.existingValue}"</li>`;
                     });
                     message += `</ul>
                             </div>`;
@@ -252,8 +329,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
                             <div><strong>Name:</strong> ${applicantData.NAME}</div>
                             <div><strong>Birth Date:</strong> ${applicantData.BDATE || 'Not provided'}</div>
+                            <div><strong>Program:</strong> ${applicantData['PROGRAM CATEGORY'] || 'Not specified'}</div>
                             <div><strong>Phone:</strong> ${applicantData.CELLPHONE || 'Not provided'}</div>
-                            <div><strong>Email:</strong> ${applicantData.EMAIL || 'Not provided'}</div>
                         </div>
                     </div>
                     
@@ -269,7 +346,6 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.innerHTML = message;
             document.body.appendChild(modal);
             
-            // Add event listeners
             document.getElementById('cancel-add').addEventListener('click', () => {
                 document.body.removeChild(modal);
                 resolve(false);
@@ -280,7 +356,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 resolve(true);
             });
             
-            // Close modal when clicking outside
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
                     document.body.removeChild(modal);
@@ -332,23 +407,22 @@ document.addEventListener('DOMContentLoaded', function () {
         window.hasScrolledToHighlight = false;
     }
 
-    // Manual form submission
-    if (elements.manualApplicantForm) {
-        elements.manualApplicantForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            addManualApplicant();
-        });
-    }
-
     function addManualApplicant() {
         const formData = new FormData(elements.manualApplicantForm);
         const applicantData = {};
         
         // Map form fields to applicant data structure
         formData.forEach((value, key) => {
-            const fieldName = key.replace('manual-', '').toUpperCase();
+            const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
             applicantData[fieldName] = value;
         });
+        const lastName = applicantData['LAST NAME'] || '';
+        const firstName = applicantData['FIRST NAME'] || '';
+        const middleName = applicantData['MIDDLE NAME'] || '';
+        
+        if (lastName && firstName) {
+            applicantData['NAME'] = `${lastName}, ${firstName} ${middleName}`.trim();
+        }
         
         // Generate SRS ID
         applicantData['SRS ID'] = generateUniqueId();
@@ -417,81 +491,35 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('tempManualPhoto');
     }
 
-    // Update the usePhoto function to handle manual form photos
-    function usePhoto() {
-        if (capturedPhoto) {
-            if (currentEditId && currentEditId.startsWith('manual_')) {
-                // For manual form
-                localStorage.setItem('tempManualPhoto', capturedPhoto);
-                elements.manualPhotoPreview.src = capturedPhoto;
-                elements.manualPhotoPreview.style.display = 'block';
-                elements.manualPhotoPlaceholder.style.display = 'none';
-                elements.manualRemovePhotoBtn.style.display = 'block';
-            } else {
-                // For edit form (existing functionality)
-                localStorage.setItem(`tempPhoto_${currentEditId}`, capturedPhoto);
-                elements.editPhotoPreview.src = capturedPhoto;
-                elements.editPhotoPreview.style.display = 'block';
-                elements.photoPlaceholder.style.display = 'none';
-                elements.removePhotoBtn.style.display = 'block';
-            }
-            
-            closeCamera();
-            showNotification('Photo captured successfully!', 'success');
+    // Initialize camera functionality
+    function initializeCamera() {
+        if (elements.takePhotoBtn) {
+            elements.takePhotoBtn.addEventListener('click', openCamera);
         }
-    }
-    
-    if (localStorage.getItem('isLoggedIn') !== 'true') {
-        window.location.href = 'login.html';
-        return;
-    }
 
-    const currentUser = localStorage.getItem('currentUser');
-    if (currentUser) {
-        const header = document.querySelector('header .header-content');
-        if (header) {
-            const userInfo = document.createElement('div');
-            userInfo.className = 'user-info';
-            userInfo.innerHTML = `
-                <span>Welcome, ${currentUser}</span>
-                <button id="logout-btn" class="logout-btn">Logout</button>
-            `;
-            header.appendChild(userInfo);
+        if (elements.closeCamera) {
+            elements.closeCamera.addEventListener('click', closeCamera);
+        }
 
-            document.getElementById('logout-btn').addEventListener('click', function() {
-                localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('currentUser');
-                window.location.href = 'login.html';
+        if (elements.cameraModal) {
+            elements.cameraModal.addEventListener('click', function(event) {
+                if (event.target === elements.cameraModal) {
+                    closeCamera();
+                }
             });
         }
-    }
 
-    if (elements.takePhotoBtn) {
-        elements.takePhotoBtn.addEventListener('click', openCamera);
-    }
+        if (elements.captureBtn) {
+            elements.captureBtn.addEventListener('click', capturePhoto);
+        }
 
-    if (elements.closeCamera) {
-        elements.closeCamera.addEventListener('click', closeCamera);
-    }
+        if (elements.retakeBtn) {
+            elements.retakeBtn.addEventListener('click', retakePhoto);
+        }
 
-    if (elements.cameraModal) {
-        elements.cameraModal.addEventListener('click', function(event) {
-            if (event.target === elements.cameraModal) {
-                closeCamera();
-            }
-        });
-    }
-
-    if (elements.captureBtn) {
-        elements.captureBtn.addEventListener('click', capturePhoto);
-    }
-
-    if (elements.retakeBtn) {
-        elements.retakeBtn.addEventListener('click', retakePhoto);
-    }
-
-    if (elements.usePhotoBtn) {
-        elements.usePhotoBtn.addEventListener('click', usePhoto);
+        if (elements.usePhotoBtn) {
+            elements.usePhotoBtn.addEventListener('click', usePhoto);
+        }
     }
 
     function openCamera() {
@@ -566,27 +594,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function usePhoto() {
         if (capturedPhoto) {
-            localStorage.setItem(`tempPhoto_${currentEditId}`, capturedPhoto);
-            
-            elements.editPhotoPreview.src = capturedPhoto;
-            elements.editPhotoPreview.style.display = 'block';
-            elements.photoPlaceholder.style.display = 'none';
-            elements.removePhotoBtn.style.display = 'block';
+            if (currentEditId && currentEditId.startsWith('manual_')) {
+                // For manual form
+                localStorage.setItem('tempManualPhoto', capturedPhoto);
+                elements.manualPhotoPreview.src = capturedPhoto;
+                elements.manualPhotoPreview.style.display = 'block';
+                elements.manualPhotoPlaceholder.style.display = 'none';
+                elements.manualRemovePhotoBtn.style.display = 'block';
+            } else {
+                // For edit form (existing functionality)
+                localStorage.setItem(`tempPhoto_${currentEditId}`, capturedPhoto);
+                elements.editPhotoPreview.src = capturedPhoto;
+                elements.editPhotoPreview.style.display = 'block';
+                elements.photoPlaceholder.style.display = 'none';
+                elements.removePhotoBtn.style.display = 'block';
+            }
             
             closeCamera();
-            
             showNotification('Photo captured successfully!', 'success');
         }
     }
 
-    if (elements.searchBtn && elements.clearSearchBtn && elements.searchInput) {
-        elements.searchBtn.addEventListener('click', searchApplicants);
-        elements.clearSearchBtn.addEventListener('click', clearSearch);
-        elements.searchInput.addEventListener('keyup', function(e) {
-            if (e.key === 'Enter') {
-                searchApplicants();
-            }
-        });
+    // Initialize search functionality
+    function initializeSearch() {
+        if (elements.searchBtn && elements.clearSearchBtn && elements.searchInput) {
+            elements.searchBtn.addEventListener('click', searchApplicants);
+            elements.clearSearchBtn.addEventListener('click', clearSearch);
+            elements.searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    searchApplicants();
+                }
+            });
+        }
     }
 
     function searchApplicants() {
@@ -661,389 +700,79 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function displayMainApplicants(applicants) {
-        if (!elements.mainApplicantTable) return;
-        
-        const tbody = elements.mainApplicantTable.querySelector('tbody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-
-        if (!applicants || !Array.isArray(applicants) || applicants.length === 0) {
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = 35; // Updated column count after removing unwanted columns
-            cell.textContent = 'No applicants found. Import data or add manually.';
-            cell.className = 'no-results';
-            row.appendChild(cell);
-            tbody.appendChild(row);
-            return;
-        }
-
-        const validApplicants = applicants.filter(applicant => applicant !== null && applicant !== undefined);
-        
-        validApplicants.forEach(applicant => {
-            addApplicantRow(tbody, applicant);
-        });
-        
-        clearSearch();
-    }
-    
-    const fieldMapping = {
-        'SRS ID': 'ID',
-        'NAME': 'Full Name',
-        'BDATE': 'Date of Birth',
-        'AGE': 'Age',
-        'SEX': 'Sex',
-        'CIVIL STATUS': 'Civil Status',
-        'STREET ADDRESS': 'Street',
-        'BARANGAY': 'Barangay',
-        'CITY/MUNICIPALITY': 'City',
-        'PROVINCE': 'Province',
-        'CELLPHONE': 'Contact No.',
-        'EMP. STATUS': 'Employment Status',
-        'EMP. TYPE': 'If Employed/Self Employment',
-        'EDUC LEVEL': 'Educational Attainment',
-        'COURSE': 'Course',
-        'SKILLS': 'Skills',
-        'WORK EXPERIENCE': 'Work Experience',
-        'REMARKS': 'Remarks',
-        'REG. DATE': 'Registration Date'
-    };
-
-    function excelDateToJSDate(serial) {
-        if (!serial || isNaN(serial)) return null;
-        
-        const utc_days = Math.floor(serial - 25569);
-        const utc_value = utc_days * 86400;
-        const date_info = new Date(utc_value * 1000);
-
-        const year = date_info.getFullYear();
-        const month = date_info.getMonth() + 1;
-        const day = date_info.getDate();
-
-        return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-    }
-
-    function processDateFields(data) {
-        return data.map(item => {
-            const newItem = {...item};
-            
-            if (newItem.BDATE && typeof newItem.BDATE === 'number') {
-                newItem.BDATE = excelDateToJSDate(newItem.BDATE);
+    // Initialize edit modal functionality
+    function initializeEditModal() {
+        if (elements.editModal) {
+            const closeBtn = elements.editModal.querySelector('.close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    elements.editModal.style.display = 'none';
+                });
             }
             
-            if (newItem['REG. DATE'] && typeof newItem['REG. DATE'] === 'number') {
-                newItem['REG. DATE'] = excelDateToJSDate(newItem['REG. DATE']);
+            const cancelBtn = document.getElementById('cancel-edit');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    elements.editModal.style.display = 'none';
+                });
             }
             
-            if (newItem['DATE CREATED'] && typeof newItem['DATE CREATED'] === 'number') {
-                newItem['DATE CREATED'] = excelDateToJSDate(newItem['DATE CREATED']);
-            }
-            
-            if (newItem['DATE LAST MODIFIED'] && typeof newItem['DATE LAST MODIFIED'] === 'number') {
-                newItem['DATE LAST MODIFIED'] = excelDateToJSDate(newItem['DATE LAST MODIFIED']);
-            }
-            
-            return newItem;
-        });
-    }
-    
-    function generateUniqueId() {
-        return Date.now().toString();
-    }
-
-    function parseName(fullName) {
-        if (!fullName) return { lastName: 'N/A', givenName: 'N/A', middleName: 'N/A' };
-        
-        const nameParts = fullName.trim().split(' ');
-        let lastName = 'N/A', givenName = 'N/A', middleName = 'N/A';
-        
-        if (nameParts.length >= 1) {
-            givenName = nameParts[0];
-        }
-        if (nameParts.length >= 2) {
-            lastName = nameParts[nameParts.length - 1];
-        }
-        if (nameParts.length >= 3) {
-            middleName = nameParts[1];
-        }
-        
-        return { lastName, givenName, middleName };
-    }
-
-    function mapExcelData(excelRow) {
-        const nameParts = parseName(excelRow['NAME'] || excelRow['Full Name']);
-        
-        return {
-            'ID': excelRow['SRS ID'] || excelRow['ID'] || generateUniqueId(),
-            'Last Name': nameParts.lastName,
-            'Given Name': nameParts.givenName,
-            'Middle Name': nameParts.middleName,
-            'Full Name': excelRow['NAME'] || excelRow['Full Name'] || 'N/A',
-            'Date of Birth': excelRow['BDATE'] || excelRow['Date of Birth'] || 'N/A',
-            'Age': excelRow['AGE'] || excelRow['Age'] || 'N/A',
-            'Sex': excelRow['SEX'] || excelRow['Sex'] || 'N/A',
-            'Civil Status': excelRow['CIVIL STATUS'] || excelRow['Civil Status'] || 'N/A',
-            'Street': excelRow['STREET ADDRESS'] || excelRow['Street'] || 'N/A',
-            'Barangay': excelRow['BARANGAY'] || excelRow['Barangay'] || 'N/A',
-            'City': excelRow['CITY/MUNICIPALITY'] || excelRow['City'] || 'N/A',
-            'Province': excelRow['PROVINCE'] || excelRow['Province'] || 'N/A',
-            'Contact No.': excelRow['CELLPHONE'] || excelRow['Contact No.'] || 'N/A',
-            'Employment Status': excelRow['EMP. STATUS'] || excelRow['Employment Status'] || 'N/A',
-            'If Employed/Self Employment': excelRow['EMP. TYPE'] || excelRow['If Employed/Self Employment'] || 'N/A',
-            'Educational Attainment': excelRow['EDUC LEVEL'] || excelRow['Educational Attainment'] || 'N/A',
-            'Course': excelRow['COURSE'] || excelRow['Course'] || 'N/A',
-            'Skills': excelRow['SKILLS'] || excelRow['Skills'] || 'N/A',
-            'Work Experience': excelRow['WORK EXPERIENCE'] || excelRow['Work Experience'] || 'N/A',
-            'Sector': excelRow['Sector'] || 'N/A',
-            'Program/Services Provided': excelRow['Program/Services Provided'] || 'N/A',
-            'Remarks': excelRow['REMARKS'] || excelRow['Remarks'] || 'N/A',
-            'Registration Date': excelRow['REG. DATE'] || excelRow['Registration Date'] || new Date().toLocaleDateString()
-        };
-    }
-
-    function saveDataToLocalStorage(data) {
-        try {
-            const existingData = JSON.parse(localStorage.getItem('importedData')) || [];
-            const combinedData = [...existingData, ...data];
-            
-            const jsonData = JSON.stringify(combinedData);
-            localStorage.setItem('importedData', jsonData);
-            
-            console.log('Data successfully saved to localStorage:', combinedData);
-            return true;
-        } catch (error) {
-            console.error('Error saving data to localStorage:', error);
-            return false;
-        }
-    }
-
-    function showNotification(message, type, notificationElement = elements.notification) {
-        if (!notificationElement) return;
-        
-        notificationElement.textContent = message;
-        notificationElement.classList.remove('success', 'error', 'warning');
-        notificationElement.classList.add(type);
-        notificationElement.style.display = 'block';
-
-        setTimeout(function () {
-            notificationElement.style.display = 'none';
-        }, 5000);
-    }
-
-    function showUploadNotification(message, type) {
-        showNotification(message, type, elements.uploadNotification);
-    }
-
-    function checkForDuplicates(newApplicants, existingApplicants) {
-        const duplicates = [];
-        const uniqueNewApplicants = [];
-        
-        newApplicants.forEach(newApp => {
-            let isDuplicate = false;
-            
-            for (const existingApp of existingApplicants) {
-                const nameMatch = newApp.NAME && existingApp.NAME && 
-                                 newApp.NAME.toLowerCase() === existingApp.NAME.toLowerCase();
-                
-                const bdateMatch = newApp.BDATE && existingApp.BDATE && 
-                                  newApp.BDATE === existingApp.BDATE;
-                
-                const phoneMatch = newApp.CELLPHONE && existingApp.CELLPHONE && 
-                                  newApp.CELLPHONE === existingApp.CELLPHONE;
-                
-                const emailMatch = newApp.EMAIL && existingApp.EMAIL && 
-                                  newApp.EMAIL.toLowerCase() === existingApp.EMAIL.toLowerCase();
-                
-                if ((nameMatch && bdateMatch) || (nameMatch && phoneMatch) || (phoneMatch && emailMatch)) {
-                    duplicates.push({
-                        applicant: newApp,
-                        existing: existingApp
-                    });
-                    isDuplicate = true;
-                    break;
-                }
-            }
-            
-            if (!isDuplicate) {
-                uniqueNewApplicants.push(newApp);
-            }
-        });
-        
-        return { duplicates, uniqueNewApplicants };
-    }
-    
-    function loadMainApplicants() {
-        try {
-            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-            const validApplicants = savedApplicants.filter(applicant => applicant !== null && applicant !== undefined);
-            displayMainApplicants(validApplicants);
-        } catch (error) {
-            console.error('Error loading applicants:', error);
-            displayMainApplicants([]);
-        }
-    }
-    
-    function saveMainApplicants(applicants) {
-        try {
-            const validApplicants = applicants.filter(applicant => applicant !== null && applicant !== undefined);
-            localStorage.setItem('mainApplicants', JSON.stringify(validApplicants));
-        } catch (error) {
-            console.error('Error saving applicants:', error);
-        }
-    }
-    
-    function addApplicantRow(tbody, applicant) {
-        const row = document.createElement('tr');
-        
-        const photoCell = document.createElement('td');
-        photoCell.className = 'photo-cell';
-        const photoId = applicant['SRS ID'] || applicant.ID;
-        const savedPhoto = localStorage.getItem(`photo_${photoId}`);
-        
-        if (savedPhoto) {
-            const img = document.createElement('img');
-            img.src = savedPhoto;
-            img.className = 'photo-thumbnail';
-            img.alt = 'Applicant Photo';
-            photoCell.appendChild(img);
-        } else {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-user photo-icon';
-            photoCell.appendChild(icon);
-        }
-        row.appendChild(photoCell);
-        
-        // Updated fields - removed PESO, AREA TYPE, AREA CLASS, username, firstname, lastname, email, course1, role1
-        const fields = [
-            'SRS ID', 'NAME', 'BDATE', 'AGE', 'SEX', 'CIVIL STATUS',
-            'STREET ADDRESS', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROVINCE', 'REGION', 'EMAIL', 'TELEPHONE',
-            'CELLPHONE', 'EMP. STATUS', 'EMP. TYPE', 'EDUC LEVEL', 'COURSE', '4Ps', 'PWD', 'DISABILITY',
-            'PREFERRED POSITION', 'SKILLS', 'WORK EXPERIENCE', 'OFW', 'COUNTRY', 'FORMER OFW', 'LATEST COUNTRY',
-            'REG. DATE', 'REMARKS', 'CREATED BY', 'DATE CREATED', 'LAST MODIFIED BY', 'DATE LAST MODIFIED'
-        ];
-        
-        fields.forEach(field => {
-            const cell = document.createElement('td');
-            cell.textContent = applicant[field] || '';
-            row.appendChild(cell);
-        });
-        
-        const actionCell = document.createElement('td');
-        actionCell.classList.add('action-buttons');
-        
-        const downloadBtn = document.createElement('button');
-        downloadBtn.classList.add('download-btn');
-        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
-        downloadBtn.addEventListener('click', function() {
-            exportApplicantToExcel(applicant);
-        });
-        
-        const editBtn = document.createElement('button');
-        editBtn.classList.add('edit-btn');
-        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-        editBtn.addEventListener('click', function() {
-            openEditModal(applicant);
-        });
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.classList.add('delete-btn');
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        deleteBtn.addEventListener('click', function() {
-            deleteApplicant(applicant);
-        });
-        
-        actionCell.appendChild(downloadBtn);
-        actionCell.appendChild(editBtn);
-        actionCell.appendChild(deleteBtn);
-        row.appendChild(actionCell);
-        
-        tbody.appendChild(row);
-    }
-    
-    function exportApplicantToExcel(applicant) {
-        try {
-            // Create a clean copy of the applicant data without unwanted fields
-            const exportData = {};
-            
-            // Define which fields to include in the export
-            const exportFields = [
-                'SRS ID', 'NAME', 'BDATE', 'AGE', 'SEX', 'CIVIL STATUS',
-                'STREET ADDRESS', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROVINCE', 'REGION', 'EMAIL', 'TELEPHONE',
-                'CELLPHONE', 'EMP. STATUS', 'EMP. TYPE', 'EDUC LEVEL', 'COURSE', '4Ps', 'PWD', 'DISABILITY',
-                'PREFERRED POSITION', 'SKILLS', 'WORK EXPERIENCE', 'OFW', 'COUNTRY', 'FORMER OFW', 'LATEST COUNTRY',
-                'REG. DATE', 'REMARKS', 'CREATED BY', 'DATE CREATED', 'LAST MODIFIED BY', 'DATE LAST MODIFIED'
-            ];
-            
-            // Only include the fields we want to export
-            exportFields.forEach(field => {
-                if (applicant[field] !== undefined) {
-                    exportData[field] = applicant[field];
+            elements.editModal.addEventListener('click', function(event) {
+                if (event.target === elements.editModal) {
+                    elements.editModal.style.display = 'none';
                 }
             });
             
-            const worksheet = XLSX.utils.json_to_sheet([exportData]);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant");
-            XLSX.writeFile(workbook, `applicant_${applicant['SRS ID'] || 'data'}.xlsx`);
-            showNotification('Applicant data exported successfully!', 'success');
-        } catch (error) {
-            console.error('Error exporting to Excel:', error);
-            showNotification('Error exporting applicant data: ' + error.message, 'error');
-        }
-    }
-    
-    function deleteApplicant(applicant) {
-        if (confirm('Are you sure you want to delete this applicant?')) {
-            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-            const updatedApplicants = savedApplicants.filter(a => a['SRS ID'] !== applicant['SRS ID']);
-            saveMainApplicants(updatedApplicants);
-            displayMainApplicants(updatedApplicants);
-            showNotification('Applicant deleted successfully!', 'success');
-        }
-    }
-    
-    if (elements.uploadPhotoBtn && elements.editPhotoInput) {
-        elements.uploadPhotoBtn.addEventListener('click', function() {
-            elements.editPhotoInput.click();
-        });
-    }
-
-    if (elements.editPhotoInput) {
-        elements.editPhotoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                if (file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const photoData = e.target.result;
-                        localStorage.setItem(`tempPhoto_${currentEditId}`, photoData);
-                        
-                        elements.editPhotoPreview.src = photoData;
-                        elements.editPhotoPreview.style.display = 'block';
-                        elements.photoPlaceholder.style.display = 'none';
-                        elements.removePhotoBtn.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    showNotification('Please select a valid image file.', 'error');
-                }
+            const editForm = document.getElementById('editApplicantForm');
+            if (editForm) {
+                editForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    updateApplicant(currentEditId);
+                });
             }
-        });
-    }
+        }
 
-    if (elements.removePhotoBtn) {
-        elements.removePhotoBtn.addEventListener('click', function() {
-            elements.editPhotoPreview.src = '';
-            elements.editPhotoPreview.style.display = 'none';
-            elements.photoPlaceholder.style.display = 'flex';
-            elements.removePhotoBtn.style.display = 'none';
-            elements.editPhotoInput.value = '';
-            
-            localStorage.removeItem(`tempPhoto_${currentEditId}`);
-            localStorage.removeItem(`photo_${currentEditId}`);
-        });
+        if (elements.uploadPhotoBtn && elements.editPhotoInput) {
+            elements.uploadPhotoBtn.addEventListener('click', function() {
+                elements.editPhotoInput.click();
+            });
+        }
+
+        if (elements.editPhotoInput) {
+            elements.editPhotoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            const photoData = e.target.result;
+                            localStorage.setItem(`tempPhoto_${currentEditId}`, photoData);
+                            
+                            elements.editPhotoPreview.src = photoData;
+                            elements.editPhotoPreview.style.display = 'block';
+                            elements.photoPlaceholder.style.display = 'none';
+                            elements.removePhotoBtn.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        showNotification('Please select a valid image file.', 'error');
+                    }
+                }
+            });
+        }
+
+        if (elements.removePhotoBtn) {
+            elements.removePhotoBtn.addEventListener('click', function() {
+                elements.editPhotoPreview.src = '';
+                elements.editPhotoPreview.style.display = 'none';
+                elements.photoPlaceholder.style.display = 'flex';
+                elements.removePhotoBtn.style.display = 'none';
+                elements.editPhotoInput.value = '';
+                
+                localStorage.removeItem(`tempPhoto_${currentEditId}`);
+                localStorage.removeItem(`photo_${currentEditId}`);
+            });
+        }
     }
 
     function openEditModal(applicant) {
@@ -1057,6 +786,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Updated field mapping - removed unwanted fields
         const fieldToIdMap = {
             'SRS ID': 'edit-srs-id',
+            'LAST NAME': 'edit-last-name',
+            'FIRST NAME': 'edit-first-name',
+            'MIDDLE NAME': 'edit-middle-name',
             'NAME': 'edit-name',
             'BDATE': 'edit-bdate',
             'AGE': 'edit-age',
@@ -1157,45 +889,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function formatDateForInput(dateString) {
-        if (!dateString) return '';
-        
-        let date;
-        if (typeof dateString === 'string') {
-            if (dateString.includes('/')) {
-                const parts = dateString.split('/');
-                if (parts.length === 3) {
-                    date = new Date(parts[2], parts[0] - 1, parts[1]);
-                }
-            } else if (dateString.includes('-')) {
-                const parts = dateString.split('-');
-                if (parts.length === 3) {
-                    if (parts[0].length === 4) {
-                        date = new Date(parts[0], parts[1] - 1, parts[2]);
-                    } else {
-                        date = new Date(parts[2], parts[1] - 1, parts[0]);
-                    }
-                }
-            } else {
-                date = new Date(dateString);
-            }
-        } else if (typeof dateString === 'number') {
-            date = excelDateToJSDateObject(dateString);
-        }
-        
-        if (date instanceof Date && !isNaN(date)) {
-            return date.toISOString().split('T')[0]; 
-        }
-        
-        return '';
-    }
-
-    function excelDateToJSDateObject(serial) {
-        const utc_days = Math.floor(serial - 25569);
-        const utc_value = utc_days * 86400;
-        return new Date(utc_value * 1000);
-    }
-    
     function updateApplicant(id) {
         if (!id) {
             showNotification('Error: No applicant ID found for update', 'error');
@@ -1241,242 +934,1207 @@ document.addEventListener('DOMContentLoaded', function () {
         showNotification('Applicant updated successfully!', 'success');
     }
 
-    if (elements.editModal) {
-        const closeBtn = elements.editModal.querySelector('.close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                elements.editModal.style.display = 'none';
+    // Initialize file uploads
+    function initializeFileUploads() {
+        if (elements.browsebtn && elements.fileInput) {
+            elements.browsebtn.addEventListener('click', function() {
+                elements.fileInput.click();
             });
         }
         
-        const cancelBtn = document.getElementById('cancel-edit');
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
-                elements.editModal.style.display = 'none';
+        if (elements.fileInput) {
+            elements.fileInput.addEventListener('change', function() {
+                if (elements.fileInput.files.length > 0 && elements.fileName) {
+                    elements.fileName.value = elements.fileInput.files[0].name;
+                    if (elements.importBtn) elements.importBtn.disabled = false;
+                } else if (elements.fileName) {
+                    elements.fileName.value = '';
+                    if (elements.importBtn) elements.importBtn.disabled = true;
+                }
             });
         }
         
-        elements.editModal.addEventListener('click', function(event) {
-            if (event.target === elements.editModal) {
-                elements.editModal.style.display = 'none';
-            }
-        });
-        
-        const editForm = document.getElementById('editApplicantForm');
-        if (editForm) {
-            editForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-                updateApplicant(currentEditId);
+        if (elements.uploadBrowseBtn && elements.uploadFileInput) {
+            elements.uploadBrowseBtn.addEventListener('click', function() {
+                elements.uploadFileInput.click();
             });
         }
-    }
-    
-    if (elements.browsebtn && elements.fileInput) {
-        elements.browsebtn.addEventListener('click', function() {
-            elements.fileInput.click();
-        });
-    }
-    
-    if (elements.fileInput) {
-        elements.fileInput.addEventListener('change', function() {
-            if (elements.fileInput.files.length > 0 && elements.fileName) {
-                elements.fileName.value = elements.fileInput.files[0].name;
-                if (elements.importBtn) elements.importBtn.disabled = false;
-            } else if (elements.fileName) {
-                elements.fileName.value = '';
-                if (elements.importBtn) elements.importBtn.disabled = true;
-            }
-        });
-    }
-    
-    if (elements.uploadBrowseBtn && elements.uploadFileInput) {
-        elements.uploadBrowseBtn.addEventListener('click', function() {
-            elements.uploadFileInput.click();
-        });
-    }
-    
-    if (elements.uploadFileInput) {
-        elements.uploadFileInput.addEventListener('change', function() {
-            if (elements.uploadFileInput.files.length > 0 && elements.uploadFileName) {
-                elements.uploadFileName.value = elements.uploadFileInput.files[0].name;
-                if (elements.addBtn) elements.addBtn.disabled = false;
-            } else if (elements.uploadFileName) {
-                elements.uploadFileName.value = '';
-                if (elements.addBtn) elements.addBtn.disabled = true;
-            }
-        });
-    }
-    
-    if (elements.addBtn) {
-        elements.addBtn.addEventListener('click', function() {
-            if (!elements.uploadFileInput) return;
-            
-            const file = elements.uploadFileInput.files[0];
-            if (!file) {
-                showUploadNotification('Please select a file first.', 'error');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    if (jsonData.length === 0) {
-                        showUploadNotification('The file does not contain any data.', 'error');
-                        return;
-                    }
-                    
-                    const processedData = processDateFields(jsonData);
-                    
-                    const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-                    
-                    const { duplicates, uniqueNewApplicants } = checkForDuplicates(processedData, savedApplicants);
-
-                    if (duplicates.length > 0) {
-                        // Highlight duplicates in the table
-                        highlightMatchingApplicants(duplicates.map(dup => ({
-                            existingApplicant: dup.existing,
-                            matchingFields: ['Possible Duplicate'],
-                            differences: []
-                        })));
+        
+        if (elements.uploadFileInput) {
+            elements.uploadFileInput.addEventListener('change', function() {
+                if (elements.uploadFileInput.files.length > 0 && elements.uploadFileName) {
+                    elements.uploadFileName.value = elements.uploadFileInput.files[0].name;
+                    if (elements.addBtn) elements.addBtn.disabled = false;
+                } else if (elements.uploadFileName) {
+                    elements.uploadFileName.value = '';
+                    if (elements.addBtn) elements.addBtn.disabled = true;
+                }
+            });
+        }
+        
+        if (elements.addBtn) {
+            elements.addBtn.addEventListener('click', function() {
+                if (!elements.uploadFileInput) return;
+                
+                const file = elements.uploadFileInput.files[0];
+                if (!file) {
+                    showUploadNotification('Please select a file first.', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
                         
-                        elements.duplicateWarning.innerHTML = `
-                            <strong>Found ${duplicates.length} potential duplicate(s):</strong> 
-                            These applicants appear to already exist in the system. They have been highlighted in the table above.
-                            <br><br>
-                            <button id="proceed-upload" class="save-btn" style="padding: 8px 15px; font-size: 14px;">
-                                Add ${uniqueNewApplicants.length} New Applicants Anyway
-                            </button>
-                        `;
-                        elements.duplicateWarning.style.display = 'block';
-                        
-                        // Add event listener for proceed button
-                        document.getElementById('proceed-upload').addEventListener('click', function() {
-                            uniqueNewApplicants.forEach(applicant => {
-                                if (!applicant['SRS ID']) {
-                                    applicant['SRS ID'] = generateUniqueId();
-                                }
-                                
-                                applicant['DATE CREATED'] = new Date().toLocaleString();
-                                applicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
-                                
-                                savedApplicants.push(applicant);
-                            });
-                            
-                            saveMainApplicants(savedApplicants);
-                            displayMainApplicants(savedApplicants);
-                            removeHighlights();
-                            
-                            showUploadNotification(`Added ${uniqueNewApplicants.length} new applicant(s). ${duplicates.length} duplicate(s) were skipped.`, 'success');
-                            if (elements.uploadFileName) elements.uploadFileName.value = '';
-                            if (elements.addBtn) elements.addBtn.disabled = true;
-                            if (elements.uploadFileInput) elements.uploadFileInput.value = '';
-                            elements.duplicateWarning.style.display = 'none';
-                        });
-                        
-                        return;
-                    }
-                    
-                    if (elements.duplicateWarning && duplicates.length > 0) {
-                        elements.duplicateWarning.innerHTML = `<strong>Found ${duplicates.length} duplicate(s):</strong> These applicants already exist in the system and will not be added.`;
-                        elements.duplicateWarning.style.display = 'block';
-                    } else if (elements.duplicateWarning) {
-                        elements.duplicateWarning.style.display = 'none';
-                    }
-                    
-                    if (uniqueNewApplicants.length === 0) {
-                        showUploadNotification('The applicant/s in the file was already on the list . No new applicants added.', 'warning');
-                        return;
-                    }
-                    
-                    uniqueNewApplicants.forEach(applicant => {
-                        if (!applicant['SRS ID']) {
-                            applicant['SRS ID'] = generateUniqueId();
+                        if (jsonData.length === 0) {
+                            showUploadNotification('The file does not contain any data.', 'error');
+                            return;
                         }
                         
-                        applicant['DATE CREATED'] = new Date().toLocaleString();
-                        applicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
+                        // Use smart import
+                        const processedData = smartImportData(jsonData);
                         
-                        savedApplicants.push(applicant);
-                    });
-                    
-                    saveMainApplicants(savedApplicants);
-                    displayMainApplicants(savedApplicants);
-                    
-                    showUploadNotification(`Added ${uniqueNewApplicants.length} new applicant(s). ${duplicates.length} duplicate(s) found.`, 'success');
-                    if (elements.uploadFileName) elements.uploadFileName.value = '';
-                    if (elements.addBtn) elements.addBtn.disabled = true;
-                    if (elements.uploadFileInput) elements.uploadFileInput.value = '';
-                    
-                } catch (error) {
-                    console.error('Error processing Excel file:', error);
-                    showUploadNotification('Error processing Excel file: ' + error.message, 'error');
-                }
-            };
-            
-            reader.onerror = function() {
-                showUploadNotification('Error reading file.', 'error');
-            };
-            
-            reader.readAsArrayBuffer(file);
-        });
-    }
-    
-    if (elements.importBtn) {
-        elements.importBtn.addEventListener('click', function() {
-            if (!elements.fileInput) return;
-            
-            const file = elements.fileInput.files[0];
-            if (!file) {
-                showNotification('Please select a file first.', 'error');
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    if (jsonData.length === 0) {
-                        showNotification('The file does not contain any data.', 'error');
-                        return;
+                        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+                        
+                        const { duplicates, uniqueNewApplicants } = checkForDuplicates(processedData, savedApplicants);
+
+                        if (duplicates.length > 0) {
+                            // Highlight duplicates in the table
+                            highlightMatchingApplicants(duplicates.map(dup => ({
+                                existingApplicant: dup.existing,
+                                matchingFields: ['Possible Duplicate'],
+                                differences: []
+                            })));
+                            
+                            elements.duplicateWarning.innerHTML = `
+                                <strong>Found ${duplicates.length} potential duplicate(s):</strong> 
+                                These applicants appear to already exist in the system. They have been highlighted in the table above.
+                                <br><br>
+                                <strong>Import Summary:</strong>
+                                <ul>
+                                    <li>Total records in file: ${processedData.length}</li>
+                                    <li>New applicants: ${uniqueNewApplicants.length}</li>
+                                    <li>Duplicates found: ${duplicates.length}</li>
+                                </ul>
+                                <br>
+                                <button id="proceed-upload" class="save-btn" style="padding: 8px 15px; font-size: 14px;">
+                                    Add ${uniqueNewApplicants.length} New Applicants Anyway
+                                </button>
+                            `;
+                            elements.duplicateWarning.style.display = 'block';
+                            
+                            document.getElementById('proceed-upload').addEventListener('click', function() {
+                                uniqueNewApplicants.forEach(applicant => {
+                                    savedApplicants.push(applicant);
+                                });
+                                
+                                saveMainApplicants(savedApplicants);
+                                displayMainApplicants(savedApplicants);
+                                removeHighlights();
+                                
+                                showUploadNotification(`Successfully added ${uniqueNewApplicants.length} new applicant(s). ${duplicates.length} duplicate(s) were skipped.`, 'success');
+                                if (elements.uploadFileName) elements.uploadFileName.value = '';
+                                if (elements.addBtn) elements.addBtn.disabled = true;
+                                if (elements.uploadFileInput) elements.uploadFileInput.value = '';
+                                elements.duplicateWarning.style.display = 'none';
+                            });
+                            
+                            return;
+                        }
+                        
+                        // If no duplicates, add all
+                        processedData.forEach(applicant => {
+                            savedApplicants.push(applicant);
+                        });
+                        
+                        saveMainApplicants(savedApplicants);
+                        displayMainApplicants(savedApplicants);
+                        
+                        showUploadNotification(`Successfully imported ${processedData.length} applicant(s). The system automatically matched your file's columns to the appropriate fields.`, 'success');
+                        if (elements.uploadFileName) elements.uploadFileName.value = '';
+                        if (elements.addBtn) elements.addBtn.disabled = true;
+                        if (elements.uploadFileInput) elements.uploadFileInput.value = '';
+                        
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        showUploadNotification('Error processing file: ' + error.message, 'error');
                     }
-                    
-                    const importedData = jsonData.map(row => mapExcelData(row));
-                    
-                    if (saveDataToLocalStorage(importedData)) {
-                        displayImportedData(importedData);
-                        showNotification('Data imported successfully!', 'success');
+                };
+                
+                reader.onerror = function() {
+                    showUploadNotification('Error reading file.', 'error');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        if (elements.importBtn) {
+            elements.importBtn.addEventListener('click', function() {
+                if (!elements.fileInput) return;
+                
+                const file = elements.fileInput.files[0];
+                if (!file) {
+                    showNotification('Please select a file first.', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        if (jsonData.length === 0) {
+                            showNotification('The file does not contain any data.', 'error');
+                            return;
+                        }
+                        
+                        const processedData = processDateFields(jsonData);
+                        displayImportedData(processedData);
+                        
+                        showNotification(`Successfully loaded ${processedData.length} record(s) from file.`, 'success');
                         if (elements.fileName) elements.fileName.value = '';
                         if (elements.importBtn) elements.importBtn.disabled = true;
                         if (elements.fileInput) elements.fileInput.value = '';
-                    } else {
-                        showNotification('Failed to save data to local storage.', 'error');
+                        
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        showNotification('Error processing file: ' + error.message, 'error');
                     }
-                    
-                } catch (error) {
-                    console.error('Error processing Excel file:', error);
-                    showNotification('Error processing Excel file: ' + error.message, 'error');
+                };
+                
+                reader.onerror = function() {
+                    showNotification('Error reading file.', 'error');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        if (elements.resetDataBtn) {
+            elements.resetDataBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all imported data? This action cannot be undone.')) {
+                    localStorage.removeItem('importedData');
+                    if (elements.importedTable) {
+                        const tbody = elements.importedTable.querySelector('tbody');
+                        if (tbody) tbody.innerHTML = '';
+                    }
+                    showNotification('Imported data cleared successfully.', 'success');
                 }
-            };
+            });
+        }
+        
+        if (elements.clearAllApplicantsBtn) {
+            elements.clearAllApplicantsBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear ALL applicants? This action cannot be undone.')) {
+                    localStorage.removeItem('mainApplicants');
+                    if (elements.mainApplicantTable) {
+                        const tbody = elements.mainApplicantTable.querySelector('tbody');
+                        if (tbody) tbody.innerHTML = '';
+                    }
+                    showNotification('All applicants cleared successfully.', 'success');
+                }
+            });
+        }
+    }
+
+    // Initialize advanced filters
+    function initializeAdvancedFilters() {
+        if (!elements.advancedFiltersBtn || !elements.advancedFiltersPanel) {
+            console.warn('Advanced filters elements not found');
+            return;
+        }
+
+        elements.advancedFiltersBtn.addEventListener('click', function() {
+            elements.advancedFiltersPanel.style.display = 
+                elements.advancedFiltersPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        if (elements.applyFiltersBtn) {
+            elements.applyFiltersBtn.addEventListener('click', applyAdvancedFilters);
+        }
+
+        if (elements.clearFiltersBtn) {
+            elements.clearFiltersBtn.addEventListener('click', clearAdvancedFilters);
+        }
+
+        if (elements.sortSelect) {
+            elements.sortSelect.addEventListener('change', applySorting);
+        }
+    }
+
+    function applyAdvancedFilters() {
+        activeFilters = {
+            programCategory: document.getElementById('filter-program-category')?.value || '',
+            programStatus: document.getElementById('filter-program-status')?.value || '',
+            employmentStatus: document.getElementById('filter-employment-status')?.value || '',
+            ageMin: document.getElementById('filter-age-min')?.value || '',
+            ageMax: document.getElementById('filter-age-max')?.value || '',
+            barangay: document.getElementById('filter-barangay')?.value || '',
+            regDate: document.getElementById('filter-reg-date')?.value || ''
+        };
+        
+        filterAndDisplayApplicants();
+        updateActiveFiltersDisplay();
+    }
+
+    function clearAdvancedFilters() {
+        const filterInputs = document.querySelectorAll('.filter-select, .filter-input');
+        filterInputs.forEach(input => {
+            input.value = '';
+        });
+        
+        activeFilters = {};
+        filterAndDisplayApplicants();
+        updateActiveFiltersDisplay();
+    }
+
+    function applySorting() {
+        filterAndDisplayApplicants();
+    }
+
+    function filterAndDisplayApplicants() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        const searchTerm = elements.searchInput?.value.toLowerCase().trim() || '';
+        
+        let filteredApplicants = savedApplicants.filter(applicant => {
+            // Text search
+            if (searchTerm) {
+                const searchableFields = [
+                    applicant.NAME, 
+                    applicant.CELLPHONE, 
+                    applicant.EMAIL, 
+                    applicant.BARANGAY,
+                    applicant['SPECIFIC PROGRAM'] || ''
+                ].join(' ').toLowerCase();
+                
+                if (!searchableFields.includes(searchTerm)) {
+                    return false;
+                }
+            }
             
-            reader.onerror = function() {
-                showNotification('Error reading file.', 'error');
-            };
+            // Program category filter
+            if (activeFilters.programCategory && applicant['PROGRAM CATEGORY'] !== activeFilters.programCategory) {
+                return false;
+            }
             
-            reader.readAsArrayBuffer(file);
+            // Program status filter
+            if (activeFilters.programStatus && applicant['PROGRAM STATUS'] !== activeFilters.programStatus) {
+                return false;
+            }
+            
+            // Employment status filter
+            if (activeFilters.employmentStatus && applicant['EMP. STATUS'] !== activeFilters.employmentStatus) {
+                return false;
+            }
+            
+            // Age range filter
+            const applicantAge = parseInt(applicant.AGE) || 0;
+            if (activeFilters.ageMin && applicantAge < parseInt(activeFilters.ageMin)) {
+                return false;
+            }
+            if (activeFilters.ageMax && applicantAge > parseInt(activeFilters.ageMax)) {
+                return false;
+            }
+            
+            // Barangay filter - fixed to filter out N/A and partial match
+            if (activeFilters.barangay) {
+                const applicantBarangay = (applicant.BARANGAY || '').toLowerCase();
+                const filterBarangay = activeFilters.barangay.toLowerCase();
+                
+                // Don't show if barangay is N/A or doesn't match
+                if (applicantBarangay === 'n/a' || applicantBarangay === '' || 
+                    !applicantBarangay.includes(filterBarangay)) {
+                    return false;
+                }
+            }
+            
+            // Registration date filter - fixed to handle year/month filtering
+            if (activeFilters.regDate) {
+                const applicantRegDate = applicant['REG. DATE'];
+                
+                // Don't show if registration date is N/A or empty
+                if (!applicantRegDate || applicantRegDate === 'N/A' || applicantRegDate === '') {
+                    return false;
+                }
+                
+                const filterDate = new Date(activeFilters.regDate);
+                const applicantDate = new Date(applicantRegDate);
+                
+                // Check if dates are valid
+                if (isNaN(filterDate.getTime()) || isNaN(applicantDate.getTime())) {
+                    return false;
+                }
+                
+                // Check year and month match
+                if (filterDate.getFullYear() !== applicantDate.getFullYear() || 
+                    filterDate.getMonth() !== applicantDate.getMonth()) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+        
+        // Apply sorting
+        filteredApplicants = applySortingToData(filteredApplicants);
+        
+        displayMainApplicants(filteredApplicants);
+        showNotification(`Found ${filteredApplicants.length} applicant(s) matching your criteria`, 'success');
+    }
+
+    function applySortingToData(data) {
+        const sortValue = elements.sortSelect?.value || 'name';
+        
+        return data.sort((a, b) => {
+            switch (sortValue) {
+                case 'name':
+                    return (a.NAME || '').localeCompare(b.NAME || '');
+                case 'name-desc':
+                    return (b.NAME || '').localeCompare(a.NAME || '');
+                case 'date':
+                    return new Date(b['REG. DATE'] || 0) - new Date(a['REG. DATE'] || 0);
+                case 'date-oldest':
+                    return new Date(a['REG. DATE'] || 0) - new Date(b['REG. DATE'] || 0);
+                case 'age':
+                    return (parseInt(a.AGE) || 0) - (parseInt(b.AGE) || 0);
+                case 'age-desc':
+                    return (parseInt(b.AGE) || 0) - (parseInt(a.AGE) || 0);
+                default:
+                    return 0;
+            }
         });
     }
-    
+
+    function updateActiveFiltersDisplay() {
+        const activeCount = Object.values(activeFilters).filter(val => val !== '').length;
+        const countElement = document.getElementById('active-filters-count');
+        
+        if (countElement) {
+            if (activeCount > 0) {
+                countElement.textContent = `${activeCount} active filter(s)`;
+                countElement.style.color = '#ff9800';
+                countElement.style.fontWeight = 'bold';
+            } else {
+                countElement.textContent = 'No active filters';
+                countElement.style.color = '#666';
+                countElement.style.fontWeight = 'normal';
+            }
+        }
+    }
+
+    // Initialize reporting
+    function initializeReporting() {
+        if (elements.generateReportBtn) {
+            elements.generateReportBtn.addEventListener('click', generateProgramReports);
+        }
+        
+        if (elements.exportReportBtn) {
+            elements.exportReportBtn.addEventListener('click', exportReportsToExcel);
+        }
+    }
+
+    function generateProgramReports() {
+        const reportsContainer = document.getElementById('program-reports');
+        
+        if (!reportsContainer) return;
+        
+        // Toggle visibility
+        if (reportsContainer.style.display === 'block') {
+            reportsContainer.style.display = 'none';
+            return;
+        }
+        
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        
+        if (savedApplicants.length === 0) {
+            reportsContainer.innerHTML = '<p class="no-results">No applicant data available for reporting.</p>';
+            reportsContainer.style.display = 'block';
+            return;
+        }
+        
+        const programStats = calculateProgramStatistics(savedApplicants);
+        const employmentStats = calculateEmploymentStatistics(savedApplicants);
+        const demographicStats = calculateDemographicStatistics(savedApplicants);
+        
+        reportsContainer.innerHTML = `
+            <div class="report-section">
+                <h3>📊 Program Enrollment Summary</h3>
+                <div class="stats-grid">
+                    ${generateProgramStatsHTML(programStats)}
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h3>🎓 Educational Attainment</h3>
+                <div class="stats-grid">
+                    ${generateEducationStatsHTML(programStats)}
+                </div>
+                ${generateExpandableCourseStats(programStats)}
+            </div>
+            
+            <div class="report-section">
+                <h3>👥 Age Demographics</h3>
+                <div class="stats-grid">
+                    ${generateAgeStatsHTML(programStats)}
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h3>💼 Employment Status Overview</h3>
+                <div class="stats-grid">
+                    ${generateEmploymentStatsHTML(employmentStats)}
+                </div>
+            </div>
+            
+            <div class="report-section">
+                <h3>👤 Demographic Overview</h3>
+                <div class="stats-grid">
+                    ${generateDemographicStatsHTML(demographicStats)}
+                </div>
+            </div>
+            
+            <div class="report-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+                <button id="export-summary-btn" class="action-btn" style="background: #4caf50;">
+                    <i class="fas fa-file-excel"></i> Export Summary Report
+                </button>
+                <button id="export-full-btn" class="action-btn" style="background: #2196f3;">
+                    <i class="fas fa-file-excel"></i> Export Full Data
+                </button>
+            </div>
+        `;
+        
+        // Initialize expandable sections
+        initializeExpandableSections();
+        
+        document.getElementById('export-summary-btn').addEventListener('click', exportSummaryReport);
+        document.getElementById('export-full-btn').addEventListener('click', exportReportsToExcel);
+        
+        reportsContainer.style.display = 'block';
+    }
+
+    function initializeExpandableSections() {
+        document.querySelectorAll('.expandable-section').forEach(section => {
+            const header = section.querySelector('.expandable-header');
+            const icon = header.querySelector('i');
+            
+            header.addEventListener('click', function() {
+                section.classList.toggle('expanded');
+                if (section.classList.contains('expanded')) {
+                    icon.className = 'fas fa-chevron-up';
+                } else {
+                    icon.className = 'fas fa-chevron-down';
+                }
+            });
+        });
+    }
+
+    // New function for education statistics
+    function generateEducationStatsHTML(stats) {
+        let html = '';
+        const topEducation = Object.entries(stats.byEducation)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 6);
+        
+        topEducation.forEach(([education, count]) => {
+            const percentage = ((count / stats.total) * 100).toFixed(1);
+            html += `
+                <div class="stat-card">
+                    <div class="stat-number">${count}</div>
+                    <div class="stat-label">${education}</div>
+                    <div class="stat-percentage">${percentage}%</div>
+                </div>
+            `;
+        });
+        
+        return html;
+    }
+
+    // New function for age statistics
+    function generateAgeStatsHTML(stats) {
+        let html = '';
+        Object.entries(stats.byAgeGroup).forEach(([ageGroup, count]) => {
+            if (count > 0) {
+                const percentage = ((count / stats.total) * 100).toFixed(1);
+                html += `
+                    <div class="stat-card">
+                        <div class="stat-number">${count}</div>
+                        <div class="stat-label">${ageGroup}</div>
+                        <div class="stat-percentage">${percentage}%</div>
+                    </div>
+                `;
+            }
+        });
+        
+        return html;
+    }
+
+    function calculateProgramStatistics(applicants) {
+        const stats = {
+            total: applicants.length,
+            byCategory: {},
+            byStatus: {},
+            bySpecificProgram: {},
+            byEducation: {},
+            byCourse: {},
+            byAgeGroup: {
+                'Below 20': 0,
+                '20-29': 0,
+                '30-39': 0,
+                '40-49': 0,
+                '50-59': 0,
+                '60 and above': 0
+            }
+        };
+        
+        applicants.forEach(applicant => {
+            const category = applicant['PROGRAM CATEGORY'] || 'Uncategorized';
+            const status = applicant['PROGRAM STATUS'] || 'Not Specified';
+            const specificProgram = applicant['SPECIFIC PROGRAM'] || 'No Specific Program';
+            const education = applicant['EDUC LEVEL'] || 'Not Specified';
+            const course = applicant['COURSE'] || 'No Course Specified';
+            const age = parseInt(applicant.AGE) || 0;
+            
+            // Age groups
+            if (age < 20) stats.byAgeGroup['Below 20']++;
+            else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
+            else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
+            else if (age >= 40 && age <= 49) stats.byAgeGroup['40-49']++;
+            else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
+            else if (age >= 60) stats.byAgeGroup['60 and above']++;
+            
+            stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+            stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
+            stats.bySpecificProgram[specificProgram] = (stats.bySpecificProgram[specificProgram] || 0) + 1;
+            stats.byEducation[education] = (stats.byEducation[education] || 0) + 1;
+            stats.byCourse[course] = (stats.byCourse[course] || 0) + 1;
+        });
+        
+        return stats;
+    }
+
+    function calculateEmploymentStatistics(applicants) {
+        const stats = {
+            employed: 0,
+            unemployed: 0,
+            selfEmployed: 0
+        };
+        
+        applicants.forEach(applicant => {
+            const status = (applicant['EMP. STATUS'] || '').toLowerCase();
+            if (status.includes('employed') && !status.includes('unemployed')) {
+                stats.employed++;
+            } else if (status.includes('unemployed')) {
+                stats.unemployed++;
+            } else if (status.includes('self')) {
+                stats.selfEmployed++;
+            }
+        });
+        
+        return stats;
+    }
+
+    function calculateDemographicStatistics(applicants) {
+        const stats = {
+            male: 0,
+            female: 0,
+            averageAge: 0
+        };
+        
+        let totalAge = 0;
+        let ageCount = 0;
+        
+        applicants.forEach(applicant => {
+            const gender = (applicant.SEX || '').toLowerCase();
+            if (gender.includes('male') && !gender.includes('female')) {
+                stats.male++;
+            } else if (gender.includes('female')) {
+                stats.female++;
+            }
+            
+            const age = parseInt(applicant.AGE);
+            if (!isNaN(age)) {
+                totalAge += age;
+                ageCount++;
+            }
+        });
+        
+        stats.averageAge = ageCount > 0 ? Math.round(totalAge / ageCount) : 0;
+        
+        return stats;
+    }
+
+    function generateProgramStatsHTML(stats) {
+        let html = `
+            <div class="stat-card total">
+                <div class="stat-number">${stats.total}</div>
+                <div class="stat-label">Total Applicants</div>
+            </div>
+        `;
+        
+        const topCategories = Object.entries(stats.byCategory)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 4);
+        
+        topCategories.forEach(([category, count]) => {
+            const percentage = ((count / stats.total) * 100).toFixed(1);
+            html += `
+                <div class="stat-card">
+                    <div class="stat-number">${count}</div>
+                    <div class="stat-label">${category}</div>
+                    <div class="stat-percentage">${percentage}%</div>
+                </div>
+            `;
+        });
+        
+        return html;
+    }
+
+    function generateEmploymentStatsHTML(stats) {
+        const total = stats.employed + stats.unemployed + stats.selfEmployed;
+        
+        return `
+            <div class="stat-card">
+                <div class="stat-number">${stats.employed}</div>
+                <div class="stat-label">Employed</div>
+                <div class="stat-percentage">${total > 0 ? ((stats.employed / total) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${stats.unemployed}</div>
+                <div class="stat-label">Unemployed</div>
+                <div class="stat-percentage">${total > 0 ? ((stats.unemployed / total) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${stats.selfEmployed}</div>
+                <div class="stat-label">Self-Employed</div>
+                <div class="stat-percentage">${total > 0 ? ((stats.selfEmployed / total) * 100).toFixed(1) : 0}%</div>
+            </div>
+        `;
+    }
+
+    function generateDemographicStatsHTML(stats) {
+        const totalGender = stats.male + stats.female;
+        
+        return `
+            <div class="stat-card">
+                <div class="stat-number">${stats.male}</div>
+                <div class="stat-label">Male</div>
+                <div class="stat-percentage">${totalGender > 0 ? ((stats.male / totalGender) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${stats.female}</div>
+                <div class="stat-label">Female</div>
+                <div class="stat-percentage">${totalGender > 0 ? ((stats.female / totalGender) * 100).toFixed(1) : 0}%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${stats.averageAge}</div>
+                <div class="stat-label">Average Age</div>
+            </div>
+        `;
+    }
+
+    function exportReportsToExcel() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        if (savedApplicants.length === 0) {
+            showNotification('No data available to export', 'error');
+            return;
+        }
+        
+        try {
+            // Create a cleaned version of the data for export
+            const exportData = savedApplicants.map(applicant => {
+                const cleanApplicant = {};
+                
+                // Only include essential fields and truncate long text
+                Object.keys(applicant).forEach(key => {
+                    let value = applicant[key];
+                    
+                    // Truncate very long text fields
+                    if (typeof value === 'string' && value.length > 1000) {
+                        value = value.substring(0, 1000) + '... [truncated]';
+                    }
+                    
+                    // Skip extremely long fields that might cause issues
+                    if (typeof value === 'string' && value.length > 30000) {
+                        value = '[Data too long for export]';
+                    }
+                    
+                    cleanApplicant[key] = value;
+                });
+                
+                return cleanApplicant;
+            });
+            
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants Report");
+            
+            // Generate filename with current date
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `applicants_report_${today}.xlsx`);
+            
+            showNotification('Report exported successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting report:', error);
+            
+            // More specific error handling
+            if (error.message.includes('32767')) {
+                showNotification('Error: Some data fields are too long for Excel export. Try exporting a summary report instead.', 'error');
+            } else {
+                showNotification('Error exporting report: ' + error.message, 'error');
+            }
+        }
+    }
+
+    // Utility functions
+    function generateUniqueId() {
+        return 'SRS_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function formatDateForInput(dateString) {
+        if (!dateString) return '';
+        
+        if (dateString.includes('/')) {
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const month = parts[0].padStart(2, '0');
+                const day = parts[1].padStart(2, '0');
+                const year = parts[2];
+                return `${year}-${month}-${day}`;
+            }
+        }
+        
+        return dateString;
+    }
+
+    function processDateFields(data) {
+        return data.map(record => {
+            const processedRecord = { ...record };
+            
+            if (record['BDATE']) {
+                const dateValue = record['BDATE'];
+                if (dateValue instanceof Date) {
+                    processedRecord['BDATE'] = `${(dateValue.getMonth() + 1).toString().padStart(2, '0')}/${dateValue.getDate().toString().padStart(2, '0')}/${dateValue.getFullYear()}`;
+                } else if (typeof dateValue === 'string' && dateValue.includes('/')) {
+                    const parts = dateValue.split('/');
+                    if (parts.length === 3) {
+                        const month = parts[0].padStart(2, '0');
+                        const day = parts[1].padStart(2, '0');
+                        const year = parts[2];
+                        processedRecord['BDATE'] = `${month}/${day}/${year}`;
+                    }
+                }
+            }
+            
+            return processedRecord;
+        });
+    }
+
+    function checkForDuplicates(newApplicants, existingApplicants) {
+        const duplicates = [];
+        const uniqueNewApplicants = [];
+        
+        newApplicants.forEach(newApp => {
+            let isDuplicate = false;
+            
+            existingApplicants.forEach(existingApp => {
+                const nameMatch = newApp.NAME && existingApp.NAME && 
+                                newApp.NAME.toLowerCase() === existingApp.NAME.toLowerCase();
+                
+                if (nameMatch) {
+                    isDuplicate = true;
+                    duplicates.push({
+                        new: newApp,
+                        existing: existingApp
+                    });
+                }
+            });
+            
+            if (!isDuplicate) {
+                uniqueNewApplicants.push(newApp);
+            }
+        });
+        
+        return { duplicates, uniqueNewApplicants };
+    }
+
+    function showNotification(message, type, notificationElement = null) {
+        const targetElement = notificationElement || elements.notification;
+        if (!targetElement) return;
+        
+        targetElement.textContent = message;
+        targetElement.className = 'notification';
+        targetElement.classList.add(type);
+        targetElement.style.display = 'block';
+        
+        setTimeout(() => {
+            targetElement.style.display = 'none';
+        }, 5000);
+    }
+
+    function showUploadNotification(message, type) {
+        showNotification(message, type, elements.uploadNotification);
+    }
+
+    function displayCurrentUser() {
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            const header = document.querySelector('header .header-content');
+            if (header) {
+                const userInfo = document.createElement('div');
+                userInfo.className = 'user-info';
+                userInfo.innerHTML = `
+                    <span>Welcome, ${currentUser}</span>
+                    <button id="logout-btn" class="logout-btn">Logout</button>
+                `;
+                header.appendChild(userInfo);
+
+                document.getElementById('logout-btn').addEventListener('click', function() {
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+    }
+
+    function loadMainApplicants() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        displayMainApplicants(savedApplicants);
+    }
+
+    function displayMainApplicants(applicants) {
+        if (!elements.mainApplicantTable) return;
+        
+        const tbody = elements.mainApplicantTable.querySelector('tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (applicants.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 35; // Updated column count
+            cell.className = 'no-results';
+            cell.textContent = 'No applicants found';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            return;
+        }
+        
+        applicants.forEach((applicant, index) => {
+            const row = document.createElement('tr');
+            
+            // SRS ID
+            const idCell = document.createElement('td');
+            idCell.textContent = applicant['SRS ID'] || `APP-${index + 1}`;
+            idCell.style.fontFamily = 'monospace';
+            idCell.style.fontSize = '10px';
+            row.appendChild(idCell);
+
+            // LAST NAME
+            const lastNameCell = document.createElement('td');
+            lastNameCell.textContent = applicant['LAST NAME'] || applicant.LASTNAME || extractLastName(applicant.NAME) || 'N/A';
+            lastNameCell.className = 'compact-cell';
+            row.appendChild(lastNameCell);
+
+            // FIRST NAME
+            const firstNameCell = document.createElement('td');
+            firstNameCell.textContent = applicant['FIRST NAME'] || applicant.FIRSTNAME || extractFirstName(applicant.NAME) || 'N/A';
+            firstNameCell.className = 'compact-cell';
+            row.appendChild(firstNameCell);
+
+            // MIDDLE NAME
+            const middleNameCell = document.createElement('td');
+            middleNameCell.textContent = applicant['MIDDLE NAME'] || applicant.MIDDLENAME || extractMiddleName(applicant.NAME) || 'N/A';
+            middleNameCell.className = 'compact-cell';
+            row.appendChild(middleNameCell);
+
+            // FULL NAME (for backward compatibility)
+            const fullNameCell = document.createElement('td');
+            fullNameCell.textContent = applicant.NAME || formatFullName(applicant) || 'N/A';
+            fullNameCell.className = 'compact-cell';
+            row.appendChild(fullNameCell);
+            
+            // BDATE
+            const bdateCell = document.createElement('td');
+            bdateCell.textContent = applicant.BDATE || 'N/A';
+            bdateCell.style.fontSize = '10px';
+            row.appendChild(bdateCell);
+            
+            // AGE
+            const ageCell = document.createElement('td');
+            ageCell.textContent = applicant.AGE || 'N/A';
+            ageCell.style.textAlign = 'center';
+            row.appendChild(ageCell);
+            
+            // SEX
+            const sexCell = document.createElement('td');
+            sexCell.textContent = applicant.SEX || 'N/A';
+            sexCell.style.textAlign = 'center';
+            row.appendChild(sexCell);
+            
+            // CIVIL STATUS
+            const civilStatusCell = document.createElement('td');
+            civilStatusCell.textContent = applicant['CIVIL STATUS'] || 'N/A';
+            row.appendChild(civilStatusCell);
+            
+            // STREET ADDRESS
+            const streetCell = document.createElement('td');
+            streetCell.textContent = applicant['STREET ADDRESS'] || 'N/A';
+            streetCell.className = 'compact-cell';
+            row.appendChild(streetCell);
+            
+            // BARANGAY
+            const barangayCell = document.createElement('td');
+            barangayCell.textContent = applicant.BARANGAY || 'N/A';
+            row.appendChild(barangayCell);
+            
+            // CITY/MUNICIPALITY
+            const cityCell = document.createElement('td');
+            cityCell.textContent = applicant['CITY/MUNICIPALITY'] || 'N/A';
+            row.appendChild(cityCell);
+            
+            // PROVINCE
+            const provinceCell = document.createElement('td');
+            provinceCell.textContent = applicant.PROVINCE || 'N/A';
+            row.appendChild(provinceCell);
+            
+            // REGION
+            const regionCell = document.createElement('td');
+            regionCell.textContent = applicant.REGION || 'N/A';
+            row.appendChild(regionCell);
+            
+            // EMAIL
+            const emailCell = document.createElement('td');
+            emailCell.textContent = applicant.EMAIL || 'N/A';
+            emailCell.className = 'compact-cell';
+            row.appendChild(emailCell);
+            
+            // TELEPHONE
+            const telephoneCell = document.createElement('td');
+            telephoneCell.textContent = applicant.TELEPHONE || 'N/A';
+            row.appendChild(telephoneCell);
+            
+            // CELLPHONE
+            const cellphoneCell = document.createElement('td');
+            cellphoneCell.textContent = applicant.CELLPHONE || 'N/A';
+            row.appendChild(cellphoneCell);
+            
+            // EMP. STATUS
+            const empStatusCell = document.createElement('td');
+            empStatusCell.textContent = applicant['EMP. STATUS'] || 'N/A';
+            row.appendChild(empStatusCell);
+            
+            // EMP. TYPE
+            const empTypeCell = document.createElement('td');
+            empTypeCell.textContent = applicant['EMP. TYPE'] || 'N/A';
+            row.appendChild(empTypeCell);
+            
+            // EDUC LEVEL
+            const educCell = document.createElement('td');
+            educCell.textContent = applicant['EDUC LEVEL'] || 'N/A';
+            row.appendChild(educCell);
+            
+            // COURSE
+            const courseCell = document.createElement('td');
+            courseCell.textContent = applicant.COURSE || 'N/A';
+            row.appendChild(courseCell);
+            
+            // 4Ps
+            const fourPsCell = document.createElement('td');
+            fourPsCell.textContent = applicant['4Ps'] || 'N/A';
+            fourPsCell.style.textAlign = 'center';
+            row.appendChild(fourPsCell);
+            
+            // PWD
+            const pwdCell = document.createElement('td');
+            pwdCell.textContent = applicant.PWD || 'N/A';
+            pwdCell.style.textAlign = 'center';
+            row.appendChild(pwdCell);
+            
+            // DISABILITY
+            const disabilityCell = document.createElement('td');
+            disabilityCell.textContent = applicant.DISABILITY || 'N/A';
+            row.appendChild(disabilityCell);
+            
+            // PREFERRED POSITION
+            const preferredPositionCell = document.createElement('td');
+            preferredPositionCell.textContent = applicant['PREFERRED POSITION'] || 'N/A';
+            row.appendChild(preferredPositionCell);
+            
+            // SKILLS
+            const skillsCell = document.createElement('td');
+            skillsCell.textContent = applicant.SKILLS || 'N/A';
+            skillsCell.className = 'compact-cell';
+            row.appendChild(skillsCell);
+            
+            // WORK EXPERIENCE
+            const workExpCell = document.createElement('td');
+            workExpCell.textContent = applicant['WORK EXPERIENCE'] || 'N/A';
+            workExpCell.className = 'compact-cell';
+            row.appendChild(workExpCell);
+            
+            // OFW
+            const ofwCell = document.createElement('td');
+            ofwCell.textContent = applicant.OFW || 'N/A';
+            ofwCell.style.textAlign = 'center';
+            row.appendChild(ofwCell);
+            
+            // COUNTRY
+            const countryCell = document.createElement('td');
+            countryCell.textContent = applicant.COUNTRY || 'N/A';
+            row.appendChild(countryCell);
+            
+            // FORMER OFW
+            const formerOfwCell = document.createElement('td');
+            formerOfwCell.textContent = applicant['FORMER OFW'] || 'N/A';
+            row.appendChild(formerOfwCell);
+            
+            // LATEST COUNTRY
+            const latestCountryCell = document.createElement('td');
+            latestCountryCell.textContent = applicant['LATEST COUNTRY'] || 'N/A';
+            row.appendChild(latestCountryCell);
+            
+            // REG. DATE
+            const regDateCell = document.createElement('td');
+            regDateCell.textContent = applicant['REG. DATE'] || 'N/A';
+            regDateCell.style.fontSize = '10px';
+            row.appendChild(regDateCell);
+            
+            // REMARKS
+            const remarksCell = document.createElement('td');
+            remarksCell.textContent = applicant.REMARKS || 'N/A';
+            row.appendChild(remarksCell);
+            
+            // CREATED BY
+            const createdByCell = document.createElement('td');
+            createdByCell.textContent = applicant['CREATED BY'] || 'System';
+            row.appendChild(createdByCell);
+            
+            // DATE CREATED
+            const dateCreatedCell = document.createElement('td');
+            dateCreatedCell.textContent = applicant['DATE CREATED'] || 'N/A';
+            dateCreatedCell.style.fontSize = '10px';
+            row.appendChild(dateCreatedCell);
+            
+            // LAST MODIFIED BY
+            const lastModifiedByCell = document.createElement('td');
+            lastModifiedByCell.textContent = applicant['LAST MODIFIED BY'] || 'System';
+            row.appendChild(lastModifiedByCell);
+            
+            // DATE LAST MODIFIED
+            const dateModifiedCell = document.createElement('td');
+            dateModifiedCell.textContent = applicant['DATE LAST MODIFIED'] || 'N/A';
+            dateModifiedCell.style.fontSize = '10px';
+            row.appendChild(dateModifiedCell);
+            
+            // Actions Cell
+            const actionsCell = document.createElement('td');
+            actionsCell.className = 'actions-cell';
+            
+            const actionButtons = document.createElement('div');
+            actionButtons.className = 'action-buttons';
+            
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-btn';
+            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+            editBtn.title = 'Edit Applicant';
+            editBtn.addEventListener('click', function() {
+                openEditModal(applicant);
+            });
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.title = 'Delete Applicant';
+            deleteBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this applicant?')) {
+                    deleteApplicant(applicant['SRS ID'] || applicant.ID);
+                }
+            });
+            
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+            downloadBtn.title = 'Download Data';
+            downloadBtn.addEventListener('click', function() {
+                downloadApplicantData(applicant);
+            });
+            
+            actionButtons.appendChild(editBtn);
+            actionButtons.appendChild(downloadBtn);
+            actionButtons.appendChild(deleteBtn);
+            actionsCell.appendChild(actionButtons);
+            row.appendChild(actionsCell);
+            
+            tbody.appendChild(row);
+        });
+    }
+
+    // Helper function for status badges
+    function getStatusClass(status) {
+        const statusLower = status.toLowerCase();
+        if (statusLower.includes('complete') || statusLower.includes('approved')) {
+            return 'completed';
+        } else if (statusLower.includes('pending') || statusLower.includes('applied')) {
+            return 'pending';
+        } else {
+            return 'active';
+        }
+    }
+
+    // Function to download individual applicant data
+    function downloadApplicantData(applicant) {
+        try {
+            const worksheet = XLSX.utils.json_to_sheet([applicant]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant Data");
+            
+            const fileName = `applicant_${applicant['SRS ID'] || applicant.NAME || 'data'}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+            
+            showNotification('Applicant data downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error downloading applicant data:', error);
+            showNotification('Error downloading applicant data', 'error');
+        }
+    }
+
+    function deleteApplicant(id) {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        const updatedApplicants = savedApplicants.filter(applicant => 
+            applicant['SRS ID'] !== id && applicant.ID !== id
+        );
+        
+        saveMainApplicants(updatedApplicants);
+        displayMainApplicants(updatedApplicants);
+        
+        localStorage.removeItem(`photo_${id}`);
+        
+        showNotification('Applicant deleted successfully!', 'success');
+    }
+
+    function saveMainApplicants(applicants) {
+        localStorage.setItem('mainApplicants', JSON.stringify(applicants));
+    }
+
+    function loadImportedData() {
+        const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
+        if (importedData.length > 0) {
+            displayImportedData(importedData);
+        }
+    }
+
     function displayImportedData(data) {
         if (!elements.importedTable) return;
         
@@ -1485,118 +2143,457 @@ document.addEventListener('DOMContentLoaded', function () {
         
         tbody.innerHTML = '';
         
-        const allImportedData = JSON.parse(localStorage.getItem('importedData')) || [];
+        if (data.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = elements.importedTable.querySelectorAll('th').length;
+            cell.className = 'no-results';
+            cell.textContent = 'No imported data';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            return;
+        }
         
-        allImportedData.forEach(item => {
+        data.forEach((record, index) => {
             const row = document.createElement('tr');
             
-            const fields = [
-                'ID', 'Last Name', 'Given Name', 'Middle Name', 'Full Name', 'Date of Birth', 'Age', 'Sex',
-                'Civil Status', 'Street', 'Barangay', 'City', 'Province', 'Contact No.', 'Employment Status',
-                'If Employed/Self Employment', 'Educational Attainment', 'Course', 'Skills', 'Work Experience',
-                'Sector', 'Program/Services Provided', 'Remarks', 'Registration Date'
+            // Create cells for all columns in the imported table
+            const columns = [
+                'ID', 'Last Name', 'Given Name', 'Middle Name', 'Full Name',
+                'Date of Birth', 'Age', 'Sex', 'Civil Status', 'Street',
+                'Barangay', 'City', 'Province', 'Contact No.', 'Employment Status',
+                'If Employed/Self Employment', 'Educational Attainment', 'Course',
+                'Skills', 'Work Experience', 'Sector', 'Program/Services Provided',
+                'Remarks', 'Registration Date', 'Actions'
             ];
             
-            fields.forEach(field => {
+            columns.forEach((column, colIndex) => {
                 const cell = document.createElement('td');
-                cell.textContent = item[field] || 'N/A';
+                
+                if (column === 'ID') {
+                    cell.textContent = record['SRS ID'] || `IMP-${index + 1}`;
+                } else if (column === 'Actions') {
+                    cell.className = 'actions-cell';
+                    cell.innerHTML = `
+                        <div class="action-buttons">
+                            <button class="download-btn" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="delete-btn" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Add event listeners for actions
+                    const downloadBtn = cell.querySelector('.download-btn');
+                    const deleteBtn = cell.querySelector('.delete-btn');
+                    
+                    downloadBtn.addEventListener('click', function() {
+                        downloadApplicantData(record);
+                    });
+                    
+                    deleteBtn.addEventListener('click', function() {
+                        if (confirm('Are you sure you want to delete this imported record?')) {
+                            deleteImportedRecord(index);
+                        }
+                    });
+                } else {
+                    // Map column names to record fields
+                    let value = 'N/A';
+                    const fieldMap = {
+                        'Last Name': record['Last Name'] || record['LAST NAME'] || record['last_name'],
+                        'Given Name': record['Given Name'] || record['GIVEN NAME'] || record['given_name'] || record['First Name'] || record['FIRST NAME'] || record['first name'],
+                        'Middle Name': record['Middle Name'] || record['MIDDLE NAME'] || record['middle_name'],
+                        'Full Name': record['Full Name'] || record['FULL NAME'] || record['full_name'] || record['NAME'],
+                        'Date of Birth': record['Date of Birth'] || record['DATE OF BIRTH'] || record['date of birth'] || ['Birthday'] || record['BIRTHDAY'] || record['birthday'] || record['Bdate'] || record['BDATE'] || record['bdate'] || record['bDate'],
+                        'Age': record['Age'] || record['AGE'] || record['age'],
+                        'Sex': record['Sex'] || record['SEX'] || record['sex'] || record['Gender'] || record['GENDER'] || record['gender'],
+                        'Civil Status': record['Civil Status'] || record['CIVIL STATUS'] || record['civil status'],
+                        'Street': record['Street'] || record['STREET'] || record['street'] || record['Street Address'] || record['STREET ADDRESS'] || record['street address'],
+                        'Barangay': record['Barangay'] || record['BARANGAY'] || record['barangay'],
+                        'City': record['City'] || record['CITY'] || record['city'] || record['City/Municipality'] || record['CITY/MUNICIPALITY'] || record['city/municipality'],
+                        'Province': record['Province'] || record['PROVINCE'] || record['province'],
+                        'Contact No.': record['Contact No.'] || record['CONTACT NO.'] || record['contact no.'] || record['Cellphone'] || record['CELLPHONE'] || record['cellphone'] || record['Phone No.'] || record['PHONE NO.'] || record['phone no.'],
+                        'Employment Status': record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Emp. Status'] || record['EMP. STATUS'] || record['emp. status'],
+                        'If Employed/Self Employed': record['If Employed/Self Employed'] || record['IF EMPLOYED/SELF EMPLOYED'] || record['if Employed/self employed'] || record[''],
+                        'Educational Attainment': record['Educational Attainment'] || record['EDUCATIONAL ATTAINMENT'] || record['educational attainment'] || record[''],
+                        'Course': record['Course'] || record['COURSE'] || record['course'] || record[''],
+                        'Skills': record['Skills'] || record['SKILLS'] || record['skills'] || record[''],
+                        'Work Experience': record['Work Experience'] || record['WORK EXPERIENCE'] || record['work experience'] || record[''],
+                        'Sector': record['Sector'] || record['SECTOR'] || record['sector'] || record[''],
+                        'Program/Services Provided': record['Program/Services Provided'] || record['PROGRAM/SERVICES PROVIDED'] || record['program/services provided'] || record[''],
+                        'Remarks': record['Remarks'] || record['REMARKS'] || record['remarks'] || record[''],
+                        'Registration Date': record['Registration Date'] || record['REGISTRATION DATE'] || record['registration date'] || record[''],
+                    };
+                    
+                    value = fieldMap[column] || record[column] || 'N/A';
+                    cell.textContent = value;
+                    cell.className = 'compact-cell';
+                }
+                
                 row.appendChild(cell);
             });
             
-            const actionCell = document.createElement('td');
-            actionCell.classList.add('action-buttons');
-            
-            const downloadBtn = document.createElement('button');
-            downloadBtn.classList.add('download-btn');
-            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
-            downloadBtn.addEventListener('click', function() {
-                exportRowToExcel(item);
-            });
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.classList.add('delete-btn');
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.addEventListener('click', function() {
-                deleteRow(row, item);
-            });
-            
-            actionCell.appendChild(downloadBtn);
-            actionCell.appendChild(deleteBtn);
-            row.appendChild(actionCell);
-            
             tbody.appendChild(row);
         });
+        
+        localStorage.setItem('importedData', JSON.stringify(data));
     }
-    
-    function exportRowToExcel(item) {
+
+    function exportSummaryReport() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        if (savedApplicants.length === 0) {
+            showNotification('No data available to export', 'error');
+            return;
+        }
+        
         try {
-            const worksheet = XLSX.utils.json_to_sheet([item]);
+            // Create summary data instead of full records
+            const summaryData = savedApplicants.map(applicant => ({
+                'SRS ID': applicant['SRS ID'] || '',
+                'Name': (applicant.NAME || '').substring(0, 100),
+                'Age': applicant.AGE || '',
+                'Sex': applicant.SEX || '',
+                'Barangay': applicant.BARANGAY || '',
+                'City/Municipality': applicant['CITY/MUNICIPALITY'] || '',
+                'Employment Status': applicant['EMP. STATUS'] || '',
+                'Program Category': applicant['PROGRAM CATEGORY'] || '',
+                'Program Status': applicant['PROGRAM STATUS'] || '',
+                'Registration Date': applicant['REG. DATE'] || '',
+                'Contact Number': applicant.CELLPHONE || ''
+            }));
+            
+            const worksheet = XLSX.utils.json_to_sheet(summaryData);
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant");
-            XLSX.writeFile(workbook, `applicant_${item.ID}.xlsx`);
-            showNotification('Row exported successfully!', 'success');
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants Summary");
+            
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `applicants_summary_${today}.xlsx`);
+            
+            showNotification('Summary report exported successfully!', 'success');
         } catch (error) {
-            console.error('Error exporting row to Excel:', error);
-            showNotification('Error exporting row: ' + error.message, 'error');
+            console.error('Error exporting summary:', error);
+            showNotification('Error exporting summary report: ' + error.message, 'error');
         }
     }
-    
-    function deleteRow(row, item) {
-        if (confirm('Are you sure you want to delete this row?')) {
-            if (!elements.importedTable) return;
-            
-            const tbody = elements.importedTable.querySelector('tbody');
-            if (tbody) tbody.removeChild(row);
-            
-            const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
-            const updatedData = importedData.filter(data => data.ID !== item.ID);
-            localStorage.setItem('importedData', JSON.stringify(updatedData));
-            
-            showNotification('Row deleted successfully!', 'success');
+
+    // Add export functionality
+    document.getElementById('export-applicants-btn').addEventListener('click', function() {
+        exportApplicantsToExcel();
+    });
+
+    function exportApplicantsToExcel() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        if (savedApplicants.length === 0) {
+            showNotification('No applicants to export', 'error');
+            return;
         }
-    }
-    
-    if (elements.resetDataBtn) {
-        elements.resetDataBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to reset all imported data?')) {
-                localStorage.removeItem('importedData');
-                if (elements.importedTable) {
-                    const tbody = elements.importedTable.querySelector('tbody');
-                    if (tbody) tbody.innerHTML = '';
-                }
-                showNotification('Imported data has been reset.', 'success');
-            }
-        });
-    }
-    
-    if (elements.clearAllApplicantsBtn) {
-        elements.clearAllApplicantsBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to clear all applicants? This action cannot be undone.')) {
-                localStorage.removeItem('mainApplicants');
-                const keys = Object.keys(localStorage);
-                keys.forEach(key => {
-                    if (key.startsWith('photo_') || key.startsWith('tempPhoto_')) {
-                        localStorage.removeItem(key);
-                    }
-                });
-                if (elements.mainApplicantTable) {
-                    const tbody = elements.mainApplicantTable.querySelector('tbody');
-                    if (tbody) tbody.innerHTML = '';
-                }
-                showNotification('All applicants have been cleared.', 'success');
-            }
-        });
-    }
-    
-    loadMainApplicants();
-    
-    const savedData = localStorage.getItem('importedData');
-    if (savedData) {
+        
         try {
-            const parsedData = JSON.parse(savedData);
-            displayImportedData(parsedData);
+            // Create simplified data for export
+            const exportData = savedApplicants.map(applicant => ({
+                'SRS ID': applicant['SRS ID'] || '',
+                'Name': applicant.NAME || '',
+                'Age': applicant.AGE || '',
+                'Gender': applicant.SEX || '',
+                'Civil Status': applicant['CIVIL STATUS'] || '',
+                'Phone': applicant.CELLPHONE || '',
+                'Email': applicant.EMAIL || '',
+                'Barangay': applicant.BARANGAY || '',
+                'City/Municipality': applicant['CITY/MUNICIPALITY'] || '',
+                'Employment Status': applicant['EMP. STATUS'] || '',
+                'Education Level': applicant['EDUC LEVEL'] || '',
+                'Program Category': applicant['PROGRAM CATEGORY'] || '',
+                'Program Status': applicant['PROGRAM STATUS'] || '',
+                'Registration Date': applicant['REG. DATE'] || ''
+            }));
+            
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants");
+            
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `applicants_${today}.xlsx`);
+            
+            showNotification('Applicants exported successfully!', 'success');
         } catch (error) {
-            console.error('Error parsing saved data:', error);
+            console.error('Error exporting applicants:', error);
+            showNotification('Error exporting applicants: ' + error.message, 'error');
         }
     }
+
+    function deleteImportedRecord(index) {
+        const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
+        importedData.splice(index, 1);
+        localStorage.setItem('importedData', JSON.stringify(importedData));
+        displayImportedData(importedData);
+        showNotification('Imported record deleted successfully!', 'success');
+    }
+
+    function generateExpandableCourseStats(stats) {
+        const collegeGrads = stats.byEducation['College Graduate'] || stats.byEducation['College'] || 0;
+        
+        if (collegeGrads === 0) {
+            return '<p style="text-align: center; color: #666; margin: 10px 0;">No college graduates found.</p>';
+        }
+        
+        // Get top courses
+        const topCourses = Object.entries(stats.byCourse)
+            .filter(([course, count]) => course !== 'No Course Specified' && course !== 'N/A' && count > 0)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+        
+        let coursesHTML = '';
+        topCourses.forEach(([course, count]) => {
+            const percentage = ((count / collegeGrads) * 100).toFixed(1);
+            coursesHTML += `
+                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #eee;">
+                    <span>${course}</span>
+                    <span><strong>${count}</strong> (${percentage}%)</span>
+                </div>
+            `;
+        });
+        
+        return `
+            <div class="expandable-section">
+                <div class="expandable-header">
+                    <span><strong>${collegeGrads} College Graduates - Course Breakdown</strong></span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="expandable-content">
+                    ${coursesHTML || '<p style="text-align: center; color: #666;">No course data available.</p>'}
+                </div>
+            </div>
+        `;
+    }
+
+    // Helper functions for name parsing
+    function extractLastName(fullName) {
+        if (!fullName) return '';
+        const parts = fullName.split(',');
+        return parts[0] ? parts[0].trim() : '';
+    }
+
+    function extractFirstName(fullName) {
+        if (!fullName) return '';
+        const parts = fullName.split(',');
+        if (parts.length > 1) {
+            const firstMiddle = parts[1].trim().split(' ');
+            return firstMiddle[0] || '';
+        }
+        return fullName.split(' ')[0] || '';
+    }
+
+    function extractMiddleName(fullName) {
+        if (!fullName) return '';
+        const parts = fullName.split(',');
+        if (parts.length > 1) {
+            const firstMiddle = parts[1].trim().split(' ');
+            return firstMiddle.length > 1 ? firstMiddle.slice(1).join(' ') : '';
+        }
+        const nameParts = fullName.split(' ');
+        return nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
+    }
+
+    function formatFullName(applicant) {
+        const lastName = applicant['LAST NAME'] || applicant.LASTNAME || '';
+        const firstName = applicant['FIRST NAME'] || applicant.FIRSTNAME || '';
+        const middleName = applicant['MIDDLE NAME'] || applicant.MIDDLENAME || '';
+        
+        if (lastName && firstName) {
+            return `${lastName}, ${firstName} ${middleName}`.trim();
+        }
+        return applicant.NAME || '';
+    }
+
+    function getFormFieldMappings() {
+        // Define all possible labels for each field based on your form
+        return {
+            'SRS ID': ['SRS ID', 'ID', 'Applicant ID', 'SRS_ID', 'srs id'],
+            'LAST NAME': ['LAST NAME', 'Last Name', 'LASTNAME', 'last name', 'Surname', 'Family Name'],
+            'FIRST NAME': ['FIRST NAME', 'First Name', 'FIRSTNAME', 'first name', 'Given Name'],
+            'MIDDLE NAME': ['MIDDLE NAME', 'Middle Name', 'MIDDLENAME', 'middle name', 'Middle Initial'],
+            'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name'],
+            'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB'],
+            'AGE': ['AGE', 'Age'],
+            'SEX': ['SEX', 'Gender', 'SEX/GENDER', 'gender'],
+            'CIVIL STATUS': ['CIVIL STATUS', 'Civil Status', 'Status', 'Marital Status'],
+            'STREET ADDRESS': ['STREET ADDRESS', 'Street Address', 'Address', 'STREET', 'Street'],
+            'BARANGAY': ['BARANGAY', 'Barangay', 'BRGY', 'Brgy'],
+            'CITY/MUNICIPALITY': ['CITY/MUNICIPALITY', 'City/Municipality', 'City', 'Municipality', 'CITY', 'MUNICIPALITY'],
+            'PROVINCE': ['PROVINCE', 'Province'],
+            'REGION': ['REGION', 'Region'],
+            'EMAIL': ['EMAIL', 'Email', 'Email Address'],
+            'TELEPHONE': ['TELEPHONE', 'Telephone', 'Phone', 'Landline'],
+            'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number'],
+            'EMP. STATUS': ['EMP. STATUS', 'Employment Status', 'EMP STATUS', 'Employment'],
+            'EMP. TYPE': ['EMP. TYPE', 'Employment Type', 'EMP TYPE', 'Type of Employment'],
+            'EDUC LEVEL': ['EDUC LEVEL', 'Educational Level', 'Education', 'Educational Attainment'],
+            'COURSE': ['COURSE', 'Course', 'Degree', 'College Course'],
+            '4Ps': ['4Ps', '4PS', '4Ps Member', 'Pantawid Pamilya'],
+            'PWD': ['PWD', 'Person with Disability', 'PWD Status'],
+            'DISABILITY': ['DISABILITY', 'Disability', 'Type of Disability'],
+            'PREFERRED POSITION': ['PREFERRED POSITION', 'Preferred Position', 'Desired Position', 'Job Preference'],
+            'SKILLS': ['SKILLS', 'Skills', 'Competencies'],
+            'WORK EXPERIENCE': ['WORK EXPERIENCE', 'Work Experience', 'Experience', 'Employment History'],
+            'OFW': ['OFW', 'Overseas Filipino Worker', 'OFW Status'],
+            'COUNTRY': ['COUNTRY', 'Country', 'Current Country'],
+            'FORMER OFW': ['FORMER OFW', 'Former OFW', 'Ex-OFW'],
+            'LATEST COUNTRY': ['LATEST COUNTRY', 'Latest Country', 'Previous Country'],
+            'REG. DATE': ['REG. DATE', 'Registration Date', 'Date Registered', 'REG DATE'],
+            'REMARKS': ['REMARKS', 'Remarks', 'Notes', 'Comments'],
+            'PROGRAM CATEGORY': ['PROGRAM CATEGORY', 'Program Category', 'Category', 'Sector'],
+            'SPECIFIC PROGRAM': ['SPECIFIC PROGRAM', 'Specific Program', 'Program', 'Service'],
+            'PROGRAM STATUS': ['PROGRAM STATUS', 'Program Status', 'Status']
+        };
+    }
+
+    function findMatchingValue(record, possibleLabels) {
+        // First, try exact matches (case insensitive)
+        for (const label of possibleLabels) {
+            for (const recordKey in record) {
+                if (recordKey.toLowerCase() === label.toLowerCase()) {
+                    return record[recordKey];
+                }
+            }
+        }
+        
+        // Then try partial matches
+        for (const label of possibleLabels) {
+            for (const recordKey in record) {
+                if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
+                    label.toLowerCase().includes(recordKey.toLowerCase())) {
+                    return record[recordKey];
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    function processFieldValue(fieldKey, value) {
+        if (!value) return value;
+        
+        // Convert to string and trim
+        value = String(value).trim();
+        
+        // Handle date fields
+        if (fieldKey === 'BDATE' || fieldKey === 'REG. DATE') {
+            return formatDateValue(value);
+        }
+        
+        // Handle boolean-like fields
+        const booleanFields = ['4Ps', 'PWD', 'OFW', 'FORMER OFW'];
+        if (booleanFields.includes(fieldKey)) {
+            return normalizeBooleanValue(value);
+        }
+        
+        // Handle empty values
+        if (value === '' || value === 'null' || value === 'undefined') {
+            return 'N/A';
+        }
+        
+        return value;
+    }
+
+    function formatDateValue(dateValue) {
+        if (!dateValue) return 'N/A';
+        
+        try {
+            // Try to parse as Date object first
+            let dateObj = new Date(dateValue);
+            
+            if (isNaN(dateObj.getTime())) {
+                // If that fails, try common string formats
+                if (dateValue.includes('/')) {
+                    const parts = dateValue.split('/');
+                    if (parts.length === 3) {
+                        const month = parts[0].padStart(2, '0');
+                        const day = parts[1].padStart(2, '0');
+                        const year = parts[2];
+                        return `${month}/${day}/${year}`;
+                    }
+                }
+                return dateValue; // Return as-is if we can't parse
+            }
+            
+            return `${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getDate().toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
+        } catch (error) {
+            console.warn('Date parsing error:', error);
+            return dateValue;
+        }
+    }
+
+    function normalizeBooleanValue(value) {
+        const trueValues = ['yes', 'true', '1', 'y', 'check', 'checked', 'x'];
+        const falseValues = ['no', 'false', '0', 'n', 'unchecked', ''];
+        
+        const lowerValue = value.toLowerCase().trim();
+        
+        if (trueValues.includes(lowerValue)) return 'Yes';
+        if (falseValues.includes(lowerValue)) return 'No';
+        
+        return value; // Return original if not recognized
+    }
+
+    function smartImportData(jsonData) {
+        console.log("Raw imported data:", jsonData);
+        
+        if (jsonData.length === 0) {
+            return [];
+        }
+        
+        const processedData = jsonData.map((record, index) => {
+            const processedRecord = {};
+            
+            // Get all field mappings from the manual form
+            const fieldMappings = getFormFieldMappings();
+            
+            // Try to match each field
+            Object.keys(fieldMappings).forEach(fieldKey => {
+                const possibleLabels = fieldMappings[fieldKey];
+                let value = findMatchingValue(record, possibleLabels);
+                
+                // Special handling for specific fields
+                if (value) {
+                    value = processFieldValue(fieldKey, value);
+                }
+                
+                processedRecord[fieldKey] = value || 'N/A';
+            });
+            
+            // Generate SRS ID if not present
+            if (!processedRecord['SRS ID'] || processedRecord['SRS ID'] === 'N/A') {
+                processedRecord['SRS ID'] = generateUniqueId();
+            }
+            
+            // Set timestamps
+            processedRecord['DATE CREATED'] = new Date().toLocaleString();
+            processedRecord['DATE LAST MODIFIED'] = new Date().toLocaleString();
+            processedRecord['CREATED BY'] = 'System Import';
+            processedRecord['LAST MODIFIED BY'] = 'System Import';
+            
+            return processedRecord;
+        });
+        
+        return processedData;
+    }
+
+    function showFieldMapping(originalRecord, processedRecord) {
+        console.log("Field mapping results:");
+        Object.keys(processedRecord).forEach(key => {
+            if (processedRecord[key] !== 'N/A') {
+                // Find which original field was mapped
+                const originalField = Object.keys(originalRecord).find(origKey => 
+                    String(originalRecord[origKey]) === String(processedRecord[key])
+                );
+                console.log(`${key}: "${processedRecord[key]}" (from: "${originalField}")`);
+            }
+        });
+    }
+
+
+    // Initialize the application
+    initializeApp();
 });

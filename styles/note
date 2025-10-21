@@ -21,3 +21,34 @@ Backend Options:
 - Node.js + MongoDB - JavaScript full-stack
 - Python (Django/Flask) + PostgreSQL - Robust and scalable
 - Firebase - Quick setup, real-time database
+
+Problems/requirements
+- Registration Date button filter: when I input a year or a month it should only filter on what was input year or month and when at the application was marked as N/A dont show it same as at the brgy. when I input for example a maimpis it will filter only the applicants that has inputed maimpis at the brgy. when it it N/A it should not show.
+
+- at the program report it is corect but add a dropdown or any like thaht where in when I click the college grad it will show the courses counts for example there is a total of 10 college grads I will click a button there and it will show that there is 1 IT, 4 BUsinessadd, 3 Educ english major and 2 Cpe
+
+- the header at the applicant table were not good, it is messier when scrolled down becuse the sub header were collpasing 
+
+- when adding a new aplicant the fields should be fill up all and N/A if it is really not applicable
+
+
+
+
+How This Works:
+Smart Field Matching: The system tries multiple possible labels for each field
+Flexible Matching: It tries exact matches first, then partial matches
+Data Normalization: Converts dates, booleans, and empty values to consistent formats
+Automatic Field Mapping: Even if your Excel columns are named differently, they'll be matched to the correct fields
+
+Benefits:
+✅ No need for exact column names
+
+✅ Handles common variations and abbreviations
+
+✅ Works with different date formats
+
+✅ Normalizes boolean values (Yes/No, True/False, 1/0)
+
+✅ Provides feedback on what was matched
+
+Now your import system will be much more flexible and should work with various Excel file formats without requiring exact column naming!

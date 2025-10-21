@@ -30,14 +30,102 @@
                 <button class="clear-search-btn" id="clear-search-btn">
                     <i class="fas fa-times"></i> Clear
                 </button>
+                <button class="action-btn" id="advanced-filters-btn" style="background: #9c27b0;">
+                    <i class="fas fa-filter"></i> Filters
+                </button>
+            </div>
+
+            <div id="advanced-filters-panel" class="advanced-filters" style="display: none;">
+                <h4 style="margin-bottom: 15px;">Advanced Filters</h4>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Program Category</label>
+                        <select id="filter-program-category" class="filter-select">
+                            <option value="">All Categories</option>
+                            <option value="Livelihood">Livelihood Program</option>
+                            <option value="Employment">Employment Assistance</option>
+                            <option value="Education">Educational Assistance</option>
+                            <option value="Skills">Skills Training</option>
+                            <option value="OFW">OFW Reintegration</option>
+                            <option value="PWD">PWD Assistance</option>
+                            <option value="4Ps">4Ps Monitoring</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Program Status</label>
+                        <select id="filter-program-status" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="Applied">Applied</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Ongoing">Ongoing</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Employment Status</label>
+                        <select id="filter-employment-status" class="filter-select">
+                            <option value="">All Status</option>
+                            <option value="Employed">Employed</option>
+                            <option value="Unemployed">Unemployed</option>
+                            <option value="Self-Employed">Self-Employed</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label class="filter-label">Age Range</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="filter-age-min" class="filter-input" placeholder="Min" min="18" max="100">
+                            <input type="number" id="filter-age-max" class="filter-input" placeholder="Max" min="18" max="100">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Barangay</label>
+                        <input type="text" id="filter-barangay" class="filter-input" placeholder="Filter by barangay">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Registration Date</label>
+                        <input type="date" id="filter-reg-date" class="filter-input">
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button class="action-btn" id="apply-filters-btn" style="background: #4caf50;">
+                        <i class="fas fa-check"></i> Apply Filters
+                    </button>
+                    <button class="clear-search-btn" id="clear-filters-btn">
+                        <i class="fas fa-broom"></i> Clear All Filters
+                    </button>
+                </div>
+            </div>
+
+            <div class="sort-container">
+                <label>Sort by:</label>
+                <select id="sort-select" class="sort-select">
+                    <option value="name">Name (A-Z)</option>
+                    <option value="name-desc">Name (Z-A)</option>
+                    <option value="date">Registration Date (Newest)</option>
+                    <option value="date-oldest">Registration Date (Oldest)</option>
+                    <option value="age">Age (Low to High)</option>
+                    <option value="age-desc">Age (High to Low)</option>
+                </select>
+                <span id="active-filters-count" style="font-size: 12px; color: #666;"></span>
             </div>
             
             <div class="table-container">
                 <table class="applicant-table" id="main-applicant-table">
                     <thead>
                         <tr>
-                            <th>Photo</th>
                             <th>SRS ID</th>
+                            <th>LAST NAME</th>
+                            <th>FIRST NAME</th>
+                            <th>MIDDLE NAME</th>
                             <th>NAME</th>
                             <th>BDATE</th>
                             <th>AGE</th>
@@ -71,15 +159,23 @@
                             <th>DATE CREATED</th>
                             <th>LAST MODIFIED BY</th>
                             <th>DATE LAST MODIFIED</th>
-                            <th>Actions</th>
+                            <th class="actions-cell">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        
+                        <!-- Data will be populated by JavaScript -->
                     </tbody>
                 </table>
             </div>
-            <button id="clear-all-applicants-btn" class="clear-all-btn">Clear All Applicants</button>
+            
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button id="clear-all-applicants-btn" class="clear-all-btn">
+                    <i class="fas fa-trash"></i> Clear All Applicants
+                </button>
+                <button id="export-applicants-btn" class="export-applicants-btn">
+                    <i class="fas fa-file-excel"></i> Export to Excel
+                </button>
+            </div>
         </div>
 
         <div class="card">
@@ -195,6 +291,24 @@
         </div>
     </div>
 
+    <!-- Program Reports Section -->
+    <div class="card">
+        <h2>Program Reports</h2>
+        
+        <div class="report-controls">
+            <button class="action-btn" id="generate-report-btn" style="background: #2196f3;">
+                <i class="fas fa-chart-bar"></i> Generate Program Report
+            </button>
+            <button class="action-btn" id="export-report-btn" style="background: #4caf50;">
+                <i class="fas fa-file-excel"></i> Export to Excel
+            </button>
+        </div>
+        
+        <div id="program-reports" class="reports-container" style="display: none;">
+            <!-- Reports will be generated here -->
+        </div>
+    </div>
+
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -231,22 +345,21 @@
             
             <form id="editApplicantForm">
                 <div class="form-grid">
-                    <!-- All your existing form fields remain the same -->
-                    <div class="form-group">
-                        <label for="edit-peso">PESO</label>
-                        <input type="text" id="edit-peso" name="edit-peso">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-area-type">AREA TYPE</label>
-                        <input type="text" id="edit-area-type" name="edit-area-type">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-area-class">AREA CLASS</label>
-                        <input type="text" id="edit-area-class" name="edit-area-class">
-                    </div>
                     <div class="form-group">
                         <label for="edit-srs-id">SRS ID</label>
                         <input type="text" id="edit-srs-id" name="edit-srs-id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-last-name">LAST NAME</label>
+                        <input type="text" id="edit-last-name" name="edit-last-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-first-name">FIRST NAME</label>
+                        <input type="text" id="edit-first-name" name="edit-first-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-middle-name">MIDDLE NAME</label>
+                        <input type="text" id="edit-middle-name" name="edit-middle-name">
                     </div>
                     <div class="form-group">
                         <label for="edit-name">NAME</label>
@@ -270,8 +383,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="edit-civil-status">Civil Status</label>
-                        <select id="edit-civil-status" name="edit-civil-status" >
+                        <label for="edit-civil-status">CIVIL STATUS</label>
+                        <select id="edit-civil-status" name="edit-civil-status">
                             <option value="">Select Status</option>
                             <option value="Single">Single</option>
                             <option value="Married">Married</option>
@@ -328,7 +441,7 @@
                         <input type="text" id="edit-course" name="edit-course">
                     </div>
                     <div class="form-group">
-                        <label for="edit-4ps">4ps</label>
+                        <label for="edit-4ps">4PS</label>
                         <select id="edit-4ps" name="edit-4ps">
                             <option value="">SELECT STATUS</option>
                             <option value="Yes">Yes</option>
@@ -359,7 +472,7 @@
                         <label for="edit-work-experience">WORK EXPERIENCE</label>
                         <input type="text" id="edit-work-experience" name="edit-work-experience">
                     </div>
-                    <div class="form-group"> 
+                    <div class="form-group">
                         <label for="edit-ofw">OFW</label>
                         <select id="edit-ofw" name="edit-ofw">
                             <option value="">SELECT STATUS</option>
@@ -396,6 +509,10 @@
                         <input type="text" id="edit-created-by" name="edit-created-by" readonly>
                     </div>
                     <div class="form-group">
+                        <label for="edit-date-created">DATE CREATED</label>
+                        <input type="text" id="edit-date-created" name="edit-date-created" readonly>
+                    </div>
+                    <div class="form-group">
                         <label for="edit-last-modified-by">LAST MODIFIED BY</label>
                         <input type="text" id="edit-last-modified-by" name="edit-last-modified-by" readonly>
                     </div>
@@ -404,28 +521,18 @@
                         <input type="text" id="edit-date-last-modified" name="edit-date-last-modified" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="edit-username">USERNAME</label>
-                        <input type="text" id="edit-username" name="edit-username">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-first-name">FIRST NAME</label>
-                        <input type="text" id="edit-first-name" name="edit-first-name" >
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-last-name">LAST NAME</label>
-                        <input type="text" id="edit-last-name" name="edit-last-name">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-email2">EMAIL</label>
-                        <input type="text" id="edit-email2" name="edit-email2">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-course-1">COURSE 1</label>
-                        <input type="text" id="edit-course-1" name="edit-course-1">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-role-1">ROLE 1</label>
-                        <input type="text" id="edit-role-1" name="edit-role-1">
+                        <label for="edit-program-category">PROGRAM CATEGORY</label>
+                        <select id="edit-program-category" name="edit-program-category">
+                            <option value="">Select Category</option>
+                            <option value="Livelihood">Livelihood Program</option>
+                            <option value="Employment">Employment Assistance</option>
+                            <option value="Education">Educational Assistance</option>
+                            <option value="Skills">Skills Training</option>
+                            <option value="OFW">OFW Reintegration</option>
+                            <option value="PWD">PWD Assistance</option>
+                            <option value="4Ps">4Ps Monitoring</option>
+                            <option value="Other">Other Programs</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -498,11 +605,23 @@
                     <!-- Basic Information -->
                     <div class="form-section">
                         <h3>Basic Information</h3>
+                        <div class="form-group required">
+                            <label for="manual-last-name" class="required-field">Last Name</label>
+                            <input type="text" id="manual-last-name" name="manual-last-name" required>
+                        </div>
+                        <div class="form-group required">
+                            <label for="manual-first-name" class="required-field">First Name</label>
+                            <input type="text" id="manual-first-name" name="manual-first-name" required>
+                        </div>
                         <div class="form-group">
+                            <label for="manual-middle-name">Middle Name</label>
+                            <input type="text" id="manual-middle-name" name="manual-middle-name">
+                        </div>
+                        <div class="form-group required">
                             <label for="manual-name" class="required-field">Full Name</label>
                             <input type="text" id="manual-name" name="manual-name" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group required">
                             <label for="manual-bdate" class="required-field">Date of Birth</label>
                             <input type="date" id="manual-bdate" name="manual-bdate" class="date-input" required>
                         </div>
@@ -614,6 +733,40 @@
                         <div class="form-group">
                             <label for="manual-remarks">Remarks</label>
                             <input type="text" id="manual-remarks" name="manual-remarks">
+                        </div>
+                    </div>
+
+                    <!-- Add this section to your manual form -->
+                    <div class="form-section">
+                        <h3>Program Information</h3>
+                        <div class="form-group">
+                            <label for="manual-program-category">Program Category</label>
+                            <select id="manual-program-category" name="manual-program-category">
+                                <option value="">Select Category</option>
+                                <option value="Livelihood">Livelihood Program</option>
+                                <option value="Employment">Employment Assistance</option>
+                                <option value="Education">Educational Assistance</option>
+                                <option value="Skills">Skills Training</option>
+                                <option value="OFW">OFW Reintegration</option>
+                                <option value="PWD">PWD Assistance</option>
+                                <option value="4Ps">4Ps Monitoring</option>
+                                <option value="Other">Other Programs</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-specific-program">Specific Program</label>
+                            <input type="text" id="manual-specific-program" name="manual-specific-program" placeholder="e.g., Sewing Livelihood, TESDA Training">
+                        </div>
+                        <div class="form-group">
+                            <label for="manual-program-status">Program Status</label>
+                            <select id="manual-program-status" name="manual-program-status">
+                                <option value="">Select Status</option>
+                                <option value="Applied">Applied</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Ongoing">Ongoing</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Not Interested">Not Interested</option>
+                            </select>
                         </div>
                     </div>
                 </div>
