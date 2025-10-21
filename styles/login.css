@@ -13,7 +13,6 @@ body {
     align-items: center;
 }
 
-/* System Header Styles (Completely separate) */
 .system-header {
     width: 100%;
     background: linear-gradient(135deg, #f86c6c, #a51f41);
@@ -61,7 +60,6 @@ body {
     opacity: 0.9;
 }
 
-/* Login Container Styles (Separate from header) */
 .login-container {
     flex: 1;
     display: flex;
@@ -170,7 +168,6 @@ body {
     font-weight: 500;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .system-header {
         padding: 25px 15px;

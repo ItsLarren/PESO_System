@@ -1,3 +1,5 @@
+// Replace your entire script.js with this updated version
+
 document.addEventListener('DOMContentLoaded', function () {
     const elements = {
         fileInput: document.getElementById('file-input'),
@@ -50,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
-        // You can modify your header to show the username
         const header = document.querySelector('header .header-content');
         if (header) {
             const userInfo = document.createElement('div');
@@ -61,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             header.appendChild(userInfo);
 
-            // Add logout functionality
             document.getElementById('logout-btn').addEventListener('click', function() {
                 localStorage.removeItem('isLoggedIn');
                 localStorage.removeItem('currentUser');
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function retakePhoto() {
         elements.cameraVideo.style.display = 'block';
         elements.cameraCanvas.style.display = 'none';
-        elements.captureBtn.style.display = 'block';
+        elements.captureBtn.style.display = 'none';
         elements.retakeBtn.style.display = 'none';
         elements.usePhotoBtn.style.display = 'none';
         capturedPhoto = null;
@@ -277,7 +277,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!applicants || !Array.isArray(applicants) || applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 43;
+            cell.colSpan = 35; // Updated column count after removing unwanted columns
             cell.textContent = 'No applicants found. Import data or add manually.';
             cell.className = 'no-results';
             row.appendChild(cell);
@@ -520,13 +520,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         row.appendChild(photoCell);
         
+        // Updated fields - removed PESO, AREA TYPE, AREA CLASS, username, firstname, lastname, email, course1, role1
         const fields = [
-            'PESO', 'AREA TYPE', 'AREA CLASS', 'SRS ID', 'NAME', 'BDATE', 'AGE', 'SEX', 'CIVIL STATUS',
+            'SRS ID', 'NAME', 'BDATE', 'AGE', 'SEX', 'CIVIL STATUS',
             'STREET ADDRESS', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROVINCE', 'REGION', 'EMAIL', 'TELEPHONE',
             'CELLPHONE', 'EMP. STATUS', 'EMP. TYPE', 'EDUC LEVEL', 'COURSE', '4Ps', 'PWD', 'DISABILITY',
             'PREFERRED POSITION', 'SKILLS', 'WORK EXPERIENCE', 'OFW', 'COUNTRY', 'FORMER OFW', 'LATEST COUNTRY',
-            'REG. DATE', 'REMARKS', 'CREATED BY', 'DATE CREATED', 'LAST MODIFIED BY', 'DATE LAST MODIFIED',
-            'username', 'firstname', 'lastname', 'email', 'course1', 'role1'
+            'REG. DATE', 'REMARKS', 'CREATED BY', 'DATE CREATED', 'LAST MODIFIED BY', 'DATE LAST MODIFIED'
         ];
         
         fields.forEach(field => {
@@ -568,11 +568,35 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function exportApplicantToExcel(applicant) {
-        const worksheet = XLSX.utils.json_to_sheet([applicant]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant");
-        XLSX.writeFile(workbook, `applicant_${applicant['SRS ID'] || 'data'}.xlsx`);
-        showNotification('Applicant data exported successfully!', 'success');
+        try {
+            // Create a clean copy of the applicant data without unwanted fields
+            const exportData = {};
+            
+            // Define which fields to include in the export
+            const exportFields = [
+                'SRS ID', 'NAME', 'BDATE', 'AGE', 'SEX', 'CIVIL STATUS',
+                'STREET ADDRESS', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROVINCE', 'REGION', 'EMAIL', 'TELEPHONE',
+                'CELLPHONE', 'EMP. STATUS', 'EMP. TYPE', 'EDUC LEVEL', 'COURSE', '4Ps', 'PWD', 'DISABILITY',
+                'PREFERRED POSITION', 'SKILLS', 'WORK EXPERIENCE', 'OFW', 'COUNTRY', 'FORMER OFW', 'LATEST COUNTRY',
+                'REG. DATE', 'REMARKS', 'CREATED BY', 'DATE CREATED', 'LAST MODIFIED BY', 'DATE LAST MODIFIED'
+            ];
+            
+            // Only include the fields we want to export
+            exportFields.forEach(field => {
+                if (applicant[field] !== undefined) {
+                    exportData[field] = applicant[field];
+                }
+            });
+            
+            const worksheet = XLSX.utils.json_to_sheet([exportData]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant");
+            XLSX.writeFile(workbook, `applicant_${applicant['SRS ID'] || 'data'}.xlsx`);
+            showNotification('Applicant data exported successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            showNotification('Error exporting applicant data: ' + error.message, 'error');
+        }
     }
     
     function deleteApplicant(applicant) {
@@ -635,10 +659,8 @@ document.addEventListener('DOMContentLoaded', function () {
             input.value = '';
         });
         
+        // Updated field mapping - removed unwanted fields
         const fieldToIdMap = {
-            'PESO': 'edit-peso',
-            'AREA TYPE': 'edit-area-type',
-            'AREA CLASS': 'edit-area-class',
             'SRS ID': 'edit-srs-id',
             'NAME': 'edit-name',
             'BDATE': 'edit-bdate',
@@ -672,13 +694,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'CREATED BY': 'edit-created-by',
             'DATE CREATED': 'edit-date-created',
             'LAST MODIFIED BY': 'edit-last-modified-by',
-            'DATE LAST MODIFIED': 'edit-date-last-modified',
-            'username': 'edit-username',
-            'firstname': 'edit-firstname',
-            'lastname': 'edit-lastname',
-            'email': 'edit-email2',
-            'course1': 'edit-course1',
-            'role1': 'edit-role1'
+            'DATE LAST MODIFIED': 'edit-date-last-modified'
         };
         
         for (const field in applicant) {
@@ -1073,11 +1089,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     
     function exportRowToExcel(item) {
-        const worksheet = XLSX.utils.json_to_sheet([item]);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant");
-        XLSX.writeFile(workbook, `applicant_${item.ID}.xlsx`);
-        showNotification('Row exported successfully!', 'success');
+        try {
+            const worksheet = XLSX.utils.json_to_sheet([item]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant");
+            XLSX.writeFile(workbook, `applicant_${item.ID}.xlsx`);
+            showNotification('Row exported successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting row to Excel:', error);
+            showNotification('Error exporting row: ' + error.message, 'error');
+        }
     }
     
     function deleteRow(row, item) {

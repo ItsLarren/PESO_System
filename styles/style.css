@@ -886,7 +886,6 @@ input[type="date"]:after {
     }
 }
 
-/* Add to your existing style.css */
 .user-info {
     display: flex;
     align-items: center;
