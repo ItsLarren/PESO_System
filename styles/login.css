@@ -26,36 +26,36 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    max-width: 1200px;
+    max-width: 2000px;
     margin: 0 auto;
     gap: 30px;
 }
 
 .logo-left, .logo-right {
-    flex: 1;
+    flex: 2;
     display: flex;
     justify-content: center;
 }
 
 .logo-img {
-    max-width: 80px;
+    max-width: 150px;
     height: auto;
 }
 
 .header-center {
-    flex: 2;
+    flex: 5;
     text-align: center;
 }
 
 .header-center h1 {
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 700;
     margin-bottom: 8px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .subtitle {
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 500;
     opacity: 0.9;
 }

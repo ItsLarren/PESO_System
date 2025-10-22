@@ -63,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let capturedPhoto = null;
     let activeFilters = {};
 
-    // Initialize all functionality
     function initializeApp() {
         initializeManualForm();
         initializeCamera();
@@ -75,17 +74,14 @@ document.addEventListener('DOMContentLoaded', function () {
         loadMainApplicants();
         loadImportedData();
         
-        // Check authentication
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'login.html';
             return;
         }
         
-        // Display current user
         displayCurrentUser();
     }
 
-    // Initialize manual form functionality
     function initializeManualForm() {
         if (elements.addManualBtn) {
             elements.addManualBtn.addEventListener('click', openManualModal);
@@ -107,9 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Set default values for manual form
         if (elements.manualApplicantForm) {
-            // Set default values to N/A for optional fields
             const optionalFields = [
                 'manual-street-address', 'manual-course', 'manual-disability',
                 'manual-preferred-position', 'manual-skills', 'manual-work-experience',
@@ -123,7 +117,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             
-            // Set default values for dropdowns
             const defaultDropdowns = {
                 'manual-4ps': 'No',
                 'manual-pwd': 'No',
@@ -144,7 +137,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Photo functionality remains the same
         if (elements.manualUploadPhotoBtn && elements.manualPhotoInput) {
             elements.manualUploadPhotoBtn.addEventListener('click', function() {
                 elements.manualPhotoInput.click();
@@ -178,10 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function openManualModal() {
         if (!elements.manualModal) return;
         
-        // Reset form
         elements.manualApplicantForm.reset();
-        
-        // Reset photo
         elements.manualPhotoPreview.src = '';
         elements.manualPhotoPreview.style.display = 'none';
         elements.manualPhotoPlaceholder.style.display = 'flex';
@@ -203,7 +192,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const photoData = e.target.result;
-                    // Store temporarily for manual entry
                     localStorage.setItem('tempManualPhoto', photoData);
                     
                     elements.manualPhotoPreview.src = photoData;
@@ -236,11 +224,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     differences: []
                 };
                 
-                // Check which fields match
                 if (nameMatch) matchDetails.matchingFields.push('Name');
                 if (bdateMatch) matchDetails.matchingFields.push('Birthday');
                 
-                // Check other fields for differences
                 const fieldsToCompare = [
                     'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'
                 ];
@@ -268,7 +254,6 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // Function to show detailed duplicate confirmation
     function showDuplicateConfirmation(applicantData, matches) {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
@@ -364,26 +349,22 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Function to highlight matching applicants in the table
     function highlightMatchingApplicants(matches) {
         const tbody = elements.mainApplicantTable.querySelector('tbody');
         if (!tbody) return;
         
-        // Remove any existing highlights
         const existingHighlights = tbody.querySelectorAll('.duplicate-highlight');
         existingHighlights.forEach(row => {
             row.classList.remove('duplicate-highlight');
         });
         
-        // Highlight matching rows
         matches.forEach(match => {
             const rows = tbody.querySelectorAll('tr');
             rows.forEach(row => {
-                const nameCell = row.querySelector('td:nth-child(3)'); // NAME column
+                const nameCell = row.querySelector('td:nth-child(3)'); 
                 if (nameCell && nameCell.textContent.trim().toLowerCase() === match.existingApplicant.NAME.toLowerCase()) {
                     row.classList.add('duplicate-highlight');
                     
-                    // Scroll to the first highlighted row
                     if (!window.hasScrolledToHighlight) {
                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         window.hasScrolledToHighlight = true;
@@ -393,7 +374,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Function to remove highlights
     function removeHighlights() {
         const tbody = elements.mainApplicantTable.querySelector('tbody');
         if (!tbody) return;
@@ -410,7 +390,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData(elements.manualApplicantForm);
         const applicantData = {};
         
-        // Map form fields to applicant data structure
         formData.forEach((value, key) => {
             const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
             applicantData[fieldName] = value;
@@ -423,48 +402,37 @@ document.addEventListener('DOMContentLoaded', function () {
             applicantData['NAME'] = `${lastName}, ${firstName} ${middleName}`.trim();
         }
         
-        // Generate SRS ID
         applicantData['SRS ID'] = generateUniqueId();
         
-        // Process date fields
         if (applicantData['BDATE']) {
             const date = new Date(applicantData['BDATE']);
             applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
         }
         
-        // Set registration date to current date
         applicantData['REG. DATE'] = new Date().toLocaleDateString();
         applicantData['DATE CREATED'] = new Date().toLocaleString();
         applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
         
-        // Check for name duplicates (even if other fields are different)
         const duplicateCheck = checkApplicantDuplicate(applicantData);
         
         if (duplicateCheck.hasMatches) {
-            // Highlight the matching applicants in the table
             highlightMatchingApplicants(duplicateCheck.matches);
             
-            // Show detailed confirmation modal
             showDuplicateConfirmation(applicantData, duplicateCheck.matches)
                 .then(shouldProceed => {
                     if (!shouldProceed) {
-                        // Remove highlights if user cancels
                         removeHighlights();
                         return;
                     }
                     
-                    // User chose to proceed - add the applicant
                     proceedWithAddingApplicant(applicantData);
                 });
         } else {
-            // No duplicates found - proceed with adding
             proceedWithAddingApplicant(applicantData);
         }
     }
 
-    // Separate function to handle the actual adding of applicant
     function proceedWithAddingApplicant(applicantData) {
-        // Handle photo
         const tempPhoto = localStorage.getItem('tempManualPhoto');
         if (tempPhoto) {
             const photoId = applicantData['SRS ID'];
@@ -473,24 +441,19 @@ document.addEventListener('DOMContentLoaded', function () {
             applicantData['PHOTO'] = tempPhoto;
         }
         
-        // Save to localStorage
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
         savedApplicants.push(applicantData);
         saveMainApplicants(savedApplicants);
         
-        // Refresh display and remove highlights
         displayMainApplicants(savedApplicants);
         removeHighlights();
         
-        // Close modal and show success message
         closeManualModal();
         showNotification('Applicant added successfully!', 'success', elements.manualNotification);
         
-        // Clear the temporary photo
         localStorage.removeItem('tempManualPhoto');
     }
 
-    // Initialize camera functionality
     function initializeCamera() {
         if (elements.takePhotoBtn) {
             elements.takePhotoBtn.addEventListener('click', openCamera);
@@ -594,14 +557,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function usePhoto() {
         if (capturedPhoto) {
             if (currentEditId && currentEditId.startsWith('manual_')) {
-                // For manual form
                 localStorage.setItem('tempManualPhoto', capturedPhoto);
                 elements.manualPhotoPreview.src = capturedPhoto;
                 elements.manualPhotoPreview.style.display = 'block';
                 elements.manualPhotoPlaceholder.style.display = 'none';
                 elements.manualRemovePhotoBtn.style.display = 'block';
             } else {
-                // For edit form (existing functionality)
                 localStorage.setItem(`tempPhoto_${currentEditId}`, capturedPhoto);
                 elements.editPhotoPreview.src = capturedPhoto;
                 elements.editPhotoPreview.style.display = 'block';
@@ -614,7 +575,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initialize search functionality
     function initializeSearch() {
         if (elements.searchBtn && elements.clearSearchBtn && elements.searchInput) {
             elements.searchBtn.addEventListener('click', searchApplicants);
@@ -699,7 +659,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initialize edit modal functionality
     function initializeEditModal() {
         if (elements.editModal) {
             const closeBtn = elements.editModal.querySelector('.close');
@@ -782,7 +741,6 @@ document.addEventListener('DOMContentLoaded', function () {
             input.value = '';
         });
         
-        // Updated field mapping - removed unwanted fields
         const fieldToIdMap = {
             'SRS ID': 'edit-srs-id',
             'LAST NAME': 'edit-last-name',
@@ -933,7 +891,6 @@ document.addEventListener('DOMContentLoaded', function () {
         showNotification('Applicant updated successfully!', 'success');
     }
 
-    // Initialize file uploads
     function initializeFileUploads() {
         if (elements.browsebtn && elements.fileInput) {
             elements.browsebtn.addEventListener('click', function() {
@@ -995,15 +952,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             return;
                         }
                         
-                        // Use smart import
                         const processedData = smartImportData(jsonData);
-                        
                         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-                        
                         const { duplicates, uniqueNewApplicants } = checkForDuplicates(processedData, savedApplicants);
 
                         if (duplicates.length > 0) {
-                            // Highlight duplicates in the table
                             highlightMatchingApplicants(duplicates.map(dup => ({
                                 existingApplicant: dup.existing,
                                 matchingFields: ['Possible Duplicate'],
@@ -1046,7 +999,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             return;
                         }
                         
-                        // If no duplicates, add all
                         processedData.forEach(applicant => {
                             savedApplicants.push(applicant);
                         });
@@ -1146,7 +1098,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initialize advanced filters
     function initializeAdvancedFilters() {
         if (!elements.advancedFiltersBtn || !elements.advancedFiltersPanel) {
             console.warn('Advanced filters elements not found');
@@ -1206,7 +1157,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const searchTerm = elements.searchInput?.value.toLowerCase().trim() || '';
         
         let filteredApplicants = savedApplicants.filter(applicant => {
-            // Text search
             if (searchTerm) {
                 const searchableFields = [
                     applicant.NAME, 
@@ -1221,22 +1171,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Program category filter
             if (activeFilters.programCategory && applicant['PROGRAM CATEGORY'] !== activeFilters.programCategory) {
                 return false;
             }
-            
-            // Program status filter
             if (activeFilters.programStatus && applicant['PROGRAM STATUS'] !== activeFilters.programStatus) {
                 return false;
             }
-            
-            // Employment status filter
             if (activeFilters.employmentStatus && applicant['EMP. STATUS'] !== activeFilters.employmentStatus) {
                 return false;
             }
-            
-            // Age range filter
             const applicantAge = parseInt(applicant.AGE) || 0;
             if (activeFilters.ageMin && applicantAge < parseInt(activeFilters.ageMin)) {
                 return false;
@@ -1244,24 +1187,19 @@ document.addEventListener('DOMContentLoaded', function () {
             if (activeFilters.ageMax && applicantAge > parseInt(activeFilters.ageMax)) {
                 return false;
             }
-            
-            // Barangay filter - fixed to filter out N/A and partial match
             if (activeFilters.barangay) {
                 const applicantBarangay = (applicant.BARANGAY || '').toLowerCase();
                 const filterBarangay = activeFilters.barangay.toLowerCase();
                 
-                // Don't show if barangay is N/A or doesn't match
                 if (applicantBarangay === 'n/a' || applicantBarangay === '' || 
                     !applicantBarangay.includes(filterBarangay)) {
                     return false;
                 }
             }
             
-            // Registration date filter - fixed to handle year/month filtering
             if (activeFilters.regDate) {
                 const applicantRegDate = applicant['REG. DATE'];
                 
-                // Don't show if registration date is N/A or empty
                 if (!applicantRegDate || applicantRegDate === 'N/A' || applicantRegDate === '') {
                     return false;
                 }
@@ -1269,12 +1207,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const filterDate = new Date(activeFilters.regDate);
                 const applicantDate = new Date(applicantRegDate);
                 
-                // Check if dates are valid
                 if (isNaN(filterDate.getTime()) || isNaN(applicantDate.getTime())) {
                     return false;
                 }
                 
-                // Check year and month match
                 if (filterDate.getFullYear() !== applicantDate.getFullYear() || 
                     filterDate.getMonth() !== applicantDate.getMonth()) {
                     return false;
@@ -1284,7 +1220,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return true;
         });
         
-        // Apply sorting
         filteredApplicants = applySortingToData(filteredApplicants);
         
         displayMainApplicants(filteredApplicants);
@@ -1331,7 +1266,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initialize reporting
     function initializeReporting() {
         if (elements.generateReportBtn) {
             elements.generateReportBtn.addEventListener('click', generateProgramReports);
@@ -1347,7 +1281,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (!reportsContainer) return;
         
-        // Toggle visibility
         if (reportsContainer.style.display === 'block') {
             reportsContainer.style.display = 'none';
             return;
@@ -1417,7 +1350,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
         
-        // Initialize expandable sections
         initializeExpandableSections();
         
         document.getElementById('export-summary-btn').addEventListener('click', exportSummaryReport);
@@ -1530,7 +1462,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .sort((a, b) => b[1] - a[1])
             .slice(0, 5);
         
-        // Calculate percentages for pie chart
         let totalTopCategories = 0;
         topCategories.forEach(([_, count]) => {
             totalTopCategories += count;
@@ -1600,7 +1531,6 @@ document.addEventListener('DOMContentLoaded', function () {
             'Below 20', '20-29', '30-39', '40-49', '50-59', '60 and above'
         ];
 
-        // Find the maximum count to scale the pyramid
         let maxCount = 0;
         ageGroups.forEach(group => {
             const maleCount = stats.agePyramid[group].male;
@@ -1618,9 +1548,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const maleCount = stats.agePyramid[ageGroup].male;
             const femaleCount = stats.agePyramid[ageGroup].female;
             const totalCount = maleCount + femaleCount;
-            
-            // Calculate bar heights (scaled to fit the container)
-            const maleHeight = (maleCount / maxCount) * 160; // Max height 160px
+            const maleHeight = (maleCount / maxCount) * 160;
             const femaleHeight = (femaleCount / maxCount) * 160;
             
             html += `
@@ -1671,19 +1599,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function generateTallyChart(programStats, employmentStats, demographicStats) {
-        // Create tally marks (groups of 5)
         function createTallyMarks(count) {
             const fullGroups = Math.floor(count / 5);
             const remainder = count % 5;
             
             let marks = '';
             
-            // Add full groups (5 marks each)
             for (let i = 0; i < fullGroups; i++) {
                 marks += '<span class="tally-mark">卌</span> ';
             }
             
-            // Add remainder marks
             if (remainder > 0) {
                 marks += '<span class="tally-mark">' + '|'.repeat(remainder) + '</span>';
             }
@@ -1751,7 +1676,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // New function for education statistics
     function generateEducationStatsHTML(stats) {
         let html = '';
         const topEducation = Object.entries(stats.byEducation)
@@ -1772,7 +1696,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return html;
     }
 
-    // New function for age statistics
     function generateAgeStatsHTML(stats) {
         let html = '';
         Object.entries(stats.byAgeGroup).forEach(([ageGroup, count]) => {
@@ -1827,7 +1750,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const age = parseInt(applicant.AGE) || 0;
             const gender = (applicant.SEX || '').toLowerCase();
 
-            // Age groups for general stats
             if (age < 20) stats.byAgeGroup['Below 20']++;
             else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
             else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
@@ -1835,7 +1757,6 @@ document.addEventListener('DOMContentLoaded', function () {
             else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
             else if (age >= 60) stats.byAgeGroup['60 and above']++;
             
-            // Age pyramid data with gender
             let ageGroup;
             if (age < 20) ageGroup = 'Below 20';
             else if (age >= 20 && age <= 29) ageGroup = '20-29';
@@ -1853,10 +1774,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Clean course data
             if (course && course !== 'No Course Specified' && course !== 'N/A') {
                 course = course.trim();
-                // Handle common variations
                 if (course.toLowerCase().includes('information technology') || course.toLowerCase().includes('it')) {
                     course = 'Information Technology';
                 } else if (course.toLowerCase().includes('business') || course.toLowerCase().includes('bussiness')) {
@@ -1874,7 +1793,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Age groups
             if (age < 20) stats.byAgeGroup['Below 20']++;
             else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
             else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
@@ -2035,20 +1953,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         try {
-            // Create a cleaned version of the data for export
             const exportData = savedApplicants.map(applicant => {
                 const cleanApplicant = {};
                 
-                // Only include essential fields and truncate long text
                 Object.keys(applicant).forEach(key => {
                     let value = applicant[key];
                     
-                    // Truncate very long text fields
                     if (typeof value === 'string' && value.length > 1000) {
                         value = value.substring(0, 1000) + '... [truncated]';
                     }
                     
-                    // Skip extremely long fields that might cause issues
                     if (typeof value === 'string' && value.length > 30000) {
                         value = '[Data too long for export]';
                     }
@@ -2063,7 +1977,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Applicants Report");
             
-            // Generate filename with current date
             const today = new Date().toISOString().split('T')[0];
             XLSX.writeFile(workbook, `applicants_report_${today}.xlsx`);
             
@@ -2071,7 +1984,6 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Error exporting report:', error);
             
-            // More specific error handling
             if (error.message.includes('32767')) {
                 showNotification('Error: Some data fields are too long for Excel export. Try exporting a summary report instead.', 'error');
             } else {
@@ -2080,7 +1992,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Utility functions
     function generateUniqueId() {
         return 'SRS_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
@@ -2208,7 +2119,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 35; // Updated column count
+            cell.colSpan = 35; 
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
@@ -2219,211 +2130,173 @@ document.addEventListener('DOMContentLoaded', function () {
         applicants.forEach((applicant, index) => {
             const row = document.createElement('tr');
             
-            // SRS ID
             const idCell = document.createElement('td');
             idCell.textContent = applicant['SRS ID'] || `APP-${index + 1}`;
             idCell.style.fontFamily = 'monospace';
             idCell.style.fontSize = '10px';
             row.appendChild(idCell);
 
-            // LAST NAME
             const lastNameCell = document.createElement('td');
             lastNameCell.textContent = applicant['LAST NAME'] || applicant.LASTNAME || extractLastName(applicant.NAME) || 'N/A';
             lastNameCell.className = 'compact-cell';
             row.appendChild(lastNameCell);
 
-            // FIRST NAME
             const firstNameCell = document.createElement('td');
             firstNameCell.textContent = applicant['FIRST NAME'] || applicant.FIRSTNAME || extractFirstName(applicant.NAME) || 'N/A';
             firstNameCell.className = 'compact-cell';
             row.appendChild(firstNameCell);
 
-            // MIDDLE NAME
             const middleNameCell = document.createElement('td');
             middleNameCell.textContent = applicant['MIDDLE NAME'] || applicant.MIDDLENAME || extractMiddleName(applicant.NAME) || 'N/A';
             middleNameCell.className = 'compact-cell';
             row.appendChild(middleNameCell);
 
-            // FULL NAME (for backward compatibility)
             const fullNameCell = document.createElement('td');
             fullNameCell.textContent = applicant.NAME || formatFullName(applicant) || 'N/A';
             fullNameCell.className = 'compact-cell';
             row.appendChild(fullNameCell);
             
-            // BDATE
             const bdateCell = document.createElement('td');
             bdateCell.textContent = applicant.BDATE || 'N/A';
             bdateCell.style.fontSize = '10px';
             row.appendChild(bdateCell);
             
-            // AGE
             const ageCell = document.createElement('td');
             ageCell.textContent = applicant.AGE || 'N/A';
             ageCell.style.textAlign = 'center';
             row.appendChild(ageCell);
             
-            // SEX
             const sexCell = document.createElement('td');
             sexCell.textContent = applicant.SEX || 'N/A';
             sexCell.style.textAlign = 'center';
             row.appendChild(sexCell);
             
-            // CIVIL STATUS
             const civilStatusCell = document.createElement('td');
             civilStatusCell.textContent = applicant['CIVIL STATUS'] || 'N/A';
             row.appendChild(civilStatusCell);
             
-            // STREET ADDRESS
             const streetCell = document.createElement('td');
             streetCell.textContent = applicant['STREET ADDRESS'] || 'N/A';
             streetCell.className = 'compact-cell';
             row.appendChild(streetCell);
             
-            // BARANGAY
             const barangayCell = document.createElement('td');
             barangayCell.textContent = applicant.BARANGAY || 'N/A';
             row.appendChild(barangayCell);
             
-            // CITY/MUNICIPALITY
             const cityCell = document.createElement('td');
             cityCell.textContent = applicant['CITY/MUNICIPALITY'] || 'N/A';
             row.appendChild(cityCell);
             
-            // PROVINCE
             const provinceCell = document.createElement('td');
             provinceCell.textContent = applicant.PROVINCE || 'N/A';
             row.appendChild(provinceCell);
             
-            // REGION
             const regionCell = document.createElement('td');
             regionCell.textContent = applicant.REGION || 'N/A';
             row.appendChild(regionCell);
             
-            // EMAIL
             const emailCell = document.createElement('td');
             emailCell.textContent = applicant.EMAIL || 'N/A';
             emailCell.className = 'compact-cell';
             row.appendChild(emailCell);
             
-            // TELEPHONE
             const telephoneCell = document.createElement('td');
             telephoneCell.textContent = applicant.TELEPHONE || 'N/A';
             row.appendChild(telephoneCell);
             
-            // CELLPHONE
             const cellphoneCell = document.createElement('td');
             cellphoneCell.textContent = applicant.CELLPHONE || 'N/A';
             row.appendChild(cellphoneCell);
             
-            // EMP. STATUS
             const empStatusCell = document.createElement('td');
             empStatusCell.textContent = applicant['EMP. STATUS'] || 'N/A';
             row.appendChild(empStatusCell);
             
-            // EMP. TYPE
             const empTypeCell = document.createElement('td');
             empTypeCell.textContent = applicant['EMP. TYPE'] || 'N/A';
             row.appendChild(empTypeCell);
             
-            // EDUC LEVEL
             const educCell = document.createElement('td');
             educCell.textContent = applicant['EDUC LEVEL'] || 'N/A';
             row.appendChild(educCell);
             
-            // COURSE
             const courseCell = document.createElement('td');
             courseCell.textContent = applicant.COURSE || 'N/A';
             row.appendChild(courseCell);
             
-            // 4Ps
             const fourPsCell = document.createElement('td');
             fourPsCell.textContent = applicant['4Ps'] || 'N/A';
             fourPsCell.style.textAlign = 'center';
             row.appendChild(fourPsCell);
             
-            // PWD
             const pwdCell = document.createElement('td');
             pwdCell.textContent = applicant.PWD || 'N/A';
             pwdCell.style.textAlign = 'center';
             row.appendChild(pwdCell);
             
-            // DISABILITY
             const disabilityCell = document.createElement('td');
             disabilityCell.textContent = applicant.DISABILITY || 'N/A';
             row.appendChild(disabilityCell);
             
-            // PREFERRED POSITION
             const preferredPositionCell = document.createElement('td');
             preferredPositionCell.textContent = applicant['PREFERRED POSITION'] || 'N/A';
             row.appendChild(preferredPositionCell);
             
-            // SKILLS
             const skillsCell = document.createElement('td');
             skillsCell.textContent = applicant.SKILLS || 'N/A';
             skillsCell.className = 'compact-cell';
             row.appendChild(skillsCell);
             
-            // WORK EXPERIENCE
             const workExpCell = document.createElement('td');
             workExpCell.textContent = applicant['WORK EXPERIENCE'] || 'N/A';
             workExpCell.className = 'compact-cell';
             row.appendChild(workExpCell);
             
-            // OFW
             const ofwCell = document.createElement('td');
             ofwCell.textContent = applicant.OFW || 'N/A';
             ofwCell.style.textAlign = 'center';
             row.appendChild(ofwCell);
             
-            // COUNTRY
             const countryCell = document.createElement('td');
             countryCell.textContent = applicant.COUNTRY || 'N/A';
             row.appendChild(countryCell);
             
-            // FORMER OFW
             const formerOfwCell = document.createElement('td');
             formerOfwCell.textContent = applicant['FORMER OFW'] || 'N/A';
             row.appendChild(formerOfwCell);
             
-            // LATEST COUNTRY
             const latestCountryCell = document.createElement('td');
             latestCountryCell.textContent = applicant['LATEST COUNTRY'] || 'N/A';
             row.appendChild(latestCountryCell);
             
-            // REG. DATE
             const regDateCell = document.createElement('td');
             regDateCell.textContent = applicant['REG. DATE'] || 'N/A';
             regDateCell.style.fontSize = '10px';
             row.appendChild(regDateCell);
             
-            // REMARKS
             const remarksCell = document.createElement('td');
             remarksCell.textContent = applicant.REMARKS || 'N/A';
             row.appendChild(remarksCell);
             
-            // CREATED BY
             const createdByCell = document.createElement('td');
             createdByCell.textContent = applicant['CREATED BY'] || 'System';
             row.appendChild(createdByCell);
             
-            // DATE CREATED
             const dateCreatedCell = document.createElement('td');
             dateCreatedCell.textContent = applicant['DATE CREATED'] || 'N/A';
             dateCreatedCell.style.fontSize = '10px';
             row.appendChild(dateCreatedCell);
             
-            // LAST MODIFIED BY
             const lastModifiedByCell = document.createElement('td');
             lastModifiedByCell.textContent = applicant['LAST MODIFIED BY'] || 'System';
             row.appendChild(lastModifiedByCell);
             
-            // DATE LAST MODIFIED
             const dateModifiedCell = document.createElement('td');
             dateModifiedCell.textContent = applicant['DATE LAST MODIFIED'] || 'N/A';
             dateModifiedCell.style.fontSize = '10px';
             row.appendChild(dateModifiedCell);
             
-            // Actions Cell
             const actionsCell = document.createElement('td');
             actionsCell.className = 'actions-cell';
             
@@ -2466,7 +2339,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Helper function for status badges
     function getStatusClass(status) {
         const statusLower = status.toLowerCase();
         if (statusLower.includes('complete') || statusLower.includes('approved')) {
@@ -2478,7 +2350,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Function to download individual applicant data
     function downloadApplicantData(applicant) {
         try {
             const worksheet = XLSX.utils.json_to_sheet([applicant]);
@@ -2542,7 +2413,6 @@ document.addEventListener('DOMContentLoaded', function () {
         data.forEach((record, index) => {
             const row = document.createElement('tr');
             
-            // Create cells for all columns in the imported table
             const columns = [
                 'ID', 'Last Name', 'Given Name', 'Middle Name', 'Full Name',
                 'Date of Birth', 'Age', 'Sex', 'Civil Status', 'Street',
@@ -2570,7 +2440,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     `;
                     
-                    // Add event listeners for actions
                     const downloadBtn = cell.querySelector('.download-btn');
                     const deleteBtn = cell.querySelector('.delete-btn');
                     
@@ -2584,7 +2453,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
                 } else {
-                    // Map column names to record fields
                     let value = 'N/A';
                     const fieldMap = {
                         'Last Name': record['Last Name'] || record['LAST NAME'] || record['last_name'],
@@ -2634,7 +2502,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         try {
-            // Create summary data instead of full records
             const summaryData = savedApplicants.map(applicant => ({
                 'SRS ID': applicant['SRS ID'] || '',
                 'Name': (applicant.NAME || '').substring(0, 100),
@@ -2663,7 +2530,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add export functionality
     document.getElementById('export-applicants-btn').addEventListener('click', function() {
         exportApplicantsToExcel();
     });
@@ -2676,7 +2542,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         try {
-            // Create simplified data for export
             const exportData = savedApplicants.map(applicant => ({
                 'SRS ID': applicant['SRS ID'] || '',
                 'Name': applicant.NAME || '',
@@ -2717,7 +2582,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function generateExpandableCourseStats(stats) {
-        // Calculate total college graduates
         const collegeGrads = (stats.byEducation['College Graduate'] || 0) + 
                             (stats.byEducation['College'] || 0) + 
                             (stats.byEducation['Bachelor'] || 0) +
@@ -2727,10 +2591,8 @@ document.addEventListener('DOMContentLoaded', function () {
             return '<p style="text-align: center; color: #666; margin: 10px 0;">No college graduates found.</p>';
         }
         
-        // Get all courses with counts
         const allCourses = Object.entries(stats.byCourse)
             .filter(([course, count]) => {
-                // Filter out empty or irrelevant course names
                 return course && 
                     course !== 'No Course Specified' && 
                     course !== 'N/A' && 
@@ -2759,7 +2621,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 `;
             });
 
-            // Add summary row
             coursesHTML += `
                 <div style="display: flex; justify-content: space-between; padding: 10px 0; margin-top: 10px; border-top: 2px solid #2196f3; background: #f8f9fa; border-radius: 4px; font-weight: bold;">
                     <span>Total College Graduates</span>
@@ -2787,7 +2648,6 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // Helper functions for name parsing
     function extractLastName(fullName) {
         if (!fullName) return '';
         const parts = fullName.split(',');
@@ -2827,7 +2687,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function getFormFieldMappings() {
-        // Define all possible labels for each field based on your form
         return {
             'SRS ID': ['SRS ID', 'ID', 'Applicant ID', 'SRS_ID', 'srs id'],
             'LAST NAME': ['LAST NAME', 'Last Name', 'LASTNAME', 'last name', 'Surname', 'Family Name'],
@@ -2869,7 +2728,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function findMatchingValue(record, possibleLabels) {
-        // First, try exact matches (case insensitive)
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase() === label.toLowerCase()) {
@@ -2878,7 +2736,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Then try partial matches
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
@@ -2888,7 +2745,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Try with spaces removed and underscores
         for (const label of possibleLabels) {
             const cleanLabel = label.toLowerCase().replace(/[\s_]/g, '');
             for (const recordKey in record) {
@@ -2905,28 +2761,23 @@ document.addEventListener('DOMContentLoaded', function () {
     function processFieldValue(fieldKey, value) {
         if (!value) return value;
         
-        // Convert to string and trim
         value = String(value).trim();
         
-        // Handle date fields
         if (fieldKey === 'BDATE' || fieldKey === 'REG. DATE') {
             return formatDateValue(value);
         }
         
-        // Handle boolean-like fields
         const booleanFields = ['4Ps', 'PWD', 'OFW', 'FORMER OFW'];
         if (booleanFields.includes(fieldKey)) {
             return normalizeBooleanValue(value);
         }
         
-        // Handle numeric fields that might have .0 decimals
         if (fieldKey === 'AGE' || fieldKey === 'CELLPHONE') {
             if (value.includes('.0')) {
                 value = value.replace('.0', '');
             }
         }
         
-        // Handle empty values
         if (value === '' || value === 'null' || value === 'undefined' || value === 'NaN') {
             return 'N/A';
         }
@@ -2938,18 +2789,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dateValue) return 'N/A';
         
         try {
-            // Handle Excel serial date numbers (like 45306, 45342 from your file)
-            if (!isNaN(dateValue) && dateValue > 25569) { // Excel date serial numbers
+            if (!isNaN(dateValue) && dateValue > 25569) {
                 const excelEpoch = new Date(1900, 0, 1);
                 const date = new Date(excelEpoch.getTime() + (dateValue - 1) * 24 * 60 * 60 * 1000);
                 return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
             }
             
-            // Try to parse as Date object
             let dateObj = new Date(dateValue);
             
             if (isNaN(dateObj.getTime())) {
-                // If that fails, try common string formats
                 if (dateValue.includes('/')) {
                     const parts = dateValue.split('/');
                     if (parts.length === 3) {
@@ -2959,7 +2807,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return `${month}/${day}/${year}`;
                     }
                 }
-                return dateValue; // Return as-is if we can't parse
+                return dateValue; 
             }
             
             return `${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getDate().toString().padStart(2, '0')}/${dateObj.getFullYear()}`;
@@ -2978,7 +2826,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (trueValues.includes(lowerValue)) return 'Yes';
         if (falseValues.includes(lowerValue)) return 'No';
         
-        return value; // Return original if not recognized
+        return value; 
     }
 
     function smartImportData(jsonData) {
@@ -2991,15 +2839,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const processedData = jsonData.map((record, index) => {
             const processedRecord = {};
             
-            // Get all field mappings from the manual form
             const fieldMappings = getFormFieldMappings();
             
-            // First pass: get all basic field values
             Object.keys(fieldMappings).forEach(fieldKey => {
                 const possibleLabels = fieldMappings[fieldKey];
                 let value = findMatchingValue(record, possibleLabels);
                 
-                // Special handling for specific fields
                 if (value) {
                     value = processFieldValue(fieldKey, value);
                 }
@@ -3007,18 +2852,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 processedRecord[fieldKey] = value || 'N/A';
             });
             
-            // SPECIAL HANDLING FOR NAME FIELD:
-            // If NAME is still 'N/A', try to construct it from individual parts
             if (!processedRecord['NAME'] || processedRecord['NAME'] === 'N/A') {
                 processedRecord['NAME'] = combineNameFromParts(record, processedRecord);
             }
             
-            // Generate SRS ID if not present
             if (!processedRecord['SRS ID'] || processedRecord['SRS ID'] === 'N/A') {
                 processedRecord['SRS ID'] = generateUniqueId();
             }
             
-            // Set timestamps
             processedRecord['DATE CREATED'] = new Date().toLocaleString();
             processedRecord['DATE LAST MODIFIED'] = new Date().toLocaleString();
             processedRecord['CREATED BY'] = 'System Import';
@@ -3031,12 +2872,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function combineNameFromParts(record, processedRecord) {
-        // Try to get name parts from the processed record first
         let lastName = processedRecord['LAST NAME'];
         let firstName = processedRecord['FIRST NAME'];
         let middleName = processedRecord['MIDDLE NAME'];
         
-        // If processed record has 'N/A', try to get from original record
         if (lastName === 'N/A') {
             lastName = findMatchingValue(record, ['LAST NAME', 'Last Name', 'LASTNAME', 'last name', 'Surname']);
         }
@@ -3047,12 +2886,10 @@ document.addEventListener('DOMContentLoaded', function () {
             middleName = findMatchingValue(record, ['MIDDLE NAME', 'Middle Name', 'MIDDLENAME', 'middle name', 'Middle Initial']);
         }
         
-        // Clean the values
         lastName = (lastName && lastName !== 'N/A') ? lastName.trim() : '';
         firstName = (firstName && firstName !== 'N/A') ? firstName.trim() : '';
         middleName = (middleName && middleName !== 'N/A') ? middleName.trim() : '';
         
-        // Construct full name in "Last Name, First Name Middle Name" format
         if (lastName && firstName) {
             let fullName = `${lastName}, ${firstName}`;
             if (middleName) {
@@ -3061,8 +2898,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return fullName;
         }
         
-        // If we have individual parts but they're not in the expected fields
-        // Try to find any name-like fields in the original record
         for (const key in record) {
             const lowerKey = key.toLowerCase();
             if ((lowerKey.includes('name') || lowerKey.includes('full') || lowerKey.includes('complete')) && 
@@ -3075,7 +2910,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function combineNameParts(record, processedRecord) {
-        // Strategy 1: Look for existing full name first
         const fullNameFields = ['Name', 'name', 'Full Name', 'full name', 'Complete Name', 'NAME'];
         for (const field of fullNameFields) {
             if (record[field] && record[field] !== 'N/A') {
@@ -3083,13 +2917,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Strategy 2: Combine from individual parts
         const lastName = processedRecord['LAST NAME'] !== 'N/A' ? processedRecord['LAST NAME'] : '';
         const firstName = processedRecord['FIRST NAME'] !== 'N/A' ? processedRecord['FIRST NAME'] : '';
         const middleName = processedRecord['MIDDLE NAME'] !== 'N/A' ? processedRecord['MIDDLE NAME'] : '';
         
         if (lastName && firstName) {
-            // Filipino format: "Last Name, First Name Middle Name"
             let fullName = `${lastName}, ${firstName}`;
             if (middleName && middleName.trim()) {
                 fullName += ` ${middleName.trim()}`;
@@ -3097,12 +2929,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return fullName.trim();
         }
         
-        // Strategy 3: Try reverse if fields might be swapped
         if (firstName && lastName) {
             return `${lastName}, ${firstName} ${middleName}`.trim();
         }
         
-        // Strategy 4: Look for any name-like fields in the original record
         for (const key in record) {
             if (typeof record[key] === 'string' && 
                 (key.toLowerCase().includes('name') || 
@@ -3114,6 +2944,5 @@ document.addEventListener('DOMContentLoaded', function () {
         
         return 'N/A';
     }
-    // Initialize the application
     initializeApp();
 });
