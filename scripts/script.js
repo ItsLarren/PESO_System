@@ -1367,40 +1367,45 @@ document.addEventListener('DOMContentLoaded', function () {
         const demographicStats = calculateDemographicStatistics(savedApplicants);
         
         reportsContainer.innerHTML = `
-            <div class="report-section">
-                <h3>📊 Program Enrollment Summary</h3>
-                <div class="stats-grid">
-                    ${generateProgramStatsHTML(programStats)}
-                </div>
+            <div class="visual-report-section">
+                <h3><i class="fas fa-users"></i> Program Enrollment Overview</h3>
+                ${generateProgramPictograph(programStats)}
             </div>
             
-            <div class="report-section">
-                <h3>🎓 Educational Attainment</h3>
-                <div class="stats-grid">
-                    ${generateEducationStatsHTML(programStats)}
-                </div>
+            <div class="visual-report-section">
+                <h3><i class="fas fa-graduation-cap"></i> Educational Attainment</h3>
+                ${generateEducationTable(programStats)}
                 ${generateExpandableCourseStats(programStats)}
             </div>
             
-            <div class="report-section">
-                <h3>👥 Age Demographics</h3>
-                <div class="stats-grid">
-                    ${generateAgeStatsHTML(programStats)}
-                </div>
+            <div class="visual-report-section">
+                <h3><i class="fas fa-user-friends"></i> Gender Distribution</h3>
+                ${generateGenderFigures(demographicStats)}
             </div>
             
-            <div class="report-section">
-                <h3>💼 Employment Status Overview</h3>
-                <div class="stats-grid">
-                    ${generateEmploymentStatsHTML(employmentStats)}
-                </div>
+            <div class="visual-report-section">
+                <h3><i class="fas fa-chart-pie"></i> Program Category Breakdown</h3>
+                ${generateProgramPieChart(programStats)}
             </div>
             
-            <div class="report-section">
-                <h3>👤 Demographic Overview</h3>
-                <div class="stats-grid">
-                    ${generateDemographicStatsHTML(demographicStats)}
-                </div>
+            <div class="visual-report-section">
+                <h3><i class="fas fa-briefcase"></i> Employment Status</h3>
+                ${generateEmploymentComparison(employmentStats)}
+            </div>
+            
+            <div class="visual-report-section">
+                <h3><i class="fas fa-chart-bar"></i> Age Demographics</h3>
+                ${generateAgePyramid(programStats)}  <!-- FIXED: Changed stats to programStats -->
+            </div>
+            
+            <div class="visual-report-section">
+                <h3><i class="fas fa-chart-line"></i> Program Status Progress</h3>
+                ${generateProgramProgress(programStats)}
+            </div>
+            
+            <div class="visual-report-section">
+                <h3><i class="fas fa-tally"></i> Quick Statistics Tally</h3>
+                ${generateTallyChart(programStats, employmentStats, demographicStats)}
             </div>
             
             <div class="report-actions" style="margin-top: 20px; display: flex; gap: 10px;">
@@ -1420,6 +1425,307 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('export-full-btn').addEventListener('click', exportReportsToExcel);
         
         reportsContainer.style.display = 'block';
+    }
+
+    function generateProgramPictograph(stats) {
+        const topCategories = Object.entries(stats.byCategory)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        let html = '<div class="pictograph-container">';
+        
+        const icons = ['fas fa-hands-helping', 'fas fa-briefcase', 'fas fa-graduation-cap', 'fas fa-tools', 'fas fa-globe-asia', 'fas fa-wheelchair', 'fas fa-home'];
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'];
+        
+        topCategories.forEach(([category, count], index) => {
+            const percentage = ((count / stats.total) * 100).toFixed(1);
+            const icon = icons[index] || 'fas fa-chart-bar';
+            const color = colors[index] || '#666';
+            
+            html += `
+                <div class="pictograph-item">
+                    <div class="pictograph-icon" style="color: ${color};">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="pictograph-content">
+                        <div style="font-weight: 500; margin-bottom: 5px;">${category}</div>
+                        <div class="pictograph-bar">
+                            <div class="pictograph-fill" style="width: ${percentage}%; background: ${color};"></div>
+                        </div>
+                        <div class="pictograph-info">
+                            <span>${count} applicants</span>
+                            <span>${percentage}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        return html;
+    }
+
+    function generateEducationTable(stats) {
+        const educationLevels = Object.entries(stats.byEducation)
+            .sort((a, b) => b[1] - a[1]);
+        
+        let html = `
+            <table class="education-table">
+                <thead>
+                    <tr>
+                        <th>Educational Level</th>
+                        <th>Number of Applicants</th>
+                        <th>Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        educationLevels.forEach(([level, count]) => {
+            const percentage = ((count / stats.total) * 100).toFixed(1);
+            html += `
+                <tr>
+                    <td>${level}</td>
+                    <td>${count}</td>
+                    <td class="percentage">${percentage}%</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        return html;
+    }
+
+    function generateGenderFigures(stats) {
+        const totalGender = stats.male + stats.female;
+        const malePercentage = totalGender > 0 ? ((stats.male / totalGender) * 100).toFixed(1) : 0;
+        const femalePercentage = totalGender > 0 ? ((stats.female / totalGender) * 100).toFixed(1) : 0;
+        
+        return `
+            <div class="gender-figures">
+                <div class="gender-figure gender-male">
+                    <i class="fas fa-male gender-icon"></i>
+                    <div class="gender-count">${stats.male}</div>
+                    <div class="gender-label">Male</div>
+                    <div class="gender-percentage">${malePercentage}%</div>
+                </div>
+                <div class="gender-figure gender-female">
+                    <i class="fas fa-female gender-icon"></i>
+                    <div class="gender-count">${stats.female}</div>
+                    <div class="gender-label">Female</div>
+                    <div class="gender-percentage">${femalePercentage}%</div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 15px; color: #666;">
+                <i class="fas fa-info-circle"></i> Total counted: ${totalGender} | Average Age: ${stats.averageAge}
+            </div>
+        `;
+    }
+
+    function generateProgramPieChart(stats) {
+        const topCategories = Object.entries(stats.byCategory)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        // Calculate percentages for pie chart
+        let totalTopCategories = 0;
+        topCategories.forEach(([_, count]) => {
+            totalTopCategories += count;
+        });
+        
+        let html = '<div class="pie-chart-container">';
+        html += '<div class="pie-chart">';
+        html += '<div class="pie-chart-center">' + stats.total + '</div>';
+        html += '</div>';
+        html += '<div class="pie-legend">';
+        
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+        
+        topCategories.forEach(([category, count], index) => {
+            const percentage = ((count / totalTopCategories) * 100).toFixed(1);
+            html += `
+                <div class="pie-legend-item">
+                    <div class="pie-color" style="background: ${colors[index]};"></div>
+                    <div class="pie-label">${category}</div>
+                    <div class="pie-value">${percentage}%</div>
+                </div>
+            `;
+        });
+        
+        html += '</div></div>';
+        return html;
+    }
+
+    function generateEmploymentComparison(stats) {
+        const total = stats.employed + stats.unemployed + stats.selfEmployed;
+        const employedPercentage = total > 0 ? ((stats.employed / total) * 100).toFixed(1) : 0;
+        const unemployedPercentage = total > 0 ? ((stats.unemployed / total) * 100).toFixed(1) : 0;
+        const selfEmployedPercentage = total > 0 ? ((stats.selfEmployed / total) * 100).toFixed(1) : 0;
+        
+        return `
+            <div class="comparison-cards">
+                <div class="comparison-card employed">
+                    <div class="comparison-icon">
+                        <i class="fas fa-briefcase" style="color: #4caf50;"></i>
+                    </div>
+                    <div class="comparison-count">${stats.employed}</div>
+                    <div class="comparison-label">Employed</div>
+                    <div style="color: #4caf50; font-weight: bold; margin-top: 5px;">${employedPercentage}%</div>
+                </div>
+                <div class="comparison-card unemployed">
+                    <div class="comparison-icon">
+                        <i class="fas fa-user-clock" style="color: #ff9800;"></i>
+                    </div>
+                    <div class="comparison-count">${stats.unemployed}</div>
+                    <div class="comparison-label">Unemployed</div>
+                    <div style="color: #ff9800; font-weight: bold; margin-top: 5px;">${unemployedPercentage}%</div>
+                </div>
+                <div class="comparison-card self-employed">
+                    <div class="comparison-icon">
+                        <i class="fas fa-user-tie" style="color: #9c27b0;"></i>
+                    </div>
+                    <div class="comparison-count">${stats.selfEmployed}</div>
+                    <div class="comparison-label">Self-Employed</div>
+                    <div style="color: #9c27b0; font-weight: bold; margin-top: 5px;">${selfEmployedPercentage}%</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function generateAgePyramid(stats) {
+        const ageGroups = [
+            'Below 20', '20-29', '30-39', '40-49', '50-59', '60 and above'
+        ];
+
+        // Find the maximum count to scale the pyramid
+        let maxCount = 0;
+        ageGroups.forEach(group => {
+            const maleCount = stats.agePyramid[group].male;
+            const femaleCount = stats.agePyramid[group].female;
+            maxCount = Math.max(maxCount, maleCount, femaleCount);
+        });
+
+        if (maxCount === 0) {
+            return '<div style="text-align: center; padding: 40px; color: #666;">No age and gender data available</div>';
+        }
+
+        let html = '<div class="age-pyramid">';
+        
+        ageGroups.forEach(ageGroup => {
+            const maleCount = stats.agePyramid[ageGroup].male;
+            const femaleCount = stats.agePyramid[ageGroup].female;
+            const totalCount = maleCount + femaleCount;
+            
+            // Calculate bar heights (scaled to fit the container)
+            const maleHeight = (maleCount / maxCount) * 160; // Max height 160px
+            const femaleHeight = (femaleCount / maxCount) * 160;
+            
+            html += `
+                <div class="pyramid-bar">
+                    <div class="pyramid-male" style="height: ${maleHeight}px;" title="Male: ${maleCount}"></div>
+                    <div class="pyramid-female" style="height: ${femaleHeight}px;" title="Female: ${femaleCount}"></div>
+                    <div class="pyramid-label">
+                        ${ageGroup.replace('Below ', '<')}<br>
+                        ${totalCount}
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        html += '<div style="text-align: center; margin-top: 10px; color: #666;">';
+        html += '<span style="color: #2196f3;"><i class="fas fa-male"></i> Male</span> | ';
+        html += '<span style="color: #e91e63;"><i class="fas fa-female"></i> Female</span>';
+        html += '</div>';
+        
+        return html;
+    }
+
+
+    function generateProgramProgress(stats) {
+        const statuses = Object.entries(stats.byStatus)
+            .sort((a, b) => b[1] - a[1]);
+        
+        let html = '<div class="progress-bars">';
+        
+        statuses.forEach(([status, count]) => {
+            const percentage = ((count / stats.total) * 100).toFixed(1);
+            html += `
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span>${status}</span>
+                        <span>${count} (${percentage}%)</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        return html;
+    }
+
+    function generateTallyChart(programStats, employmentStats, demographicStats) {
+        // Create tally marks (groups of 5)
+        function createTallyMarks(count) {
+            const fullGroups = Math.floor(count / 5);
+            const remainder = count % 5;
+            
+            let marks = '';
+            
+            // Add full groups (5 marks each)
+            for (let i = 0; i < fullGroups; i++) {
+                marks += '<span class="tally-mark">卌</span> ';
+            }
+            
+            // Add remainder marks
+            if (remainder > 0) {
+                marks += '<span class="tally-mark">' + '|'.repeat(remainder) + '</span>';
+            }
+            
+            return marks || '<span style="color: #999;">No data</span>';
+        }
+        
+        return `
+            <div class="tally-chart">
+                <div class="tally-group">
+                    <div class="tally-label">Total Applicants</div>
+                    <div class="tally-marks">${createTallyMarks(programStats.total)}</div>
+                    <div class="tally-count">${programStats.total}</div>
+                </div>
+                <div class="tally-group">
+                    <div class="tally-label">Male Applicants</div>
+                    <div class="tally-marks">${createTallyMarks(demographicStats.male)}</div>
+                    <div class="tally-count">${demographicStats.male}</div>
+                </div>
+                <div class="tally-group">
+                    <div class="tally-label">Female Applicants</div>
+                    <div class="tally-marks">${createTallyMarks(demographicStats.female)}</div>
+                    <div class="tally-count">${demographicStats.female}</div>
+                </div>
+                <div class="tally-group">
+                    <div class="tally-label">Employed</div>
+                    <div class="tally-marks">${createTallyMarks(employmentStats.employed)}</div>
+                    <div class="tally-count">${employmentStats.employed}</div>
+                </div>
+                <div class="tally-group">
+                    <div class="tally-label">Unemployed</div>
+                    <div class="tally-marks">${createTallyMarks(employmentStats.unemployed)}</div>
+                    <div class="tally-count">${employmentStats.unemployed}</div>
+                </div>
+                <div class="tally-group">
+                    <div class="tally-label">Self-Employed</div>
+                    <div class="tally-marks">${createTallyMarks(employmentStats.selfEmployed)}</div>
+                    <div class="tally-count">${employmentStats.selfEmployed}</div>
+                </div>
+            </div>
+        `;
     }
 
     function initializeExpandableSections() {
@@ -1501,6 +1807,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 '40-49': 0,
                 '50-59': 0,
                 '60 and above': 0
+            },
+
+            agePyramid: {
+                'Below 20': { male: 0, female: 0 },
+                '20-29': { male: 0, female: 0 },
+                '30-39': { male: 0, female: 0 },
+                '40-49': { male: 0, female: 0 },
+                '50-59': { male: 0, female: 0 },
+                '60 and above': { male: 0, female: 0 }
             }
         };
         
@@ -1511,6 +1826,33 @@ document.addEventListener('DOMContentLoaded', function () {
             const education = applicant['EDUC LEVEL'] || 'Not Specified';
             let course = applicant['COURSE'] || 'No Course Specified';
             const age = parseInt(applicant.AGE) || 0;
+            const gender = (applicant.SEX || '').toLowerCase();
+
+            // Age groups for general stats
+            if (age < 20) stats.byAgeGroup['Below 20']++;
+            else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
+            else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
+            else if (age >= 40 && age <= 49) stats.byAgeGroup['40-49']++;
+            else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
+            else if (age >= 60) stats.byAgeGroup['60 and above']++;
+            
+            // Age pyramid data with gender
+            let ageGroup;
+            if (age < 20) ageGroup = 'Below 20';
+            else if (age >= 20 && age <= 29) ageGroup = '20-29';
+            else if (age >= 30 && age <= 39) ageGroup = '30-39';
+            else if (age >= 40 && age <= 49) ageGroup = '40-49';
+            else if (age >= 50 && age <= 59) ageGroup = '50-59';
+            else if (age >= 60) ageGroup = '60 and above';
+            else ageGroup = null;
+            
+            if (ageGroup) {
+                if (gender.includes('male') && !gender.includes('female')) {
+                    stats.agePyramid[ageGroup].male++;
+                } else if (gender.includes('female')) {
+                    stats.agePyramid[ageGroup].female++;
+                }
+            }
             
             // Clean course data
             if (course && course !== 'No Course Specified' && course !== 'N/A') {
@@ -1652,21 +1994,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function generateDemographicStatsHTML(stats) {
         const totalGender = stats.male + stats.female;
+        const malePercentage = totalGender > 0 ? ((stats.male / totalGender) * 100).toFixed(1) : 0;
+        const femalePercentage = totalGender > 0 ? ((stats.female / totalGender) * 100).toFixed(1) : 0;
         
         return `
-            <div class="stat-card">
-                <div class="stat-number">${stats.male}</div>
-                <div class="stat-label">Male</div>
-                <div class="stat-percentage">${totalGender > 0 ? ((stats.male / totalGender) * 100).toFixed(1) : 0}%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${stats.female}</div>
-                <div class="stat-label">Female</div>
-                <div class="stat-percentage">${totalGender > 0 ? ((stats.female / totalGender) * 100).toFixed(1) : 0}%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">${stats.averageAge}</div>
-                <div class="stat-label">Average Age</div>
+            <div class="gender-stats-section">
+                <h3><i class="fas fa-user-friends"></i> Gender Distribution</h3>
+                <div class="gender-figures">
+                    <div class="gender-figure gender-male">
+                        <i class="fas fa-male gender-icon"></i>
+                        <div class="gender-count">${stats.male}</div>
+                        <div class="gender-label">Male</div>
+                        <div class="gender-percentage">${malePercentage}%</div>
+                    </div>
+                    <div class="gender-figure gender-female">
+                        <i class="fas fa-female gender-icon"></i>
+                        <div class="gender-count">${stats.female}</div>
+                        <div class="gender-label">Female</div>
+                        <div class="gender-percentage">${femalePercentage}%</div>
+                    </div>
+                </div>
+                <div class="stats-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.averageAge}</div>
+                        <div class="stat-label">Average Age</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${totalGender}</div>
+                        <div class="stat-label">Total Counted</div>
+                    </div>
+                </div>
             </div>
         `;
     }
