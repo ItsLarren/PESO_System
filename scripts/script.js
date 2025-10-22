@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', function () {
         applyFiltersBtn: document.getElementById('apply-filters-btn'),
         clearFiltersBtn: document.getElementById('clear-filters-btn'),
         sortSelect: document.getElementById('sort-select'),
-        sortOrder: document.getElementById('sort-order'),
         generateReportBtn: document.getElementById('generate-report-btn'),
         exportReportBtn: document.getElementById('export-report-btn')
     };
@@ -3115,21 +3114,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         return 'N/A';
     }
-
-    function showFieldMapping(originalRecord, processedRecord) {
-        console.log("Field mapping results:");
-        Object.keys(processedRecord).forEach(key => {
-            if (processedRecord[key] !== 'N/A') {
-                // Find which original field was mapped
-                const originalField = Object.keys(originalRecord).find(origKey => 
-                    String(originalRecord[origKey]) === String(processedRecord[key])
-                );
-                console.log(`${key}: "${processedRecord[key]}" (from: "${originalField}")`);
-            }
-        });
-    }
-
-
     // Initialize the application
     initializeApp();
 });
