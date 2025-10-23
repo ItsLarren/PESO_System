@@ -935,7 +935,6 @@ input[type="date"]:after {
     justify-content: center;
 }
 
-/* Add duplicate highlight styles */
 .duplicate-highlight {
     background-color: #fff3cd !important;
     border-left: 4px solid #ff9800;
@@ -952,7 +951,6 @@ input[type="date"]:after {
     100% { background-color: #fff3cd; }
 }
 
-/* Advanced Filter Styles */
 .advanced-filters {
     background: #f8f9fa;
     padding: 20px;
@@ -1006,7 +1004,6 @@ input[type="date"]:after {
     background: white;
 }
 
-/* Report Styles */
 .report-section {
     background: white;
     padding: 20px;
@@ -1067,7 +1064,6 @@ input[type="date"]:after {
     flex-wrap: wrap;
 }
 
-/* Improved Table Styles */
 .table-container {
     overflow-x: auto;
     max-height: 600px;
@@ -1082,7 +1078,7 @@ input[type="date"]:after {
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
-    min-width: 1200px; /* Ensure table has minimum width */
+    min-width: 1200px; 
 }
 
 .applicant-table th {
@@ -1122,7 +1118,6 @@ input[type="date"]:after {
     background-color: #f1f3f4;
 }
 
-/* Column-specific styling */
 .photo-cell {
     width: 60px;
     text-align: center;
@@ -1148,7 +1143,6 @@ input[type="date"]:after {
     white-space: nowrap;
 }
 
-/* Action buttons */
 .action-buttons {
     display: flex;
     gap: 5px;
@@ -1198,7 +1192,6 @@ input[type="date"]:after {
     transform: translateY(-1px);
 }
 
-/* Compact view for better readability */
 .compact-cell {
     max-width: 150px;
     overflow: hidden;
@@ -1213,7 +1206,6 @@ input[type="date"]:after {
     white-space: nowrap;
 }
 
-/* Status badges */
 .status-badge {
     padding: 4px 8px;
     border-radius: 12px;
@@ -1237,7 +1229,6 @@ input[type="date"]:after {
     color: #1565c0;
 }
 
-/* Table header groups */
 .table-header-group {
     background: #5d6d7e !important;
     color: white;
@@ -1245,7 +1236,6 @@ input[type="date"]:after {
     font-weight: bold;
 }
 
-/* Responsive table */
 @media (max-width: 768px) {
     .applicant-table {
         font-size: 12px;
@@ -1268,7 +1258,6 @@ input[type="date"]:after {
     }
 }
 
-/* Scrollbar styling */
 .table-container::-webkit-scrollbar {
     height: 8px;
     width: 8px;
@@ -1309,7 +1298,6 @@ input[type="date"]:after {
     background: #388e3c !important;
 }
 
-/* Fix table header glitching */
 .applicant-table thead th {
     position: sticky;
     top: 0;
@@ -1319,7 +1307,6 @@ input[type="date"]:after {
     font-weight: 600;
 }
 
-/* Fix header group styling */
 .table-header-group {
     background: #5d6d7e !important;
     position: sticky;
@@ -1327,7 +1314,6 @@ input[type="date"]:after {
     z-index: 101;
 }
 
-/* Make header title bigger and in one line */
 .header-content h1 {
     font-size: 32px;
     font-weight: 700;
@@ -1340,7 +1326,6 @@ input[type="date"]:after {
     font-weight: bold;
 }
 
-/* Ensure header content stays in one line */
 .header-content {
     display: flex;
     justify-content: space-between;
@@ -1349,13 +1334,11 @@ input[type="date"]:after {
     flex-wrap: nowrap;
 }
 
-/* Fix filter functionality */
 .filter-input:focus {
     border-color: #1e88e5;
     box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
 }
 
-/* Fix table header structure */
 .applicant-table thead {
     position: sticky;
     top: 0;
@@ -1377,12 +1360,11 @@ input[type="date"]:after {
     color: white;
     font-weight: 600;
     position: sticky;
-    top: 38px; /* Height of first header row */
+    top: 38px; 
     z-index: 100;
     border-bottom: 1px solid rgba(255,255,255,0.2);
 }
 
-/* Ensure table cells have proper alignment */
 .applicant-table th, .applicant-table td {
     padding: 8px 6px;
     border: 1px solid #e0e0e0;
@@ -1395,7 +1377,6 @@ input[type="date"]:after {
     font-size: 11px;
 }
 
-/* Make table container scroll properly */
 .table-container {
     overflow-x: auto;
     max-height: 600px;
@@ -1405,13 +1386,11 @@ input[type="date"]:after {
     margin: 15px 0;
 }
 
-/* Fix filter styles */
 .filter-input:focus {
     border-color: #1e88e5;
     box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
 }
 
-/* Expandable report sections */
 .expandable-section {
     margin: 10px 0;
     border: 1px solid #ddd;
@@ -1439,7 +1418,6 @@ input[type="date"]:after {
     display: block;
 }
 
-/* Required field styling */
 .required-field::after {
     content: " *";
     color: #f44336;
@@ -1450,7 +1428,6 @@ input[type="date"]:after {
     color: #f44336;
 }
 
-/* Enhanced Expandable Section Styles */
 .expandable-section {
     margin: 15px 0;
     border-radius: 4px;
@@ -1488,7 +1465,6 @@ input[type="date"]:after {
     border-bottom: 2px solid #2196f3;
 }
 
-/* Course list styles */
 .course-item {
     display: flex;
     justify-content: space-between;
@@ -1531,7 +1507,6 @@ input[type="date"]:after {
     font-weight: bold;
 }
 
-/* Smooth transitions */
 .expandable-content {
     transition: max-height 0.3s ease;
 }
@@ -1546,7 +1521,6 @@ input[type="date"]:after {
     max-height: 400px;
 }
 
-/* Gender Figures Styles */
 .gender-figures {
     display: flex;
     justify-content: space-around;
@@ -1598,7 +1572,6 @@ input[type="date"]:after {
     margin-top: 5px;
 }
 
-/* Enhanced Gender Stats Section */
 .gender-stats-section {
     background: white;
     padding: 20px;
@@ -1620,7 +1593,6 @@ input[type="date"]:after {
     margin-right: 10px;
 }
 
-/* Visual Report Styles */
 .visual-report-section {
     background: white;
     padding: 20px;
@@ -1642,7 +1614,6 @@ input[type="date"]:after {
     margin-right: 10px;
 }
 
-/* Gender Figures */
 .gender-figures {
     display: flex;
     justify-content: space-around;
@@ -1691,7 +1662,6 @@ input[type="date"]:after {
     margin-top: 5px;
 }
 
-/* Pictograph Styles */
 .pictograph-container {
     display: flex;
     flex-wrap: wrap;
@@ -1740,7 +1710,6 @@ input[type="date"]:after {
     font-size: 12px;
 }
 
-/* Pie Chart Styles */
 .pie-chart-container {
     display: flex;
     align-items: center;
@@ -1807,7 +1776,6 @@ input[type="date"]:after {
     color: #333;
 }
 
-/* Tally Chart Styles */
 .tally-chart {
     margin: 20px 0;
 }
@@ -1846,7 +1814,6 @@ input[type="date"]:after {
     color: #2196f3;
 }
 
-/* Education Table Styles */
 .education-table {
     width: 100%;
     border-collapse: collapse;
@@ -1880,7 +1847,6 @@ input[type="date"]:after {
     color: #4caf50;
 }
 
-/* Progress Bars */
 .progress-bars {
     margin: 20px 0;
 }
@@ -1910,7 +1876,6 @@ input[type="date"]:after {
     background: linear-gradient(90deg, #4caf50, #8bc34a);
 }
 
-/* Age Pyramid */
 .age-pyramid {
     display: flex;
     justify-content: center;
@@ -1943,7 +1908,6 @@ input[type="date"]:after {
     font-weight: bold;
 }
 
-/* Comparison Cards */
 .comparison-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1988,7 +1952,6 @@ input[type="date"]:after {
     font-size: 14px;
 }
 
-/* Age Distribution Chart Styles */
 .age-distribution-chart {
     margin: 20px 0;
 }
