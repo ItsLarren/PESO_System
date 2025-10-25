@@ -2003,3 +2003,429 @@ input[type="date"]:after {
     text-align: center;
     line-height: 1.2;
 }
+
+.same-name-different-bday {
+    border-left: 4px solid #d32f2f !important;
+    background-color: #ffebee !important;
+}
+
+.same-name-different-bday:hover {
+    background-color: #ffcdd2 !important;
+}
+
+@keyframes pulse-warning {
+    0% { background-color: #ffebee; }
+    50% { background-color: #ffcdd2; }
+    100% { background-color: #ffebee; }
+}
+
+.same-name-different-bday {
+    animation: pulse-warning 2s infinite;
+}
+
+/* Section Navigation */
+.section-navigation {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-selector {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    flex: 1;
+}
+
+/* Form Sections */
+.form-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-section h3 {
+    color: #1e88e5;
+    margin-bottom: 15px;
+    font-size: 18px;
+    border-bottom: 2px solid #e3f2fd;
+    padding-bottom: 8px;
+}
+
+/* Checkbox and Radio Groups */
+.checkbox-group, .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.checkbox-group div, .radio-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Location Group */
+.location-group {
+    display: flex;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.location-column {
+    flex: 1;
+}
+
+/* Table Styles */
+.language-table table, 
+.education-table table, 
+.training-table table, 
+.eligibility-table table, 
+.work-experience-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.language-table th, 
+.language-table td,
+.education-table th, 
+.education-table td,
+.training-table th, 
+.training-table td,
+.eligibility-table th, 
+.eligibility-table td,
+.work-experience-table th, 
+.work-experience-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.language-table th, 
+.education-table th, 
+.training-table th, 
+.eligibility-table th, 
+.work-experience-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+}
+
+/* Skills Checkbox Group */
+.skills-checkbox-group {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.skills-column {
+    flex: 1;
+    min-width: 200px;
+}
+
+.skills-column div {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Add Entry Button */
+.add-entry-btn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+.add-entry-btn:hover {
+    background: #388e3c;
+}
+
+/* Form Grid for Manual Form */
+.manual-form-grid {
+    display: block;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .location-group {
+        flex-direction: column;
+    }
+    
+    .skills-checkbox-group {
+        flex-direction: column;
+    }
+    
+    .language-table, 
+    .education-table, 
+    .training-table, 
+    .eligibility-table, 
+    .work-experience-table {
+        overflow-x: auto;
+    }
+    
+    .section-navigation {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* Table Container for Horizontal Scrolling */
+.table-container-scroll {
+    width: 100%;
+    overflow-x: auto;
+    margin: 10px 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+/* Table Styles with Minimum Width */
+.language-table, 
+.education-table, 
+.training-table, 
+.eligibility-table, 
+.work-experience-table {
+    width: 100%;
+    min-width: 600px; /* Ensure tables have minimum width for scrolling */
+}
+
+.language-table table, 
+.education-table table, 
+.training-table table, 
+.eligibility-table table, 
+.work-experience-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    table-layout: fixed;
+}
+
+/* Specific table widths for better layout */
+.language-table table {
+    min-width: 500px;
+}
+
+.education-table table {
+    min-width: 800px;
+}
+
+.training-table table {
+    min-width: 600px;
+}
+
+.eligibility-table table {
+    min-width: 700px;
+}
+
+.work-experience-table table {
+    min-width: 700px;
+}
+
+.language-table th, 
+.language-table td,
+.education-table th, 
+.education-table td,
+.training-table th, 
+.training-table td,
+.eligibility-table th, 
+.eligibility-table td,
+.work-experience-table th, 
+.work-experience-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Column widths for specific tables */
+.language-table th:nth-child(1),
+.language-table td:nth-child(1) {
+    width: 25%;
+}
+
+.language-table th:nth-child(2),
+.language-table td:nth-child(2),
+.language-table th:nth-child(3),
+.language-table td:nth-child(3),
+.language-table th:nth-child(4),
+.language-table td:nth-child(4),
+.language-table th:nth-child(5),
+.language-table td:nth-child(5) {
+    width: 18.75%;
+    text-align: center;
+}
+
+.education-table th:nth-child(1),
+.education-table td:nth-child(1) {
+    width: 15%;
+}
+
+.education-table th:nth-child(2),
+.education-table td:nth-child(2) {
+    width: 20%;
+}
+
+.education-table th:nth-child(3),
+.education-table td:nth-child(3) {
+    width: 20%;
+}
+
+.education-table th:nth-child(4),
+.education-table td:nth-child(4) {
+    width: 15%;
+}
+
+.education-table th:nth-child(5),
+.education-table td:nth-child(5) {
+    width: 20%;
+}
+
+.education-table th:nth-child(6),
+.education-table td:nth-child(6) {
+    width: 10%;
+}
+
+.training-table th:nth-child(1),
+.training-table td:nth-child(1) {
+    width: 30%;
+}
+
+.training-table th:nth-child(2),
+.training-table td:nth-child(2) {
+    width: 20%;
+}
+
+.training-table th:nth-child(3),
+.training-table td:nth-child(3) {
+    width: 25%;
+}
+
+.training-table th:nth-child(4),
+.training-table td:nth-child(4) {
+    width: 25%;
+}
+
+.eligibility-table th:nth-child(1),
+.eligibility-table td:nth-child(1) {
+    width: 25%;
+}
+
+.eligibility-table th:nth-child(2),
+.eligibility-table td:nth-child(2) {
+    width: 15%;
+}
+
+.eligibility-table th:nth-child(3),
+.eligibility-table td:nth-child(3) {
+    width: 20%;
+}
+
+.eligibility-table th:nth-child(4),
+.eligibility-table td:nth-child(4) {
+    width: 20%;
+}
+
+.eligibility-table th:nth-child(5),
+.eligibility-table td:nth-child(5) {
+    width: 20%;
+}
+
+.work-experience-table th:nth-child(1),
+.work-experience-table td:nth-child(1) {
+    width: 20%;
+}
+
+.work-experience-table th:nth-child(2),
+.work-experience-table td:nth-child(2) {
+    width: 20%;
+}
+
+.work-experience-table th:nth-child(3),
+.work-experience-table td:nth-child(3) {
+    width: 20%;
+}
+
+.work-experience-table th:nth-child(4),
+.work-experience-table td:nth-child(4) {
+    width: 20%;
+}
+
+.work-experience-table th:nth-child(5),
+.work-experience-table td:nth-child(5) {
+    width: 20%;
+}
+
+.language-table th, 
+.education-table th, 
+.training-table th, 
+.eligibility-table th, 
+.work-experience-table th {
+    background: #f5f5f5;
+    font-weight: 600;
+    position: sticky;
+    left: 0;
+}
+
+/* Input styles within tables */
+.language-table input[type="text"],
+.education-table input[type="text"],
+.training-table input[type="text"],
+.eligibility-table input[type="text"],
+.work-experience-table input[type="text"],
+.language-table input[type="date"],
+.education-table input[type="date"],
+.training-table input[type="date"],
+.eligibility-table input[type="date"],
+.work-experience-table input[type="date"],
+.language-table select,
+.education-table select,
+.training-table select,
+.eligibility-table select,
+.work-experience-table select {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.language-table input[type="checkbox"] {
+    transform: scale(1.2);
+}
+
+/* Scrollbar styling for table containers */
+.table-container-scroll::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-container-scroll::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-container-scroll::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

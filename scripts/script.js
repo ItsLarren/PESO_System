@@ -78,8 +78,231 @@ document.addEventListener('DOMContentLoaded', function () {
             window.location.href = 'login.html';
             return;
         }
+
+        if (document.getElementById('section-selector')) {
+            document.getElementById('section-selector').addEventListener('change', function() {
+                const sectionId = this.value;
+                const targetSection = document.getElementById(sectionId);
+                if (targetSection) {
+                    targetSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        }
+        initializeDynamicFormElements();
+        initializeAddEntryButtons();
         
         displayCurrentUser();
+    }
+
+    function initializeDynamicFormElements() {
+        // Disability "Others" specification
+        const disabilityOthers = document.getElementById('manual-disability-others');
+        const disabilitySpecify = document.getElementById('manual-disability-specify');
+        
+        if (disabilityOthers && disabilitySpecify) {
+            disabilityOthers.addEventListener('change', function() {
+                disabilitySpecify.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        // Employment status specification
+        const empStatus = document.getElementById('manual-emp-status');
+        const empStatusSpecify = document.getElementById('manual-emp-status-specify');
+        const empStatusCountry = document.getElementById('manual-emp-status-country');
+        
+        if (empStatus) {
+            empStatus.addEventListener('change', function() {
+                empStatusSpecify.style.display = this.value === 'Other' ? 'block' : 'none';
+                empStatusCountry.style.display = this.value === 'Unemployed - Terminated/Laidoff (abroad)' ? 'block' : 'none';
+            });
+        }
+        
+        // Looking for work duration
+        const lookingWorkYes = document.getElementById('manual-looking-work-yes');
+        const lookingWorkDuration = document.getElementById('manual-looking-work-duration');
+        
+        if (lookingWorkYes && lookingWorkDuration) {
+            lookingWorkYes.addEventListener('change', function() {
+                lookingWorkDuration.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        // Work immediately when
+        const workImmediatelyNo = document.getElementById('manual-work-immediately-no');
+        const workImmediatelyWhen = document.getElementById('manual-work-immediately-when');
+        
+        if (workImmediatelyNo && workImmediatelyWhen) {
+            workImmediatelyNo.addEventListener('change', function() {
+                workImmediatelyWhen.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        // 4Ps beneficiary ID
+        const fourPsYes = document.getElementById('manual-4ps-yes');
+        const fourPsId = document.getElementById('manual-4ps-id');
+        
+        if (fourPsYes && fourPsId) {
+            fourPsYes.addEventListener('change', function() {
+                fourPsId.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+        
+        // Work location inputs
+        const workLocationLocal = document.querySelector('input[name="manual-work-location"][value="Local"]');
+        const workLocationOverseas = document.querySelector('input[name="manual-work-location"][value="Overseas"]');
+        
+        if (workLocationLocal) {
+            workLocationLocal.addEventListener('change', function() {
+                document.getElementById('manual-work-location-local1').style.display = this.checked ? 'block' : 'none';
+                document.getElementById('manual-work-location-local2').style.display = this.checked ? 'block' : 'none';
+                document.getElementById('manual-work-location-local3').style.display = this.checked ? 'block' : 'none';
+                
+                // Hide overseas inputs
+                document.getElementById('manual-work-location-overseas1').style.display = 'none';
+                document.getElementById('manual-work-location-overseas2').style.display = 'none';
+                document.getElementById('manual-work-location-overseas3').style.display = 'none';
+            });
+        }
+        
+        if (workLocationOverseas) {
+            workLocationOverseas.addEventListener('change', function() {
+                document.getElementById('manual-work-location-overseas1').style.display = this.checked ? 'block' : 'none';
+                document.getElementById('manual-work-location-overseas2').style.display = this.checked ? 'block' : 'none';
+                document.getElementById('manual-work-location-overseas3').style.display = this.checked ? 'block' : 'none';
+                
+                // Hide local inputs
+                document.getElementById('manual-work-location-local1').style.display = 'none';
+                document.getElementById('manual-work-location-local2').style.display = 'none';
+                document.getElementById('manual-work-location-local3').style.display = 'none';
+            });
+        }
+        
+        // Skills "Others" specification
+        const skillOthers = document.getElementById('manual-skill-others');
+        const skillOthersSpecify = document.getElementById('manual-skill-others-specify');
+        
+        if (skillOthers && skillOthersSpecify) {
+            skillOthers.addEventListener('change', function() {
+                skillOthersSpecify.style.display = this.checked ? 'block' : 'none';
+            });
+        }
+    }
+
+    // Initialize add entry buttons for dynamic tables
+    function initializeAddEntryButtons() {
+        // Training entries
+        const addTrainingBtn = document.getElementById('add-training-btn');
+        if (addTrainingBtn) {
+            addTrainingBtn.addEventListener('click', function() {
+                addTableEntry('training-entries', 'training');
+            });
+        }
+        
+        // Eligibility entries
+        const addEligibilityBtn = document.getElementById('add-eligibility-btn');
+        if (addEligibilityBtn) {
+            addEligibilityBtn.addEventListener('click', function() {
+                addTableEntry('eligibility-entries', 'eligibility');
+            });
+        }
+        
+        // Work experience entries
+        const addWorkBtn = document.getElementById('add-work-btn');
+        if (addWorkBtn) {
+            addWorkBtn.addEventListener('click', function() {
+                addTableEntry('work-entries', 'work');
+            });
+        }
+    }
+
+    // Add new row to tables
+    function addTableEntry(tableId, type) {
+        const tableBody = document.getElementById(tableId);
+        if (!tableBody) return;
+        
+        const rowCount = tableBody.children.length + 1;
+        
+        let newRow;
+        if (type === 'training') {
+            newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" id="manual-training-course${rowCount}" name="manual-training-course${rowCount}"></td>
+                <td><input type="text" id="manual-training-duration${rowCount}" name="manual-training-duration${rowCount}"></td>
+                <td><input type="text" id="manual-training-institution${rowCount}" name="manual-training-institution${rowCount}"></td>
+                <td><input type="text" id="manual-training-certificate${rowCount}" name="manual-training-certificate${rowCount}"></td>
+            `;
+        } else if (type === 'eligibility') {
+            newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" id="manual-eligibility${rowCount}" name="manual-eligibility${rowCount}"></td>
+                <td><input type="text" id="manual-eligibility-rating${rowCount}" name="manual-eligibility-rating${rowCount}"></td>
+                <td><input type="date" id="manual-eligibility-date${rowCount}" name="manual-eligibility-date${rowCount}" class="date-input"></td>
+                <td><input type="text" id="manual-license${rowCount}" name="manual-license${rowCount}"></td>
+                <td><input type="date" id="manual-license-valid${rowCount}" name="manual-license-valid${rowCount}" class="date-input"></td>
+            `;
+        } else if (type === 'work') {
+            newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td><input type="text" id="manual-work-company${rowCount}" name="manual-work-company${rowCount}"></td>
+                <td><input type="text" id="manual-work-address${rowCount}" name="manual-work-address${rowCount}"></td>
+                <td><input type="text" id="manual-work-position${rowCount}" name="manual-work-position${rowCount}"></td>
+                <td><input type="text" id="manual-work-dates${rowCount}" name="manual-work-dates${rowCount}"></td>
+                <td>
+                    <select id="manual-work-status${rowCount}" name="manual-work-status${rowCount}">
+                        <option value="">Select Status</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="Contractual">Contractual</option>
+                        <option value="Part Time">Part Time</option>
+                        <option value="Probationary">Probationary</option>
+                    </select>
+                </td>
+            `;
+        }
+        
+        tableBody.appendChild(newRow);
+        
+        // Scroll to the bottom of the table container to show the new row
+        const tableContainer = tableBody.closest('.table-container-scroll');
+        if (tableContainer) {
+            tableContainer.scrollLeft = tableContainer.scrollWidth;
+        }
+    }
+
+    // Update the manual form submission handler to include all new fields
+    function handleManualFormSubmission(e) {
+        e.preventDefault();
+        
+        // Get all form values
+        const formData = {
+            // Personal Information
+            surname: document.getElementById('manual-surname').value,
+            firstName: document.getElementById('manual-first-name').value,
+            middleName: document.getElementById('manual-middle-name').value,
+            suffix: document.getElementById('manual-suffix').value,
+            birthDate: document.getElementById('manual-bdate').value,
+            placeOfBirth: document.getElementById('manual-place-birth').value,
+            sex: document.getElementById('manual-sex').value,
+            civilStatus: document.getElementById('manual-civil-status').value,
+            tin: document.getElementById('manual-tin').value,
+            gsisSss: document.getElementById('manual-gsis-sss').value,
+            pagibig: document.getElementById('manual-pagibig').value,
+            philhealth: document.getElementById('manual-philhealth').value,
+            height: document.getElementById('manual-height').value,
+            email: document.getElementById('manual-email').value,
+            landline: document.getElementById('manual-landline').value,
+            cellphone: document.getElementById('manual-cellphone').value,
+            // ... continue for all other fields
+        };
+        
+        // Process the form data and add to applicants array
+        // ... existing code ...
+        
+        // Close modal and reset form
+        document.getElementById('manualModal').style.display = 'none';
+        document.getElementById('manualApplicantForm').reset();
+        
+        // Update applicant list display
+        displayApplicants();
     }
 
     function initializeManualForm() {
@@ -217,16 +440,22 @@ document.addEventListener('DOMContentLoaded', function () {
             const bdateMatch = applicantData.BDATE && existingApp.BDATE && 
                             applicantData.BDATE === existingApp.BDATE;
             
-            if (nameMatch || bdateMatch) {
+            // Check for same name but different birthday
+            const sameNameDifferentBday = nameMatch && !bdateMatch;
+            
+            if (nameMatch || bdateMatch || sameNameDifferentBday) {
                 const matchDetails = {
                     existingApplicant: existingApp,
                     matchingFields: [],
-                    differences: []
+                    differences: [],
+                    sameNameDifferentBday: sameNameDifferentBday
                 };
                 
                 if (nameMatch) matchDetails.matchingFields.push('Name');
                 if (bdateMatch) matchDetails.matchingFields.push('Birthday');
+                if (sameNameDifferentBday) matchDetails.matchingFields.push('Same Name, Different Birthday');
                 
+                // Compare other fields to show differences
                 const fieldsToCompare = [
                     'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'
                 ];
@@ -243,6 +472,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
                 });
+                
+                // Add birthday difference for same name cases
+                if (sameNameDifferentBday) {
+                    matchDetails.differences.push({
+                        field: 'Birthday',
+                        newValue: applicantData.BDATE,
+                        existingValue: existingApp.BDATE
+                    });
+                }
                 
                 matches.push(matchDetails);
             }
@@ -275,11 +513,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         <h4 style="margin: 0 0 10px 0; color: #856404;">
                             <i class="fas fa-exclamation-triangle"></i> 
                             Existing Applicant: <span style="background: #ffeb3b; padding: 2px 5px;">${existing.NAME}</span>
+                            ${match.sameNameDifferentBday ? '<span style="color: #d32f2f; margin-left: 10px;">(Same Name, Different Birthday)</span>' : ''}
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
                             <div>
                                 <strong>Current Program:</strong><br>
                                 ${existing['PROGRAM CATEGORY'] || 'Not specified'} - ${existing['PROGRAM STATUS'] || 'No status'}
+                            </div>
+                            <div>
+                                <strong>Birthday:</strong><br>
+                                ${existing.BDATE || 'Not provided'}
                             </div>
                             <div>
                                 <strong>Matching Fields:</strong>
@@ -292,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 if (match.differences.length > 0) {
                     message += `
-                            <div colspan="2">
+                            <div style="grid-column: 1 / -1;">
                                 <strong>Differences Found:</strong>
                                 <ul style="margin: 5px 0; padding-left: 20px; color: #388e3c;">`;
                     match.differences.forEach(diff => {
@@ -319,7 +562,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                     
                     <p><strong>Do you want to proceed with adding this applicant?</strong></p>
-                    <p style="font-size: 14px; color: #666;">If this is a different person, click "Add Anyway". If it's the same person, click "Cancel".</p>
+                    <p style="font-size: 14px; color: #666;">
+                        ${matches.some(m => m.sameNameDifferentBday) 
+                            ? 'This applicant has the same name but different birthday from existing applicant(s). Please verify if this is a different person.' 
+                            : 'If this is a different person, click "Add Anyway". If it\'s the same person, click "Cancel".'}
+                    </p>
                 </div>
                 <div class="modal-footer">
                     <button id="cancel-add" class="cancel-btn" style="margin-right: 10px;">Cancel</button>
@@ -361,9 +608,16 @@ document.addEventListener('DOMContentLoaded', function () {
         matches.forEach(match => {
             const rows = tbody.querySelectorAll('tr');
             rows.forEach(row => {
-                const nameCell = row.querySelector('td:nth-child(3)'); 
+                const nameCell = row.querySelector('td:nth-child(2)'); // Now column 2 (was 5)
+                const bdateCell = row.querySelector('td:nth-child(3)'); // Now column 3 (was 6)
+                
                 if (nameCell && nameCell.textContent.trim().toLowerCase() === match.existingApplicant.NAME.toLowerCase()) {
                     row.classList.add('duplicate-highlight');
+                    
+                    // Add special styling for same name different birthday cases
+                    if (match.sameNameDifferentBday) {
+                        row.classList.add('same-name-different-bday');
+                    }
                     
                     if (!window.hasScrolledToHighlight) {
                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -381,6 +635,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const highlightedRows = tbody.querySelectorAll('.duplicate-highlight');
         highlightedRows.forEach(row => {
             row.classList.remove('duplicate-highlight');
+            row.classList.remove('same-name-different-bday');
         });
         
         window.hasScrolledToHighlight = false;
@@ -390,17 +645,36 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData(elements.manualApplicantForm);
         const applicantData = {};
         
-        formData.forEach((value, key) => {
-            const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
-            applicantData[fieldName] = value;
-        });
-        const lastName = applicantData['LAST NAME'] || '';
-        const firstName = applicantData['FIRST NAME'] || '';
-        const middleName = applicantData['MIDDLE NAME'] || '';
+        // Get individual name parts
+        const lastName = document.getElementById('manual-last-name').value.trim();
+        const firstName = document.getElementById('manual-first-name').value.trim();
+        const middleName = document.getElementById('manual-middle-name').value.trim();
         
+        // Combine into full name format: "Last Name, First Name Middle Name"
         if (lastName && firstName) {
-            applicantData['NAME'] = `${lastName}, ${firstName} ${middleName}`.trim();
+            let fullName = `${lastName}, ${firstName}`;
+            if (middleName) {
+                fullName += ` ${middleName}`;
+            }
+            applicantData['NAME'] = fullName;
+        } else {
+            // Fallback to the full name field if provided
+            applicantData['NAME'] = document.getElementById('manual-name').value.trim() || 'N/A';
         }
+        
+        // Store individual name parts for reference
+        applicantData['LAST NAME'] = lastName || 'N/A';
+        applicantData['FIRST NAME'] = firstName || 'N/A';
+        applicantData['MIDDLE NAME'] = middleName || 'N/A';
+        
+        // Process other form data
+        formData.forEach((value, key) => {
+            if (!key.startsWith('manual-last-name') && !key.startsWith('manual-first-name') && 
+                !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
+                const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
+                applicantData[fieldName] = value;
+            }
+        });
         
         applicantData['SRS ID'] = generateUniqueId();
         
@@ -854,6 +1128,39 @@ document.addEventListener('DOMContentLoaded', function () {
     
         const formData = new FormData(document.getElementById('editApplicantForm'));
         const updatedApplicant = {};
+
+        const lastName = document.getElementById('edit-last-name').value.trim();
+        const firstName = document.getElementById('edit-first-name').value.trim();
+        const middleName = document.getElementById('edit-middle-name').value.trim();
+        
+        // Combine into full name
+        if (lastName && firstName) {
+            let fullName = `${lastName}, ${firstName}`;
+            if (middleName) {
+                fullName += ` ${middleName}`;
+            }
+            updatedApplicant['NAME'] = fullName;
+        }
+        
+        // Store individual name parts
+        updatedApplicant['LAST NAME'] = lastName || 'N/A';
+        updatedApplicant['FIRST NAME'] = firstName || 'N/A';
+        updatedApplicant['MIDDLE NAME'] = middleName || 'N/A';
+        
+        // Process other form data
+        formData.forEach((value, key) => {
+            if (!key.startsWith('edit-last-name') && !key.startsWith('edit-first-name') && 
+                !key.startsWith('edit-middle-name') && !key.startsWith('edit-name')) {
+                const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
+
+                if (originalFieldName === 'BDATE' && value) {
+                    const date = new Date(value);
+                    updatedApplicant[originalFieldName] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                } else {
+                    updatedApplicant[originalFieldName] = value;
+                }
+            }
+        });
         
         formData.forEach((value, key) => {
             const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
@@ -2065,8 +2372,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showNotification(message, type, notificationElement = null) {
         const targetElement = notificationElement || elements.notification;
-        if (!targetElement) return;
-        
+        if (!targetElement) {
+                console.warn('Notification element not found');
+                return;
+            }        
+
         targetElement.textContent = message;
         targetElement.className = 'notification';
         targetElement.classList.add(type);
@@ -2109,7 +2419,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function displayMainApplicants(applicants) {
-        if (!elements.mainApplicantTable) return;
+        if (!elements.mainApplicantTable) {
+            console.warn('Main applicant table not found');
+            return;
+        }
         
         const tbody = elements.mainApplicantTable.querySelector('tbody');
         if (!tbody) return;
@@ -2119,7 +2432,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 35; 
+            cell.colSpan = 32; 
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
@@ -2135,21 +2448,6 @@ document.addEventListener('DOMContentLoaded', function () {
             idCell.style.fontFamily = 'monospace';
             idCell.style.fontSize = '10px';
             row.appendChild(idCell);
-
-            const lastNameCell = document.createElement('td');
-            lastNameCell.textContent = applicant['LAST NAME'] || applicant.LASTNAME || extractLastName(applicant.NAME) || 'N/A';
-            lastNameCell.className = 'compact-cell';
-            row.appendChild(lastNameCell);
-
-            const firstNameCell = document.createElement('td');
-            firstNameCell.textContent = applicant['FIRST NAME'] || applicant.FIRSTNAME || extractFirstName(applicant.NAME) || 'N/A';
-            firstNameCell.className = 'compact-cell';
-            row.appendChild(firstNameCell);
-
-            const middleNameCell = document.createElement('td');
-            middleNameCell.textContent = applicant['MIDDLE NAME'] || applicant.MIDDLENAME || extractMiddleName(applicant.NAME) || 'N/A';
-            middleNameCell.className = 'compact-cell';
-            row.appendChild(middleNameCell);
 
             const fullNameCell = document.createElement('td');
             fullNameCell.textContent = applicant.NAME || formatFullName(applicant) || 'N/A';
@@ -2943,6 +3241,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         return 'N/A';
+    }
+
+    function validateApplicantData(applicantData) {
+        const required = ['NAME', 'BDATE'];
+        const missing = required.filter(field => !applicantData[field] || applicantData[field] === 'N/A');
+        
+        if (missing.length > 0) {
+            throw new Error(`Missing required fields: ${missing.join(', ')}`);
+        }
     }
     initializeApp();
 });
