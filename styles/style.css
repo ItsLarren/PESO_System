@@ -2576,3 +2576,131 @@ input[type="date"]:after {
     content: " *";
     color: #d32f2f;
 }
+
+/* Enhanced Statistics Styles */
+.enhanced-stats-container {
+    margin: 20px 0;
+}
+
+.stats-grid-enhanced {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.stat-card-enhanced {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 4px solid #3498db;
+}
+
+.stat-card-enhanced:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stat-card-enhanced.total {
+    border-left-color: #2c3e50;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.stat-card-enhanced.male {
+    border-left-color: #3498db;
+}
+
+.stat-card-enhanced.female {
+    border-left-color: #e91e63;
+}
+
+.stat-card-enhanced.employed {
+    border-left-color: #27ae60;
+}
+
+.stat-card-enhanced.unemployed {
+    border-left-color: #f39c12;
+}
+
+.stat-card-enhanced.self-employed {
+    border-left-color: #9b59b6;
+}
+
+.stat-icon {
+    font-size: 32px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(52, 152, 219, 0.1);
+}
+
+.stat-card-enhanced.total .stat-icon {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-card-enhanced.total .stat-number {
+    color: white;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.stat-card-enhanced.total .stat-label {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-percentage {
+    font-size: 12px;
+    color: #27ae60;
+    font-weight: bold;
+    background: rgba(39, 174, 96, 0.1);
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+/* PDF Export Button */
+.pdf-export-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
+    color: white;
+    border: none;
+    padding: 12px 25px !important;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.pdf-export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    background: linear-gradient(135deg, #c0392b, #a93226) !important;
+}

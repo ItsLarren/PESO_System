@@ -60,6 +60,27 @@ document.addEventListener('DOMContentLoaded', function () {
         closeView: document.querySelector('.close-view'),
     };
 
+    // Add this missing function that was likely causing the error
+    function initializeManualFormControls() {
+        // Initialize photo controls
+        initializeManualPhotoControls();
+        
+        // Initialize dynamic form elements
+        initializeDynamicFormElements();
+        
+        // Initialize add entry buttons
+        initializeAddEntryButtons();
+        
+        // Add submit handler for adding new applicants
+        if (elements.manualApplicantForm) {
+            elements.manualApplicantForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                if (validateManualForm(false)) {
+                    addManualApplicant();
+                }
+            });
+        }
+    }
     // Add this function to initialize the view modal
     function initializeViewModal() {
         if (elements.viewModal) {
@@ -188,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function downloadApplicantAsPDF(applicant) {
         try {
             // Create a new window with the applicant data formatted for PDF
-            const printWindow = window.open('', '_blank');
+            const printWindow = window.open('', 'CPESO Comprehensive Program Report');
             const applicantName = applicant.NAME || 'applicant';
             const fileName = `applicant_${applicantName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
             
@@ -337,35 +358,39 @@ document.addEventListener('DOMContentLoaded', function () {
     let activeFilters = {};
 
     function initializeApp() {
-        initializeManualForm();
-        initializeCamera();
-        initializeSearch();
-        initializeEditModal();
-        initializeFileUploads();
-        initializeAdvancedFilters();
-        initializeReporting();
-        loadMainApplicants();
-        loadImportedData();
-        initializeViewModal();
-        
-        if (localStorage.getItem('isLoggedIn') !== 'true') {
-            window.location.href = 'login.html';
-            return;
-        }
+        try {
+            console.log('Initializing application...');
+            
+            // Check authentication
+            if (localStorage.getItem('isLoggedIn') !== 'true') {
+                window.location.href = 'login.html';
+                return;
+            }
 
-        if (document.getElementById('section-selector')) {
-            document.getElementById('section-selector').addEventListener('change', function() {
-                const sectionId = this.value;
-                const targetSection = document.getElementById(sectionId);
-                if (targetSection) {
-                    targetSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
+            // Initialize all components
+            initializeManualForm();
+            initializeCamera();
+            initializeSearch();
+            initializeEditModal();
+            initializeFileUploads();
+            initializeAdvancedFilters();
+            initializeReporting();
+            initializeViewModal();
+            
+            // Load data
+            loadMainApplicants();
+            loadImportedData();
+            
+            // Initialize UI components
+            initializeDynamicFormElements();
+            initializeAddEntryButtons();
+            displayCurrentUser();
+
+            console.log('Application initialized successfully');
+        } catch (error) {
+            console.error('Error during application initialization:', error);
+            showNotification('Error initializing application: ' + error.message, 'error');
         }
-        initializeDynamicFormElements();
-        initializeAddEntryButtons();
-        
-        displayCurrentUser();
     }
 
     function initializeDynamicFormElements() {
@@ -1989,6 +2014,11 @@ document.addEventListener('DOMContentLoaded', function () {
         
         reportsContainer.innerHTML = `
             <div class="visual-report-section">
+                <h3><i class="fas fa-chart-line"></i> Executive Summary</h3>
+                ${generateEnhancedStatistics(programStats, employmentStats, demographicStats)}
+            </div>
+            
+            <div class="visual-report-section">
                 <h3><i class="fas fa-users"></i> Program Enrollment Overview</h3>
                 ${generateProgramPictograph(programStats)}
             </div>
@@ -2016,20 +2046,18 @@ document.addEventListener('DOMContentLoaded', function () {
             
             <div class="visual-report-section">
                 <h3><i class="fas fa-chart-bar"></i> Age Demographics</h3>
-                ${generateAgePyramid(programStats)}  <!-- FIXED: Changed stats to programStats -->
+                ${generateAgePyramid(programStats)}
             </div>
             
             <div class="visual-report-section">
-                <h3><i class="fas fa-chart-line"></i> Program Status Progress</h3>
+                <h3><i class="fas fa-tasks"></i> Program Status Progress</h3>
                 ${generateProgramProgress(programStats)}
             </div>
             
-            <div class="visual-report-section">
-                <h3><i class="fas fa-tally"></i> Quick Statistics Tally</h3>
-                ${generateTallyChart(programStats, employmentStats, demographicStats)}
-            </div>
-            
-            <div class="report-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+            <div class="report-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <button id="export-pdf-btn" class="pdf-export-btn">
+                    <i class="fas fa-file-pdf"></i> Export Comprehensive PDF Report
+                </button>
                 <button id="export-summary-btn" class="action-btn" style="background: #4caf50;">
                     <i class="fas fa-file-excel"></i> Export Summary Report
                 </button>
@@ -2039,11 +2067,12 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
         
-        initializeExpandableSections();
-        
+        // Add event listener for PDF export
+        document.getElementById('export-pdf-btn').addEventListener('click', generateComprehensivePDFReport);
         document.getElementById('export-summary-btn').addEventListener('click', exportSummaryReport);
         document.getElementById('export-full-btn').addEventListener('click', exportReportsToExcel);
         
+        initializeExpandableSections();
         reportsContainer.style.display = 'block';
     }
 
@@ -2286,55 +2315,84 @@ document.addEventListener('DOMContentLoaded', function () {
         return html;
     }
 
-    function generateTallyChart(programStats, employmentStats, demographicStats) {
-        function createTallyMarks(count) {
-            const fullGroups = Math.floor(count / 5);
-            const remainder = count % 5;
-            
-            let marks = '';
-            
-            for (let i = 0; i < fullGroups; i++) {
-                marks += '<span class="tally-mark">卌</span> ';
-            }
-            
-            if (remainder > 0) {
-                marks += '<span class="tally-mark">' + '|'.repeat(remainder) + '</span>';
-            }
-            
-            return marks || '<span style="color: #999;">No data</span>';
-        }
-        
+    function generateEnhancedStatistics(programStats, employmentStats, demographicStats) {
         return `
-            <div class="tally-chart">
-                <div class="tally-group">
-                    <div class="tally-label">Total Applicants</div>
-                    <div class="tally-marks">${createTallyMarks(programStats.total)}</div>
-                    <div class="tally-count">${programStats.total}</div>
-                </div>
-                <div class="tally-group">
-                    <div class="tally-label">Male Applicants</div>
-                    <div class="tally-marks">${createTallyMarks(demographicStats.male)}</div>
-                    <div class="tally-count">${demographicStats.male}</div>
-                </div>
-                <div class="tally-group">
-                    <div class="tally-label">Female Applicants</div>
-                    <div class="tally-marks">${createTallyMarks(demographicStats.female)}</div>
-                    <div class="tally-count">${demographicStats.female}</div>
-                </div>
-                <div class="tally-group">
-                    <div class="tally-label">Employed</div>
-                    <div class="tally-marks">${createTallyMarks(employmentStats.employed)}</div>
-                    <div class="tally-count">${employmentStats.employed}</div>
-                </div>
-                <div class="tally-group">
-                    <div class="tally-label">Unemployed</div>
-                    <div class="tally-marks">${createTallyMarks(employmentStats.unemployed)}</div>
-                    <div class="tally-count">${employmentStats.unemployed}</div>
-                </div>
-                <div class="tally-group">
-                    <div class="tally-label">Self-Employed</div>
-                    <div class="tally-marks">${createTallyMarks(employmentStats.selfEmployed)}</div>
-                    <div class="tally-count">${employmentStats.selfEmployed}</div>
+            <div class="enhanced-stats-container">
+                <div class="stats-grid-enhanced">
+                    <div class="stat-card-enhanced total">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${programStats.total}</div>
+                            <div class="stat-label">Total Applicants</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card-enhanced male">
+                        <div class="stat-icon">
+                            <i class="fas fa-male"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${demographicStats.male}</div>
+                            <div class="stat-label">Male</div>
+                            <div class="stat-percentage">
+                                ${programStats.total > 0 ? Math.round((demographicStats.male / programStats.total) * 100) : 0}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card-enhanced female">
+                        <div class="stat-icon">
+                            <i class="fas fa-female"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${demographicStats.female}</div>
+                            <div class="stat-label">Female</div>
+                            <div class="stat-percentage">
+                                ${programStats.total > 0 ? Math.round((demographicStats.female / programStats.total) * 100) : 0}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card-enhanced employed">
+                        <div class="stat-icon">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${employmentStats.employed}</div>
+                            <div class="stat-label">Employed</div>
+                            <div class="stat-percentage">
+                                ${programStats.total > 0 ? Math.round((employmentStats.employed / programStats.total) * 100) : 0}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card-enhanced unemployed">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${employmentStats.unemployed}</div>
+                            <div class="stat-label">Unemployed</div>
+                            <div class="stat-percentage">
+                                ${programStats.total > 0 ? Math.round((employmentStats.unemployed / programStats.total) * 100) : 0}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card-enhanced self-employed">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">${employmentStats.selfEmployed}</div>
+                            <div class="stat-label">Self-Employed</div>
+                            <div class="stat-percentage">
+                                ${programStats.total > 0 ? Math.round((employmentStats.selfEmployed / programStats.total) * 100) : 0}%
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -2462,24 +2520,113 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            if (course && course !== 'No Course Specified' && course !== 'N/A') {
-                course = course.trim();
-                if (course.toLowerCase().includes('information technology') || course.toLowerCase().includes('it')) {
-                    course = 'Information Technology';
-                } else if (course.toLowerCase().includes('business') || course.toLowerCase().includes('bussiness')) {
-                    course = 'Business Administration';
-                } else if (course.toLowerCase().includes('education') || course.toLowerCase().includes('educ')) {
-                    course = 'Education';
-                } else if (course.toLowerCase().includes('computer') || course.toLowerCase().includes('comsci')) {
-                    course = 'Computer Science';
-                } else if (course.toLowerCase().includes('engineering')) {
-                    course = 'Engineering';
-                } else if (course.toLowerCase().includes('accounting')) {
-                    course = 'Accounting';
-                } else if (course.toLowerCase().includes('nursing')) {
-                    course = 'Nursing';
-                }
+            function categorizeCourse(course) {
+            if (!course || course === 'No Course Specified' || course === 'N/A' || course === '') {
+                return 'No Course Specified';
             }
+            
+            course = course.trim().toLowerCase();
+            
+            // Information Technology & Computer-related
+            if (course.includes('information technology') || course.includes('it') || 
+                course.includes('computer science') || course.includes('comsci') ||
+                course.includes('computer engineering') || course.includes('comeng') ||
+                course.includes('information system') || course.includes('is') ||
+                course.includes('software engineering') || course.includes('computer programming')) {
+                return 'Information Technology & Computer Science';
+            }
+            
+            // Business & Management
+            if (course.includes('business administration') || course.includes('bussiness') ||
+                course.includes('business management') || course.includes('marketing') ||
+                course.includes('management') || course.includes('entrepreneurship') ||
+                course.includes('hr') || course.includes('human resource') ||
+                course.includes('office administration') || course.includes('office management')) {
+                return 'Business Administration & Management';
+            }
+            
+            // Education
+            if (course.includes('education') || course.includes('educ') ||
+                course.includes('elementary education') || course.includes('secondary education') ||
+                course.includes('physical education') || course.includes('pe') ||
+                course.includes('special education') || course.includes('sped') ||
+                course.includes('early childhood education')) {
+                return 'Education';
+            }
+            
+            // Engineering
+            if (course.includes('engineering') || course.includes('civil engineering') ||
+                course.includes('electrical engineering') || course.includes('mechanical engineering') ||
+                course.includes('electronics engineering') || course.includes('chemical engineering') ||
+                course.includes('industrial engineering') || course.includes('sanitary engineering')) {
+                return 'Engineering';
+            }
+            
+            // Accounting & Finance
+            if (course.includes('accounting') || course.includes('accountancy') ||
+                course.includes('finance') || course.includes('banking') ||
+                course.includes('financial management') || course.includes('management accounting')) {
+                return 'Accounting & Finance';
+            }
+            
+            // Healthcare & Nursing
+            if (course.includes('nursing') || course.includes('midwifery') ||
+                course.includes('medical technology') || course.includes('medtech') ||
+                course.includes('pharmacy') || course.includes('physical therapy') ||
+                course.includes('radiological technology') || course.includes('respiratory therapy')) {
+                return 'Healthcare & Nursing';
+            }
+            
+            // Hospitality & Tourism
+            if (course.includes('hotel') || course.includes('restaurant') ||
+                course.includes('tourism') || course.includes('hospitality') ||
+                course.includes('culinary') || course.includes('cookery')) {
+                return 'Hospitality & Tourism Management';
+            }
+            
+            // Maritime
+            if (course.includes('marine') || course.includes('maritime') ||
+                course.includes('seaman') || course.includes('seafaring')) {
+                return 'Maritime Education';
+            }
+            
+            // Arts & Sciences
+            if (course.includes('psychology') || course.includes('sociology') ||
+                course.includes('political science') || course.includes('pol sci') ||
+                course.includes('biology') || course.includes('chemistry') ||
+                course.includes('mathematics') || course.includes('physics') ||
+                course.includes('english') || course.includes('filipino') ||
+                course.includes('history') || course.includes('communication')) {
+                return 'Arts & Sciences';
+            }
+            
+            // Criminology
+            if (course.includes('criminology') || course.includes('criminal justice')) {
+                return 'Criminology';
+            }
+            
+            // Architecture & Design
+            if (course.includes('architecture') || course.includes('interior design') ||
+                course.includes('fine arts') || course.includes('graphic design')) {
+                return 'Architecture & Design';
+            }
+            
+            // Agriculture
+            if (course.includes('agriculture') || course.includes('fishery') ||
+                course.includes('veterinary') || course.includes('agribusiness')) {
+                return 'Agriculture';
+            }
+            
+            // Technical Vocational
+            if (course.includes('automotive') || course.includes('welding') ||
+                course.includes('electrical technology') || course.includes('refrigeration') ||
+                course.includes('driving') || course.includes('heavy equipment')) {
+                return 'Technical Vocational';
+            }
+            
+            // Return original course if no category matches
+            return course.charAt(0).toUpperCase() + course.slice(1);
+        }
             
             if (age < 20) stats.byAgeGroup['Below 20']++;
             else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
@@ -3356,18 +3503,18 @@ document.addEventListener('DOMContentLoaded', function () {
             allCourses.forEach(([course, count]) => {
                 const percentage = ((count / collegeGrads) * 100).toFixed(1);
                 coursesHTML += `
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; align-items: center;">
-                        <span style="flex: 1;">${course}</span>
+                    <div class="course-item">
+                        <span class="course-name">${course}</span>
                         <div style="display: flex; align-items: center; gap: 15px;">
-                            <span style="font-weight: bold; color: #2196f3;">${count}</span>
-                            <span style="color: #4caf50; font-size: 12px; background: #e8f5e8; padding: 2px 6px; border-radius: 10px;">${percentage}%</span>
+                            <span class="course-count">${count}</span>
+                            <span class="course-percentage">${percentage}%</span>
                         </div>
                     </div>
                 `;
             });
 
             coursesHTML += `
-                <div style="display: flex; justify-content: space-between; padding: 10px 0; margin-top: 10px; border-top: 2px solid #2196f3; background: #f8f9fa; border-radius: 4px; font-weight: bold;">
+                <div class="course-summary">
                     <span>Total College Graduates</span>
                     <span style="color: #2196f3;">${collegeGrads}</span>
                 </div>
@@ -3375,24 +3522,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         return `
-            <div class="expandable-section">
-                <div class="expandable-header" style="cursor: pointer; background: #e3f2fd; padding: 12px 15px; border-radius: 4px;">
+            <div class="expandable-section" style="margin-top: 20px;">
+                <div class="expandable-header">
                     <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <span style="font-weight: bold; color: #1976d2;">
                             <i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>
                             ${collegeGrads} College Graduates - Course Breakdown
                             ${allCourses.length > 0 ? `<span style="font-size: 12px; color: #666; margin-left: 8px;">(${allCourses.length} courses)</span>` : ''}
                         </span>
-                        <i class="fas fa-chevron-down" style="transition: transform 0.3s ease;"></i>
                     </div>
                 </div>
-                <div class="expandable-content" style="display: none; padding: 15px; background: white; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 4px 4px;">
+                <div class="expandable-content">
                     ${coursesHTML}
                 </div>
             </div>
         `;
     }
-
     function extractLastName(fullName) {
         if (!fullName || fullName === 'N/A') return '';
         const parts = fullName.split(',');
@@ -3655,55 +3800,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'N/A';
     }
 
-    function validateAndImportApplicants(newApplicants) {
-        const validationResults = validateImportedDataDuplicates(newApplicants);
-
-        if (validationResults.inImported.length > 0 || validationResults.inMain.length > 0) {
-            showEnhancedImportValidationModal(validationResults, newApplicants);
-        } else {
-            // No duplicates found, proceed with import
-            proceedWithImport(newApplicants, JSON.parse(localStorage.getItem('importedData')) || []);
-        }
-        const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
-        
-        let duplicatesFound = [];
-        let uniqueNewApplicants = [];
-        let importedDuplicates = [];
-
-        // Check against main applicants
-        newApplicants.forEach(newApp => {
-            const duplicateCheck = checkApplicantDuplicate(newApp);
-            
-            if (duplicateCheck.hasMatches) {
-                duplicatesFound.push({
-                    applicant: newApp,
-                    matches: duplicateCheck.matches,
-                    source: 'main'
-                });
-            } else {
-                // Also check against imported data
-                const importedDuplicate = checkImportedDuplicate(newApp, importedData);
-                if (importedDuplicate.hasMatches) {
-                    importedDuplicates.push({
-                        applicant: newApp,
-                        matches: importedDuplicate.matches,
-                        source: 'imported'
-                    });
-                } else {
-                    uniqueNewApplicants.push(newApp);
-                }
-            }
-        });
-
-        // Show validation results
-        if (duplicatesFound.length > 0 || importedDuplicates.length > 0) {
-            showImportValidationModal(newApplicants, duplicatesFound, importedDuplicates, uniqueNewApplicants);
-        } else {
-            // No duplicates found, proceed with import
-            proceedWithImport(newApplicants, importedData);
-        }
-    }
-
     function checkImportedDuplicate(newApplicant, importedData) {
         const matches = [];
         
@@ -3819,231 +3915,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         return null;
-    }
-
-    function showImportValidationModal(newApplicants, mainDuplicates, importedDuplicates, uniqueNewApplicants) {
-        return new Promise((resolve) => {
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.style.display = 'block';
-            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            
-            let message = `<div class="modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
-                <div class="modal-header">
-                    <h2 style="color: #ff9800;">Import Validation Results</h2>
-                </div>
-                <div style="padding: 20px;">
-                    <div style="background: #e8f4fd; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                        <h3 style="margin: 0 0 10px 0; color: #1976d2;">
-                            <i class="fas fa-info-circle"></i> Import Summary
-                        </h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
-                            <div>
-                                <strong>Total in file:</strong> ${newApplicants.length}
-                            </div>
-                            <div>
-                                <strong>New applicants:</strong> ${uniqueNewApplicants.length}
-                            </div>
-                            <div>
-                                <strong>Duplicates found:</strong> ${mainDuplicates.length + importedDuplicates.length}
-                            </div>
-                        </div>
-                    </div>`;
-            
-            // Show main applicant duplicates
-            if (mainDuplicates.length > 0) {
-                message += `
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 5px;">
-                            <i class="fas fa-exclamation-triangle"></i> Duplicates in Main Database (${mainDuplicates.length})
-                        </h3>
-                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                            These applicants already exist in your main applicant database.
-                        </p>`;
-                
-                mainDuplicates.forEach((dup, index) => {
-                    const applicant = dup.applicant;
-                    message += `
-                        <div style="background: #ffebee; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #d32f2f;">
-                            <h4 style="margin: 0 0 10px 0; color: #c62828;">
-                                <i class="fas fa-user-times"></i> 
-                                New Applicant: <span style="background: #ffcdd2; padding: 2px 5px;">${applicant.NAME}</span>
-                            </h4>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
-                                <div><strong>Birth Date:</strong> ${applicant.BDATE || 'Not provided'}</div>
-                                <div><strong>Phone:</strong> ${applicant.CELLPHONE || 'Not provided'}</div>
-                                <div><strong>Program:</strong> ${applicant['PROGRAM CATEGORY'] || 'Not specified'}</div>
-                            </div>
-                            <div style="margin-top: 10px; padding: 10px; background: #fce4ec; border-radius: 4px;">
-                                <strong>Matching Existing Applicant(s):</strong>
-                                <ul style="margin: 5px 0; padding-left: 20px;">`;
-                    
-                    dup.matches.forEach(match => {
-                        const existing = match.existingApplicant;
-                        message += `<li>
-                            <strong>${existing.NAME}</strong> 
-                            (Birth: ${existing.BDATE || 'N/A'}, Phone: ${existing.CELLPHONE || 'N/A'})
-                            ${match.sameNameDifferentBday ? '<span style="color: #d32f2f;">- Same Name, Different Birthday</span>' : ''}
-                        </li>`;
-                    });
-                    
-                    message += `</ul></div></div>`;
-                });
-                
-                message += `</div>`;
-            }
-            
-            // Show imported data duplicates
-            if (importedDuplicates.length > 0) {
-                message += `
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="color: #ff9800; border-bottom: 2px solid #ff9800; padding-bottom: 5px;">
-                            <i class="fas fa-exclamation-circle"></i> Duplicates in Imported Data (${importedDuplicates.length})
-                        </h3>
-                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                            These applicants already exist in your imported data table.
-                        </p>`;
-                
-                importedDuplicates.forEach((dup, index) => {
-                    const applicant = dup.applicant;
-                    message += `
-                        <div style="background: #fff3e0; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #ff9800;">
-                            <h4 style="margin: 0 0 10px 0; color: #ef6c00;">
-                                <i class="fas fa-user-clock"></i> 
-                                New Applicant: <span style="background: #ffe0b2; padding: 2px 5px;">${applicant.NAME}</span>
-                            </h4>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
-                                <div><strong>Birth Date:</strong> ${applicant.BDATE || 'Not provided'}</div>
-                                <div><strong>Phone:</strong> ${applicant.CELLPHONE || 'Not provided'}</div>
-                                <div><strong>Program:</strong> ${applicant['PROGRAM CATEGORY'] || 'Not specified'}</div>
-                            </div>
-                            <div style="margin-top: 10px; padding: 10px; background: #fff8e1; border-radius: 4px;">
-                                <strong>Matching Imported Record(s):</strong>
-                                <ul style="margin: 5px 0; padding-left: 20px;">`;
-                    
-                    dup.matches.forEach(match => {
-                        const existing = match.existingApplicant;
-                        message += `<li>
-                            <strong>${existing.NAME}</strong> 
-                            (Birth: ${existing.BDATE || 'N/A'}, Phone: ${existing.CELLPHONE || 'N/A'})
-                        </li>`;
-                    });
-                    
-                    message += `</ul></div></div>`;
-                });
-                
-                message += `</div>`;
-            }
-            
-            // Show unique applicants
-            if (uniqueNewApplicants.length > 0) {
-                message += `
-                    <div style="margin-bottom: 25px;">
-                        <h3 style="color: #4caf50; border-bottom: 2px solid #4caf50; padding-bottom: 5px;">
-                            <i class="fas fa-user-check"></i> New Applicants (${uniqueNewApplicants.length})
-                        </h3>
-                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                            These applicants will be added to the imported data table.
-                        </p>
-                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px;">
-                            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">`;
-                
-                uniqueNewApplicants.slice(0, 10).forEach(applicant => {
-                    message += `<li>${applicant.NAME} (${applicant.BDATE || 'No birth date'})</li>`;
-                });
-                
-                if (uniqueNewApplicants.length > 10) {
-                    message += `<li>... and ${uniqueNewApplicants.length - 10} more applicants</li>`;
-                }
-                
-                message += `</ul></div></div>`;
-            }
-            
-            message += `
-                    <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
-                        <p><strong>How would you like to proceed?</strong></p>
-                        <div style="font-size: 14px; color: #666;">
-                            <ul>
-                                <li><strong>Import All:</strong> Add all ${newApplicants.length} applicants (including duplicates)</li>
-                                <li><strong>Import Unique Only:</strong> Add only ${uniqueNewApplicants.length} new applicants</li>
-                                <li><strong>Cancel:</strong> Don't import any data</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer" style="display: flex; justify-content: space-between; padding: 15px 20px; border-top: 1px solid #e0e0e0;">
-                    <button id="cancel-import" class="cancel-btn">Cancel Import</button>
-                    <div style="display: flex; gap: 10px;">
-                        <button id="import-unique" class="save-btn" style="background: #4caf50;">
-                            Import Unique Only (${uniqueNewApplicants.length})
-                        </button>
-                        <button id="import-all" class="save-btn" style="background: #ff9800;">
-                            Import All (${newApplicants.length})
-                        </button>
-                    </div>
-                </div>
-            </div>`;
-            
-            modal.innerHTML = message;
-            document.body.appendChild(modal);
-            
-            // Event handlers
-            document.getElementById('cancel-import').addEventListener('click', () => {
-                document.body.removeChild(modal);
-                resolve({ action: 'cancel' });
-            });
-            
-            document.getElementById('import-unique').addEventListener('click', () => {
-                document.body.removeChild(modal);
-                resolve({ action: 'unique', data: uniqueNewApplicants });
-            });
-            
-            document.getElementById('import-all').addEventListener('click', () => {
-                document.body.removeChild(modal);
-                resolve({ action: 'all', data: newApplicants });
-            });
-            
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    document.body.removeChild(modal);
-                    resolve({ action: 'cancel' });
-                }
-            });
-        }).then(result => {
-            switch (result.action) {
-                case 'unique':
-                    proceedWithImport(result.data, JSON.parse(localStorage.getItem('importedData')) || []);
-                    break;
-                case 'all':
-                    proceedWithImport(result.data, JSON.parse(localStorage.getItem('importedData')) || []);
-                    break;
-                case 'cancel':
-                    showUploadNotification('Import cancelled.', 'info');
-                    break;
-            }
-        });
-    }
-
-    function proceedWithImport(newApplicants, existingImportedData) {
-        try {
-            const mergedData = [...existingImportedData, ...newApplicants];
-            
-            // Save to imported data
-            localStorage.setItem('importedData', JSON.stringify(mergedData));
-            displayImportedData([]); // This will reload all imported data
-            
-            // Show success message
-            showUploadNotification(`Successfully imported ${newApplicants.length} applicant(s) to imported data table.`, 'success');
-            
-            // Reset form
-            if (elements.uploadFileName) elements.uploadFileName.value = '';
-            if (elements.addBtn) elements.addBtn.disabled = true;
-            if (elements.uploadFileInput) elements.uploadFileInput.value = '';
-            
-        } catch (error) {
-            console.error('Error importing data:', error);
-            showUploadNotification('Error importing data: ' + error.message, 'error');
-        }
     }
 
     function validateImportedDataDuplicates(newApplicants) {
@@ -4442,29 +4313,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function testValidation() {
-        // Test data - create a sample applicant that should match existing data
-        const testApplicant = {
-            'NAME': 'Test Applicant',
-            'BDATE': '01/15/1990',
-            'CELLPHONE': '09123456789',
-            'EMAIL': 'test@example.com',
-            'BARANGAY': 'Test Barangay'
-        };
-        
-        const validationResults = validateImportedDataDuplicates([testApplicant]);
-        console.log('Validation Test Results:', validationResults);
-        
-        if (validationResults.inImported.length > 0 || validationResults.inMain.length > 0) {
-            console.log('✅ Validation is working! Found duplicates.');
-        } else {
-            console.log('❌ No duplicates found. Check your test data.');
-        }
-    }
-
-    // Call this temporarily to test
-    // testValidation();
-
     function createTestData() {
         console.log('🧪 Creating test data...');
         
@@ -4512,61 +4360,6 @@ document.addEventListener('DOMContentLoaded', function () {
             imported: testImportedData,
             main: testMainApplicants
         };
-    }
-
-    function testWithForcedDuplicates() {
-        console.log('🧪 Testing with forced duplicates...');
-        
-        // Create test data first
-        createTestData();
-        
-        // Create new applicants that should match the test data
-        const testNewApplicants = [
-            // This should match imported data
-            {
-                'NAME': 'John Smith', // Exact match with imported
-                'BDATE': '01/15/1990',
-                'CELLPHONE': '09123456789',
-                'EMAIL': 'john.smith@example.com',
-                'BARANGAY': 'Different Barangay'
-            },
-            // This should match main data
-            {
-                'NAME': 'Robert Johnson', // Exact match with main
-                'BDATE': '03/10/1978',
-                'CELLPHONE': '09222222222',
-                'EMAIL': 'robert.johnson@example.com',
-                'BARANGAY': 'Different Location'
-            },
-            // This should be unique
-            {
-                'NAME': 'Unique Applicant',
-                'BDATE': '12/25/1995',
-                'CELLPHONE': '09333333333',
-                'EMAIL': 'unique@example.com',
-                'BARANGAY': 'Unique Place'
-            }
-        ];
-        
-        console.log('🧪 Test new applicants:', testNewApplicants);
-        
-        // Run validation
-        const results = validateImportedDataDuplicates(testNewApplicants);
-        
-        console.log('🧪 Test results:', results);
-        
-        // Show results in alert for immediate feedback
-        setTimeout(() => {
-            alert(`Test Results:
-            • Total: ${testNewApplicants.length}
-            • Imported Duplicates: ${results.inImported.length}
-            • Main Duplicates: ${results.inMain.length}
-            • Unique: ${results.unique.length}
-            
-            Check console for details.`);
-        }, 500);
-        
-        return results;
     }
 
     // Function to open manual form with existing applicant data
@@ -5064,6 +4857,683 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
+    }
+
+    function generateComprehensivePDFReport() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        if (savedApplicants.length === 0) {
+            showNotification('No data available to generate report', 'error');
+            return;
+        }
+
+        const programStats = calculateProgramStatistics(savedApplicants);
+        const employmentStats = calculateEmploymentStatistics(savedApplicants);
+        const demographicStats = calculateDemographicStatistics(savedApplicants);
+        
+        const printWindow = window.open('', 'CPESO Comprehensive Program Report');
+        const today = new Date().toLocaleDateString();
+        
+        // Capture all visual elements
+        const enhancedStats = generateEnhancedStatistics(programStats, employmentStats, demographicStats);
+        const programPictograph = generateProgramPictograph(programStats);
+        const educationTable = generateEducationTable(programStats);
+        const genderFigures = generateGenderFigures(demographicStats);
+        const programPieChart = generateProgramPieChart(programStats);
+        const employmentComparison = generateEmploymentComparison(employmentStats);
+        const agePyramid = generateAgePyramid(programStats);
+        const programProgress = generateProgramProgress(programStats);
+        const courseBreakdown = generateExpandableCourseStats(programStats);
+        
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Comprehensive Program Report - ${today}</title>
+                <style>
+                    body { 
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                        margin: 25px; 
+                        color: #333; 
+                        line-height: 1.6;
+                        background: #f5f7f5;
+                    }
+                    .header { 
+                        text-align: center; 
+                        margin-bottom: 30px; 
+                        padding: 25px; 
+                        background: linear-gradient(135deg, #f86c6c, #a51f41);
+                        color: white;
+                        border-radius: 10px;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    }
+                    .header h1 { 
+                        margin: 0; 
+                        font-size: 32px;
+                        font-weight: 700;
+                    }
+                    .header .subtitle { 
+                        margin: 5px 0 0 0;
+                        font-size: 16px;
+                        opacity: 0.9;
+                    }
+                    .report-section { 
+                        background: white;
+                        padding: 25px;
+                        margin-bottom: 25px;
+                        border-radius: 10px;
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+                        page-break-inside: avoid;
+                    }
+                    .section-title { 
+                        color: #ee5656;
+                        margin-bottom: 20px;
+                        font-size: 22px;
+                        border-bottom: 2px solid #e3f2fd;
+                        padding-bottom: 10px;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    .section-title i {
+                        color: #1e88e5;
+                    }
+                    
+                    /* Enhanced Statistics Styles for PDF */
+                    .stats-grid-enhanced {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 15px;
+                        margin: 20px 0;
+                    }
+                    .stat-card-enhanced {
+                        background: white;
+                        padding: 20px;
+                        border-radius: 10px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        display: flex;
+                        align-items: center;
+                        gap: 15px;
+                        border-left: 4px solid #3498db;
+                    }
+                    .stat-card-enhanced.total {
+                        border-left-color: #2c3e50;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                    }
+                    .stat-card-enhanced.male { border-left-color: #3498db; }
+                    .stat-card-enhanced.female { border-left-color: #e91e63; }
+                    .stat-card-enhanced.employed { border-left-color: #27ae60; }
+                    .stat-card-enhanced.unemployed { border-left-color: #f39c12; }
+                    .stat-card-enhanced.self-employed { border-left-color: #9b59b6; }
+                    .stat-icon {
+                        font-size: 32px;
+                        width: 60px;
+                        height: 60px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 50%;
+                        background: rgba(52, 152, 219, 0.1);
+                    }
+                    .stat-card-enhanced.total .stat-icon {
+                        background: rgba(255, 255, 255, 0.2);
+                    }
+                    .stat-content { flex: 1; }
+                    .stat-number {
+                        font-size: 28px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .stat-card-enhanced.total .stat-number { color: white; }
+                    .stat-label {
+                        font-size: 14px;
+                        color: #666;
+                        margin-bottom: 5px;
+                        font-weight: 500;
+                    }
+                    .stat-card-enhanced.total .stat-label { color: rgba(255, 255, 255, 0.9); }
+                    .stat-percentage {
+                        font-size: 12px;
+                        color: #27ae60;
+                        font-weight: bold;
+                        background: rgba(39, 174, 96, 0.1);
+                        padding: 2px 8px;
+                        border-radius: 10px;
+                        display: inline-block;
+                    }
+                    
+                    /* Pictograph Styles for PDF */
+                    .pictograph-container {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 15px;
+                        margin: 20px 0;
+                    }
+                    .pictograph-item {
+                        display: flex;
+                        align-items: center;
+                        background: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 6px;
+                        flex: 1;
+                        min-width: 200px;
+                    }
+                    .pictograph-icon {
+                        font-size: 24px;
+                        margin-right: 10px;
+                        width: 30px;
+                        text-align: center;
+                    }
+                    .pictograph-content { flex: 1; }
+                    .pictograph-bar {
+                        height: 20px;
+                        background: #e0e0e0;
+                        border-radius: 10px;
+                        overflow: hidden;
+                        margin: 5px 0;
+                    }
+                    .pictograph-fill {
+                        height: 100%;
+                        border-radius: 10px;
+                    }
+                    .pictograph-info {
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 12px;
+                    }
+                    
+                    /* Education Table Styles */
+                    .education-table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin: 20px 0;
+                        background: white;
+                        border-radius: 8px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .education-table th {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        padding: 12px 15px;
+                        text-align: left;
+                        font-weight: 600;
+                    }
+                    .education-table td {
+                        padding: 12px 15px;
+                        border-bottom: 1px solid #e0e0e0;
+                    }
+                    .education-table tr:hover {
+                        background-color: #f5f5f5;
+                    }
+                    .education-table .percentage {
+                        text-align: center;
+                        font-weight: bold;
+                        color: #4caf50;
+                    }
+                    
+                    /* Gender Figures Styles */
+                    .gender-figures {
+                        display: flex;
+                        justify-content: space-around;
+                        align-items: flex-end;
+                        margin: 20px 0;
+                        padding: 20px;
+                        background: white;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .gender-figure {
+                        text-align: center;
+                        flex: 1;
+                        max-width: 200px;
+                    }
+                    .gender-icon {
+                        font-size: 48px;
+                        margin-bottom: 10px;
+                        display: block;
+                    }
+                    .gender-male .gender-icon { color: #2196f3; }
+                    .gender-female .gender-icon { color: #e91e63; }
+                    .gender-count {
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .gender-label {
+                        font-size: 14px;
+                        color: #666;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+                    .gender-percentage {
+                        font-size: 12px;
+                        color: #4caf50;
+                        font-weight: bold;
+                        margin-top: 5px;
+                    }
+                    
+                    /* Pie Chart Styles */
+                    .pie-chart-container {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin: 20px 0;
+                    }
+                    .pie-chart {
+                        width: 200px;
+                        height: 200px;
+                        border-radius: 50%;
+                        background: conic-gradient(
+                            #ff6b6b 0% 30%,
+                            #4ecdc4 30% 60%,
+                            #45b7d1 60% 80%,
+                            #96ceb4 80% 95%,
+                            #feca57 95% 100%
+                        );
+                        position: relative;
+                    }
+                    .pie-chart-center {
+                        position: absolute;
+                        width: 80px;
+                        height: 80px;
+                        background: white;
+                        border-radius: 50%;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: bold;
+                        color: #333;
+                    }
+                    .pie-legend {
+                        margin-left: 30px;
+                        flex: 1;
+                    }
+                    .pie-legend-item {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 8px;
+                        padding: 5px 0;
+                    }
+                    .pie-color {
+                        width: 15px;
+                        height: 15px;
+                        border-radius: 3px;
+                        margin-right: 10px;
+                    }
+                    .pie-label { flex: 1; font-size: 14px; }
+                    .pie-value { font-weight: bold; color: #333; }
+                    
+                    /* Employment Comparison Styles */
+                    .comparison-cards {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 15px;
+                        margin: 20px 0;
+                    }
+                    .comparison-card {
+                        background: white;
+                        padding: 20px;
+                        border-radius: 8px;
+                        text-align: center;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        border-top: 4px solid #2196f3;
+                    }
+                    .comparison-card.employed { border-top-color: #4caf50; }
+                    .comparison-card.unemployed { border-top-color: #ff9800; }
+                    .comparison-card.self-employed { border-top-color: #9c27b0; }
+                    .comparison-icon {
+                        font-size: 36px;
+                        margin-bottom: 10px;
+                    }
+                    .comparison-count {
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 5px;
+                    }
+                    .comparison-label {
+                        color: #666;
+                        font-size: 14px;
+                    }
+                    
+                    /* Age Pyramid Styles */
+                    .age-pyramid {
+                        display: flex;
+                        justify-content: center;
+                        align-items: flex-end;
+                        margin: 20px 0;
+                        gap: 5px;
+                        height: 200px;
+                    }
+                    .pyramid-bar {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        width: 50px;
+                        height: 200px;
+                        position: relative;
+                    }
+                    .pyramid-male {
+                        background: #2196f3;
+                        border-radius: 3px 3px 0 0;
+                        width: 100%;
+                        min-height: 1px;
+                    }
+                    .pyramid-female {
+                        background: #e91e63;
+                        border-radius: 0 0 3px 3px;
+                        width: 100%;
+                        min-height: 1px;
+                    }
+                    .pyramid-label {
+                        margin-top: 5px;
+                        font-size: 11px;
+                        font-weight: bold;
+                        text-align: center;
+                        line-height: 1.2;
+                    }
+                    
+                    /* Progress Bars Styles */
+                    .progress-bars { margin: 20px 0; }
+                    .progress-item { margin-bottom: 15px; }
+                    .progress-label {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 5px;
+                        font-size: 14px;
+                    }
+                    .progress-bar {
+                        height: 20px;
+                        background: #e0e0e0;
+                        border-radius: 10px;
+                        overflow: hidden;
+                    }
+                    .progress-fill {
+                        height: 100%;
+                        border-radius: 10px;
+                        background: linear-gradient(90deg, #4caf50, #8bc34a);
+                    }
+                    
+                    /* Expandable Section Styles */
+                    .expandable-section {
+                        margin: 15px 0;
+                        border-radius: 4px;
+                        overflow: hidden;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    }
+                    .expandable-header {
+                        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+                        padding: 12px 15px;
+                        cursor: pointer;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-bottom: 1px solid #e0e0e0;
+                    }
+                    .expandable-content {
+                        padding: 15px;
+                        background: white;
+                        border: 1px solid #e0e0e0;
+                        border-top: none;
+                        border-radius: 0 0 4px 4px;
+                    }
+                    .course-item {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #eee;
+                        align-items: center;
+                    }
+                    .course-item:last-child { border-bottom: none; }
+                    .course-name { flex: 1; font-weight: 500; }
+                    .course-count { font-weight: bold; color: #2196f3; margin-right: 10px; }
+                    .course-percentage {
+                        color: #4caf50;
+                        font-size: 12px;
+                        background: #e8f5e8;
+                        padding: 2px 6px;
+                        border-radius: 10px;
+                    }
+                    .course-summary {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 10px 0;
+                        margin-top: 10px;
+                        border-top: 2px solid #2196f3;
+                        background: #f8f9fa;
+                        border-radius: 4px;
+                        font-weight: bold;
+                    }
+                    
+                    .footer { 
+                        text-align: center; 
+                        margin-top: 40px; 
+                        color: #7f8c8d; 
+                        font-size: 12px; 
+                        border-top: 1px solid #bdc3c7; 
+                        padding-top: 10px;
+                    }
+                    
+                    @media print {
+                        body { 
+                            margin: 0.25in;
+                            background: white !important;
+                        }
+                        .report-section { 
+                            page-break-inside: avoid;
+                            break-inside: avoid;
+                        }
+                        .header { 
+                            margin-bottom: 20px;
+                            break-after: avoid;
+                        }
+                        .stats-grid-enhanced {
+                            grid-template-columns: repeat(2, 1fr) !important;
+                        }
+                        .comparison-cards {
+                            grid-template-columns: repeat(2, 1fr) !important;
+                        }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>COMPREHENSIVE PROGRAM REPORT</h1>
+                    <div class="subtitle">CPESO Applicant Management System</div>
+                    <div class="subtitle">Generated on: ${new Date().toLocaleString()}</div>
+                </div>
+                
+                <!-- Executive Summary -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-chart-line"></i> Executive Summary
+                    </div>
+                    ${enhancedStats}
+                </div>
+                
+                <!-- Program Enrollment Overview -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-users"></i> Program Enrollment Overview
+                    </div>
+                    ${programPictograph}
+                </div>
+                
+                <!-- Educational Attainment -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-graduation-cap"></i> Educational Attainment
+                    </div>
+                    ${educationTable}
+                    ${courseBreakdown}
+                </div>
+                
+                <!-- Gender Distribution -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-user-friends"></i> Gender Distribution
+                    </div>
+                    ${genderFigures}
+                </div>
+                
+                <!-- Program Category Breakdown -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-chart-pie"></i> Program Category Breakdown
+                    </div>
+                    ${programPieChart}
+                </div>
+                
+                <!-- Employment Status -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-briefcase"></i> Employment Status
+                    </div>
+                    ${employmentComparison}
+                </div>
+                
+                <!-- Age Demographics -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-chart-bar"></i> Age Demographics
+                    </div>
+                    ${agePyramid}
+                </div>
+                
+                <!-- Program Status Progress -->
+                <div class="report-section">
+                    <div class="section-title">
+                        <i class="fas fa-tasks"></i> Program Status Progress
+                    </div>
+                    ${programProgress}
+                </div>
+                
+                <div class="footer">
+                    <p>This report was generated automatically by the CPESO Applicant Management System</p>
+                    <p>For questions or concerns, please contact the system administrator</p>
+                </div>
+                
+                <script>
+                    // Load Font Awesome for icons
+                    const faLink = document.createElement('link');
+                    faLink.rel = 'stylesheet';
+                    faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+                    document.head.appendChild(faLink);
+                    
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            setTimeout(function() {
+                                // window.close();
+                            }, 1000);
+                        }, 1000);
+                    };
+                </script>
+            </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        
+        // Show notification
+        showNotification('PDF report generated successfully! The print dialog will open shortly.', 'success');
+    }
+
+    // Helper functions for PDF generation
+    function generateCourseBreakdownHTML(stats) {
+        const collegeGrads = (stats.byEducation['College Graduate'] || 0) + 
+                            (stats.byEducation['College'] || 0) + 
+                            (stats.byEducation['Bachelor'] || 0) +
+                            (stats.byEducation['Bachelor\'s Degree'] || 0);
+
+        if (collegeGrads === 0) {
+            return '<p style="text-align: center; color: #666; padding: 20px;">No college graduate data available.</p>';
+        }
+
+        const topCourses = Object.entries(stats.byCourse)
+            .filter(([course, count]) => count > 0 && course !== 'No Course Specified')
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10);
+
+        let html = `
+            <table class="table-container-pdf" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Graduates</th>
+                        <th>Percentage</th>
+                        <th>Distribution</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        topCourses.forEach(([course, count]) => {
+            const percentage = ((count / collegeGrads) * 100).toFixed(1);
+            html += `
+                <tr>
+                    <td>${course}</td>
+                    <td>${count}</td>
+                    <td>${percentage}%</td>
+                    <td style="width: 200px;">
+                        <div class="progress-bar-pdf">
+                            <div class="progress-fill-pdf" style="width: ${percentage}%"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                </tbody>
+            </table>
+            <div style="text-align: center; margin-top: 10px; color: #666; font-size: 12px;">
+                Showing top ${topCourses.length} courses out of ${collegeGrads} college graduates
+            </div>
+        `;
+
+        return html;
+    }
+
+    function generateProgramBreakdownHTML(stats) {
+        const topPrograms = Object.entries(stats.byCategory)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8);
+
+        let html = `
+            <table class="table-container-pdf" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Program Category</th>
+                        <th>Applicants</th>
+                        <th>Percentage</th>
+                        <th>Distribution</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        topPrograms.forEach(([program, count]) => {
+            const percentage = ((count / stats.total) * 100).toFixed(1);
+            html += `
+                <tr>
+                    <td>${program}</td>
+                    <td>${count}</td>
+                    <td>${percentage}%</td>
+                    <td style="width: 200px;">
+                        <div class="progress-bar-pdf">
+                            <div class="progress-fill-pdf" style="width: ${percentage}%"></div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        return html;
     }
     initializeApp();
 });
