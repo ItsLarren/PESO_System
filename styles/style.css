@@ -2429,3 +2429,43 @@ input[type="date"]:after {
 .table-container-scroll::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
 }
+
+/* Import Validation Modal Styles */
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-footer {
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+}
+
+.import-summary-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.import-summary-item:last-child {
+    border-bottom: none;
+}
+
+.duplicate-highlight-imported {
+    background-color: #fff3cd !important;
+    border-left: 4px solid #ffc107;
+}
+
+.duplicate-highlight-main {
+    background-color: #f8d7da !important;
+    border-left: 4px solid #dc3545;
+}

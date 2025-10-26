@@ -430,66 +430,81 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function checkApplicantDuplicate(applicantData) {
-        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-        const matches = [];
-        
-        for (const existingApp of savedApplicants) {
-            const nameMatch = applicantData.NAME && existingApp.NAME && 
-                            applicantData.NAME.toLowerCase() === existingApp.NAME.toLowerCase();
+        try {
+            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            const matches = [];
             
-            const bdateMatch = applicantData.BDATE && existingApp.BDATE && 
-                            applicantData.BDATE === existingApp.BDATE;
-            
-            // Check for same name but different birthday
-            const sameNameDifferentBday = nameMatch && !bdateMatch;
-            
-            if (nameMatch || bdateMatch || sameNameDifferentBday) {
-                const matchDetails = {
-                    existingApplicant: existingApp,
-                    matchingFields: [],
-                    differences: [],
-                    sameNameDifferentBday: sameNameDifferentBday
-                };
+            for (const existingApp of savedApplicants) {
+                // Add null checks for all property accesses
+                const applicantName = applicantData.NAME ? applicantData.NAME.toLowerCase() : '';
+                const existingName = existingApp.NAME ? existingApp.NAME.toLowerCase() : '';
                 
-                if (nameMatch) matchDetails.matchingFields.push('Name');
-                if (bdateMatch) matchDetails.matchingFields.push('Birthday');
-                if (sameNameDifferentBday) matchDetails.matchingFields.push('Same Name, Different Birthday');
+                const applicantBdate = applicantData.BDATE || '';
+                const existingBdate = existingApp.BDATE || '';
                 
-                // Compare other fields to show differences
-                const fieldsToCompare = [
-                    'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'
-                ];
+                const nameMatch = applicantName && existingName && 
+                                applicantName === existingName;
                 
-                fieldsToCompare.forEach(field => {
-                    const newValue = applicantData[field] || '';
-                    const existingValue = existingApp[field] || '';
+                const bdateMatch = applicantBdate && existingBdate && 
+                                applicantBdate === existingBdate;
+                
+                // Check for same name but different birthday
+                const sameNameDifferentBday = nameMatch && !bdateMatch;
+                
+                if (nameMatch || bdateMatch || sameNameDifferentBday) {
+                    const matchDetails = {
+                        existingApplicant: existingApp,
+                        matchingFields: [],
+                        differences: [],
+                        sameNameDifferentBday: sameNameDifferentBday
+                    };
                     
-                    if (newValue && existingValue && newValue.toLowerCase() !== existingValue.toLowerCase()) {
+                    if (nameMatch) matchDetails.matchingFields.push('Name');
+                    if (bdateMatch) matchDetails.matchingFields.push('Birthday');
+                    if (sameNameDifferentBday) matchDetails.matchingFields.push('Same Name, Different Birthday');
+                    
+                    // Compare other fields to show differences (with null checks)
+                    const fieldsToCompare = [
+                        'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'
+                    ];
+                    
+                    fieldsToCompare.forEach(field => {
+                        const newValue = applicantData[field] || '';
+                        const existingValue = existingApp[field] || '';
+                        
+                        if (newValue && existingValue && newValue.toLowerCase() !== existingValue.toLowerCase()) {
+                            matchDetails.differences.push({
+                                field: field,
+                                newValue: newValue,
+                                existingValue: existingValue
+                            });
+                        }
+                    });
+                    
+                    // Add birthday difference for same name cases
+                    if (sameNameDifferentBday) {
                         matchDetails.differences.push({
-                            field: field,
-                            newValue: newValue,
-                            existingValue: existingValue
+                            field: 'Birthday',
+                            newValue: applicantData.BDATE || 'Not provided',
+                            existingValue: existingApp.BDATE || 'Not provided'
                         });
                     }
-                });
-                
-                // Add birthday difference for same name cases
-                if (sameNameDifferentBday) {
-                    matchDetails.differences.push({
-                        field: 'Birthday',
-                        newValue: applicantData.BDATE,
-                        existingValue: existingApp.BDATE
-                    });
+                    
+                    matches.push(matchDetails);
                 }
-                
-                matches.push(matchDetails);
             }
+            
+            return {
+                hasMatches: matches.length > 0,
+                matches: matches
+            };
+        } catch (error) {
+            console.error('Error in duplicate check:', error);
+            return {
+                hasMatches: false,
+                matches: []
+            };
         }
-        
-        return {
-            hasMatches: matches.length > 0,
-            matches: matches
-        };
     }
 
     function showDuplicateConfirmation(applicantData, matches) {
@@ -645,10 +660,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData(elements.manualApplicantForm);
         const applicantData = {};
         
-        // Get individual name parts
-        const lastName = document.getElementById('manual-last-name').value.trim();
-        const firstName = document.getElementById('manual-first-name').value.trim();
-        const middleName = document.getElementById('manual-middle-name').value.trim();
+        // Get individual name parts - FIXED: Using correct field IDs
+        const lastName = document.getElementById('manual-surname')?.value.trim() || '';
+        const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
+        const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
         
         // Combine into full name format: "Last Name, First Name Middle Name"
         if (lastName && firstName) {
@@ -659,7 +674,7 @@ document.addEventListener('DOMContentLoaded', function () {
             applicantData['NAME'] = fullName;
         } else {
             // Fallback to the full name field if provided
-            applicantData['NAME'] = document.getElementById('manual-name').value.trim() || 'N/A';
+            applicantData['NAME'] = document.getElementById('manual-name')?.value.trim() || 'N/A';
         }
         
         // Store individual name parts for reference
@@ -667,65 +682,94 @@ document.addEventListener('DOMContentLoaded', function () {
         applicantData['FIRST NAME'] = firstName || 'N/A';
         applicantData['MIDDLE NAME'] = middleName || 'N/A';
         
-        // Process other form data
+        // Process other form data with null checks
         formData.forEach((value, key) => {
-            if (!key.startsWith('manual-last-name') && !key.startsWith('manual-first-name') && 
+            if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
                 !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
                 const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
-                applicantData[fieldName] = value;
+                applicantData[fieldName] = value || 'N/A';
             }
         });
         
         applicantData['SRS ID'] = generateUniqueId();
         
+        // Process date field
         if (applicantData['BDATE']) {
-            const date = new Date(applicantData['BDATE']);
-            applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+            try {
+                const date = new Date(applicantData['BDATE']);
+                if (!isNaN(date.getTime())) {
+                    applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                }
+            } catch (error) {
+                console.warn('Date parsing error:', error);
+                applicantData['BDATE'] = 'N/A';
+            }
+        } else {
+            applicantData['BDATE'] = 'N/A';
         }
         
         applicantData['REG. DATE'] = new Date().toLocaleDateString();
         applicantData['DATE CREATED'] = new Date().toLocaleString();
         applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
         
-        const duplicateCheck = checkApplicantDuplicate(applicantData);
+        // Ensure all required fields have values
+        const requiredFields = ['NAME', 'BDATE', 'SEX', 'CIVIL STATUS', 'BARANGAY', 'CITY/MUNICIPALITY'];
+        requiredFields.forEach(field => {
+            if (!applicantData[field] || applicantData[field] === '') {
+                applicantData[field] = 'N/A';
+            }
+        });
         
-        if (duplicateCheck.hasMatches) {
-            highlightMatchingApplicants(duplicateCheck.matches);
+        try {
+            const duplicateCheck = checkApplicantDuplicate(applicantData);
             
-            showDuplicateConfirmation(applicantData, duplicateCheck.matches)
-                .then(shouldProceed => {
-                    if (!shouldProceed) {
-                        removeHighlights();
-                        return;
-                    }
-                    
-                    proceedWithAddingApplicant(applicantData);
-                });
-        } else {
+            if (duplicateCheck.hasMatches) {
+                highlightMatchingApplicants(duplicateCheck.matches);
+                
+                showDuplicateConfirmation(applicantData, duplicateCheck.matches)
+                    .then(shouldProceed => {
+                        if (!shouldProceed) {
+                            removeHighlights();
+                            return;
+                        }
+                        
+                        proceedWithAddingApplicant(applicantData);
+                    });
+            } else {
+                proceedWithAddingApplicant(applicantData);
+            }
+        } catch (error) {
+            console.error('Error in duplicate check:', error);
+            // Proceed with adding anyway if duplicate check fails
             proceedWithAddingApplicant(applicantData);
         }
     }
 
     function proceedWithAddingApplicant(applicantData) {
-        const tempPhoto = localStorage.getItem('tempManualPhoto');
-        if (tempPhoto) {
-            const photoId = applicantData['SRS ID'];
-            localStorage.setItem(`photo_${photoId}`, tempPhoto);
+        try {
+            const tempPhoto = localStorage.getItem('tempManualPhoto');
+            if (tempPhoto) {
+                const photoId = applicantData['SRS ID'];
+                localStorage.setItem(`photo_${photoId}`, tempPhoto);
+                localStorage.removeItem('tempManualPhoto');
+                applicantData['PHOTO'] = tempPhoto;
+            }
+            
+            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            savedApplicants.push(applicantData);
+            saveMainApplicants(savedApplicants);
+            
+            displayMainApplicants(savedApplicants);
+            removeHighlights();
+            
+            closeManualModal();
+            showNotification('Applicant added successfully!', 'success', elements.manualNotification);
+            
             localStorage.removeItem('tempManualPhoto');
-            applicantData['PHOTO'] = tempPhoto;
+        } catch (error) {
+            console.error('Error adding applicant:', error);
+            showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
-        
-        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-        savedApplicants.push(applicantData);
-        saveMainApplicants(savedApplicants);
-        
-        displayMainApplicants(savedApplicants);
-        removeHighlights();
-        
-        closeManualModal();
-        showNotification('Applicant added successfully!', 'success', elements.manualNotification);
-        
-        localStorage.removeItem('tempManualPhoto');
     }
 
     function initializeCamera() {
@@ -1198,7 +1242,9 @@ document.addEventListener('DOMContentLoaded', function () {
         showNotification('Applicant updated successfully!', 'success');
     }
 
+    // Replace the initializeFileUploads function with this corrected version
     function initializeFileUploads() {
+        // 1. FILE UPLOAD FOR IMPORTED DATA TABLE (Excel Import section)
         if (elements.browsebtn && elements.fileInput) {
             elements.browsebtn.addEventListener('click', function() {
                 elements.fileInput.click();
@@ -1217,6 +1263,53 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
+        if (elements.importBtn) {
+            elements.importBtn.addEventListener('click', function() {
+                if (!elements.fileInput) return;
+                
+                const file = elements.fileInput.files[0];
+                if (!file) {
+                    showNotification('Please select a file first.', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        if (jsonData.length === 0) {
+                            showNotification('The file does not contain any data.', 'error');
+                            return;
+                        }
+                        
+                        console.log('📁 Raw imported data:', jsonData);
+                        const processedData = smartImportData(jsonData);
+                        console.log('🔄 Processed data:', processedData);
+                        
+                        // Run validation for IMPORTED DATA (no duplicate checking needed here)
+                        // Just proceed with import to imported data table
+                        proceedWithImportToImportedData(processedData);
+                        
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        showNotification('Error processing file: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.onerror = function() {
+                    showNotification('Error reading file.', 'error');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // 2. FILE UPLOAD FOR ADDING TO MAIN APPLICANTS (Upload New Applicant section)
         if (elements.uploadBrowseBtn && elements.uploadFileInput) {
             elements.uploadBrowseBtn.addEventListener('click', function() {
                 elements.uploadFileInput.click();
@@ -1259,64 +1352,29 @@ document.addEventListener('DOMContentLoaded', function () {
                             return;
                         }
                         
+                        console.log('📁 Raw applicant data:', jsonData);
                         const processedData = smartImportData(jsonData);
-                        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-                        const { duplicates, uniqueNewApplicants } = checkForDuplicates(processedData, savedApplicants);
-
-                        if (duplicates.length > 0) {
-                            highlightMatchingApplicants(duplicates.map(dup => ({
-                                existingApplicant: dup.existing,
-                                matchingFields: ['Possible Duplicate'],
-                                differences: []
-                            })));
-                            
-                            elements.duplicateWarning.innerHTML = `
-                                <strong>Found ${duplicates.length} potential duplicate(s):</strong> 
-                                These applicants appear to already exist in the system. They have been highlighted in the table above.
-                                <br><br>
-                                <strong>Import Summary:</strong>
-                                <ul>
-                                    <li>Total records in file: ${processedData.length}</li>
-                                    <li>New applicants: ${uniqueNewApplicants.length}</li>
-                                    <li>Duplicates found: ${duplicates.length}</li>
-                                </ul>
-                                <br>
-                                <button id="proceed-upload" class="save-btn" style="padding: 8px 15px; font-size: 14px;">
-                                    Add ${uniqueNewApplicants.length} New Applicants Anyway
-                                </button>
-                            `;
-                            elements.duplicateWarning.style.display = 'block';
-                            
-                            document.getElementById('proceed-upload').addEventListener('click', function() {
-                                uniqueNewApplicants.forEach(applicant => {
-                                    savedApplicants.push(applicant);
-                                });
-                                
-                                saveMainApplicants(savedApplicants);
-                                displayMainApplicants(savedApplicants);
-                                removeHighlights();
-                                
-                                showUploadNotification(`Successfully added ${uniqueNewApplicants.length} new applicant(s). ${duplicates.length} duplicate(s) were skipped.`, 'success');
-                                if (elements.uploadFileName) elements.uploadFileName.value = '';
-                                if (elements.addBtn) elements.addBtn.disabled = true;
-                                if (elements.uploadFileInput) elements.uploadFileInput.value = '';
-                                elements.duplicateWarning.style.display = 'none';
+                        console.log('🔄 Processed applicant data:', processedData);
+                        
+                        // Run validation for MAIN APPLICANTS (this is where duplicate checking should happen)
+                        const validationResults = validateImportedDataDuplicates(processedData);
+                        console.log('✅ Validation completed:', validationResults);
+                        
+                        // Show validation modal for main applicants
+                        showEnhancedImportValidationModal(validationResults, processedData)
+                            .then(result => {
+                                switch (result.action) {
+                                    case 'unique':
+                                        proceedWithAddingToMainApplicants(result.data);
+                                        break;
+                                    case 'all':
+                                        proceedWithAddingToMainApplicants(result.data);
+                                        break;
+                                    case 'cancel':
+                                        showUploadNotification('Import cancelled.', 'info');
+                                        break;
+                                }
                             });
-                            
-                            return;
-                        }
-                        
-                        processedData.forEach(applicant => {
-                            savedApplicants.push(applicant);
-                        });
-                        
-                        saveMainApplicants(savedApplicants);
-                        displayMainApplicants(savedApplicants);
-                        
-                        showUploadNotification(`Successfully imported ${processedData.length} applicant(s). The system automatically matched your file's columns to the appropriate fields.`, 'success');
-                        if (elements.uploadFileName) elements.uploadFileName.value = '';
-                        if (elements.addBtn) elements.addBtn.disabled = true;
-                        if (elements.uploadFileInput) elements.uploadFileInput.value = '';
                         
                     } catch (error) {
                         console.error('Error processing file:', error);
@@ -1332,52 +1390,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        if (elements.importBtn) {
-            elements.importBtn.addEventListener('click', function() {
-                if (!elements.fileInput) return;
-                
-                const file = elements.fileInput.files[0];
-                if (!file) {
-                    showNotification('Please select a file first.', 'error');
-                    return;
-                }
-                
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const firstSheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[firstSheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        
-                        if (jsonData.length === 0) {
-                            showNotification('The file does not contain any data.', 'error');
-                            return;
-                        }
-                        
-                        const processedData = processDateFields(jsonData);
-                        displayImportedData(processedData);
-                        
-                        showNotification(`Successfully loaded ${processedData.length} record(s) from file.`, 'success');
-                        if (elements.fileName) elements.fileName.value = '';
-                        if (elements.importBtn) elements.importBtn.disabled = true;
-                        if (elements.fileInput) elements.fileInput.value = '';
-                        
-                    } catch (error) {
-                        console.error('Error processing file:', error);
-                        showNotification('Error processing file: ' + error.message, 'error');
-                    }
-                };
-                
-                reader.onerror = function() {
-                    showNotification('Error reading file.', 'error');
-                };
-                
-                reader.readAsArrayBuffer(file);
-            });
-        }
-        
+        // Reset buttons (keep existing functionality)
         if (elements.resetDataBtn) {
             elements.resetDataBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear all imported data? This action cannot be undone.')) {
@@ -1402,6 +1415,54 @@ document.addEventListener('DOMContentLoaded', function () {
                     showNotification('All applicants cleared successfully.', 'success');
                 }
             });
+        }
+    }
+
+    // Add these two new functions to handle the different destinations:
+
+    function proceedWithImportToImportedData(newApplicants) {
+        try {
+            const existingImportedData = JSON.parse(localStorage.getItem('importedData')) || [];
+            const mergedData = [...existingImportedData, ...newApplicants];
+            
+            // Save to imported data table
+            localStorage.setItem('importedData', JSON.stringify(mergedData));
+            displayImportedData([]); // This will reload all imported data
+            
+            // Show success message
+            showNotification(`Successfully imported ${newApplicants.length} applicant(s) to imported data table.`, 'success');
+            
+            // Reset form
+            if (elements.fileName) elements.fileName.value = '';
+            if (elements.importBtn) elements.importBtn.disabled = true;
+            if (elements.fileInput) elements.fileInput.value = '';
+            
+        } catch (error) {
+            console.error('Error importing data:', error);
+            showNotification('Error importing data: ' + error.message, 'error');
+        }
+    }
+
+    function proceedWithAddingToMainApplicants(newApplicants) {
+        try {
+            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            const mergedData = [...savedApplicants, ...newApplicants];
+            
+            // Save to main applicants
+            saveMainApplicants(mergedData);
+            displayMainApplicants(mergedData);
+            
+            // Show success message
+            showUploadNotification(`Successfully added ${newApplicants.length} applicant(s) to main applicant table.`, 'success');
+            
+            // Reset form
+            if (elements.uploadFileName) elements.uploadFileName.value = '';
+            if (elements.addBtn) elements.addBtn.disabled = true;
+            if (elements.uploadFileInput) elements.uploadFileInput.value = '';
+            
+        } catch (error) {
+            console.error('Error adding applicants:', error);
+            showUploadNotification('Error adding applicants: ' + error.message, 'error');
         }
     }
 
@@ -2650,11 +2711,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function downloadApplicantData(applicant) {
         try {
-            const worksheet = XLSX.utils.json_to_sheet([applicant]);
+            // Create a clean copy with properly formatted names
+            const exportApplicant = { ...applicant };
+            
+            // Ensure full name is properly formatted
+            if (!exportApplicant.NAME || exportApplicant.NAME === 'N/A') {
+                const lastName = exportApplicant['LAST NAME'] || '';
+                const firstName = exportApplicant['FIRST NAME'] || '';
+                const middleName = exportApplicant['MIDDLE NAME'] || '';
+                
+                if (lastName && firstName) {
+                    let fullName = `${lastName}, ${firstName}`;
+                    if (middleName && middleName !== 'N/A') {
+                        fullName += ` ${middleName}`;
+                    }
+                    exportApplicant.NAME = fullName;
+                }
+            }
+            
+            // Ensure individual name parts are included
+            if (!exportApplicant['LAST NAME'] || exportApplicant['LAST NAME'] === 'N/A') {
+                exportApplicant['LAST NAME'] = extractLastName(exportApplicant.NAME);
+            }
+            if (!exportApplicant['FIRST NAME'] || exportApplicant['FIRST NAME'] === 'N/A') {
+                exportApplicant['FIRST NAME'] = extractFirstName(exportApplicant.NAME);
+            }
+            if (!exportApplicant['MIDDLE NAME'] || exportApplicant['MIDDLE NAME'] === 'N/A') {
+                exportApplicant['MIDDLE NAME'] = extractMiddleName(exportApplicant.NAME);
+            }
+            
+            const worksheet = XLSX.utils.json_to_sheet([exportApplicant]);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Applicant Data");
             
-            const fileName = `applicant_${applicant['SRS ID'] || applicant.NAME || 'data'}.xlsx`;
+            const fileName = `applicant_${exportApplicant['SRS ID'] || exportApplicant.NAME || 'data'}.xlsx`;
             XLSX.writeFile(workbook, fileName);
             
             showNotification('Applicant data downloaded successfully!', 'success');
@@ -2689,15 +2779,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function displayImportedData(data) {
+    function displayImportedData(newData) {
         if (!elements.importedTable) return;
+        
+        // Load existing imported data and merge with new data
+        const existingData = JSON.parse(localStorage.getItem('importedData')) || [];
+        const mergedData = [...existingData, ...newData];
         
         const tbody = elements.importedTable.querySelector('tbody');
         if (!tbody) return;
         
         tbody.innerHTML = '';
         
-        if (data.length === 0) {
+        if (mergedData.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
             cell.colSpan = elements.importedTable.querySelectorAll('th').length;
@@ -2708,7 +2802,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        data.forEach((record, index) => {
+        mergedData.forEach((record, index) => {
             const row = document.createElement('tr');
             
             const columns = [
@@ -2753,11 +2847,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     let value = 'N/A';
                     const fieldMap = {
-                        'Last Name': record['Last Name'] || record['LAST NAME'] || record['last_name'],
-                        'Given Name': record['Given Name'] || record['GIVEN NAME'] || record['given_name'] || record['First Name'] || record['FIRST NAME'] || record['first name'],
-                        'Middle Name': record['Middle Name'] || record['MIDDLE NAME'] || record['middle_name'],
-                        'NAME': record['Full Name'] || record['FULL NAME'] || record['full name'] || record['NAME'] || record['Name'] || record['name'] || record['Complete Name'] || record['COMPLETE NAME'] || record['complete name'] || record['Applicant Name'] || record['APPLICANT NAME'] || record['applicant name'],
-                        'Date of Birth': record['Date of Birth'] || record['DATE OF BIRTH'] || record['date of birth'] || ['Birthday'] || record['BIRTHDAY'] || record['birthday'] || record['Bdate'] || record['BDATE'] || record['bdate'] || record['bDate'],
+                        'Last Name': record['Last Name'] || record['LAST NAME'] || record['last_name'] || record['LASTNAME'] || record['Surname'],
+                        'Given Name': record['Given Name'] || record['GIVEN NAME'] || record['given_name'] || record['First Name'] || record['FIRST NAME'] || record['first name'] || record['FIRSTNAME'],
+                        'Middle Name': record['Middle Name'] || record['MIDDLE NAME'] || record['middle_name'] || record['MIDDLENAME'],
+                        'Full Name': record['Full Name'] || record['FULL NAME'] || record['full name'] || record['NAME'] || record['Name'] || record['name'] || record['Complete Name'] || record['COMPLETE NAME'] || record['complete name'] || record['Applicant Name'] || record['APPLICANT NAME'] || record['applicant name'],
+                        'Date of Birth': record['Date of Birth'] || record['DATE OF BIRTH'] || record['date of birth'] || record['Birthday'] || record['BIRTHDAY'] || record['birthday'] || record['Bdate'] || record['BDATE'] || record['bdate'] || record['bDate'],
                         'Age': record['Age'] || record['AGE'] || record['age'],
                         'Sex': record['Sex'] || record['SEX'] || record['sex'] || record['Gender'] || record['GENDER'] || record['gender'],
                         'Civil Status': record['Civil Status'] || record['CIVIL STATUS'] || record['civil status'],
@@ -2766,8 +2860,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         'City': record['City'] || record['CITY'] || record['city'] || record['City/Municipality'] || record['CITY/MUNICIPALITY'] || record['city/municipality'],
                         'Province': record['Province'] || record['PROVINCE'] || record['province'],
                         'Contact No.': record['Contact No.'] || record['CONTACT NO.'] || record['contact no.'] || record['Cellphone'] || record['CELLPHONE'] || record['cellphone'] || record['Phone No.'] || record['PHONE NO.'] || record['phone no.'],
-                        'Employment Status': record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Emp. Status'] || record['EMP. STATUS'] || record['emp. status'],
-                        'If Employed/Self Employed': record['If Employed/Self Employed'] || record['IF EMPLOYED/SELF EMPLOYED'] || record['if employed/self employed'] || record['If Employed'] || record['IF EMPLOYED'] || record['if employed'] || record['Self Employed'] || record['SELF EMPLOYED'] || record['self employed'],
+                        'Employment Status': record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Emp. Status'] || record['EMP. STATUS'] || record['emp. status'],
+                        'If Employed/Self Employment': record['If Employed/Self Employment'] || record['IF EMPLOYED/SELF EMPLOYMENT'] || record['if employed/self employment'] || record['If Employed'] || record['IF EMPLOYED'] || record['if employed'] || record['Self Employed'] || record['SELF EMPLOYED'] || record['self employed'],
                         'Educational Attainment': record['Educational Attainment'] || record['EDUCATIONAL ATTAINMENT'] || record['educational attainment'] || record['Educ Level'] || record['EDUC LEVEL'] || record['educ level'],
                         'Course': record['Course'] || record['COURSE'] || record['course'],
                         'Skills': record['Skills'] || record['SKILLS'] || record['skills'],
@@ -2789,7 +2883,8 @@ document.addEventListener('DOMContentLoaded', function () {
             tbody.appendChild(row);
         });
         
-        localStorage.setItem('importedData', JSON.stringify(data));
+        // Save the merged data back to localStorage
+        localStorage.setItem('importedData', JSON.stringify(mergedData));
     }
 
     function exportSummaryReport() {
@@ -2840,22 +2935,44 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         try {
-            const exportData = savedApplicants.map(applicant => ({
-                'SRS ID': applicant['SRS ID'] || '',
-                'Name': applicant.NAME || '',
-                'Age': applicant.AGE || '',
-                'Gender': applicant.SEX || '',
-                'Civil Status': applicant['CIVIL STATUS'] || '',
-                'Phone': applicant.CELLPHONE || '',
-                'Email': applicant.EMAIL || '',
-                'Barangay': applicant.BARANGAY || '',
-                'City/Municipality': applicant['CITY/MUNICIPALITY'] || '',
-                'Employment Status': applicant['EMP. STATUS'] || '',
-                'Education Level': applicant['EDUC LEVEL'] || '',
-                'Program Category': applicant['PROGRAM CATEGORY'] || '',
-                'Program Status': applicant['PROGRAM STATUS'] || '',
-                'Registration Date': applicant['REG. DATE'] || ''
-            }));
+            const exportData = savedApplicants.map(applicant => {
+                const exportApplicant = { ...applicant };
+                
+                // Ensure names are properly formatted for export
+                if (!exportApplicant.NAME || exportApplicant.NAME === 'N/A') {
+                    const lastName = exportApplicant['LAST NAME'] || '';
+                    const firstName = exportApplicant['FIRST NAME'] || '';
+                    const middleName = exportApplicant['MIDDLE NAME'] || '';
+                    
+                    if (lastName && firstName) {
+                        let fullName = `${lastName}, ${firstName}`;
+                        if (middleName && middleName !== 'N/A') {
+                            fullName += ` ${middleName}`;
+                        }
+                        exportApplicant.NAME = fullName;
+                    }
+                }
+                
+                return {
+                    'SRS ID': exportApplicant['SRS ID'] || '',
+                    'Last Name': exportApplicant['LAST NAME'] || extractLastName(exportApplicant.NAME),
+                    'First Name': exportApplicant['FIRST NAME'] || extractFirstName(exportApplicant.NAME),
+                    'Middle Name': exportApplicant['MIDDLE NAME'] || extractMiddleName(exportApplicant.NAME),
+                    'Full Name': exportApplicant.NAME || '',
+                    'Age': exportApplicant.AGE || '',
+                    'Gender': exportApplicant.SEX || '',
+                    'Civil Status': exportApplicant['CIVIL STATUS'] || '',
+                    'Phone': exportApplicant.CELLPHONE || '',
+                    'Email': exportApplicant.EMAIL || '',
+                    'Barangay': exportApplicant.BARANGAY || '',
+                    'City/Municipality': exportApplicant['CITY/MUNICIPALITY'] || '',
+                    'Employment Status': exportApplicant['EMP. STATUS'] || '',
+                    'Education Level': exportApplicant['EDUC LEVEL'] || '',
+                    'Program Category': exportApplicant['PROGRAM CATEGORY'] || '',
+                    'Program Status': exportApplicant['PROGRAM STATUS'] || '',
+                    'Registration Date': exportApplicant['REG. DATE'] || ''
+                };
+            });
             
             const worksheet = XLSX.utils.json_to_sheet(exportData);
             const workbook = XLSX.utils.book_new();
@@ -2875,7 +2992,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
         importedData.splice(index, 1);
         localStorage.setItem('importedData', JSON.stringify(importedData));
-        displayImportedData(importedData);
+        displayImportedData([]); // Pass empty array to trigger reload of existing data
         showNotification('Imported record deleted successfully!', 'success');
     }
 
@@ -2947,30 +3064,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function extractLastName(fullName) {
-        if (!fullName) return '';
+        if (!fullName || fullName === 'N/A') return '';
         const parts = fullName.split(',');
-        return parts[0] ? parts[0].trim() : '';
+        return parts[0] ? parts[0].trim() : fullName.split(' ')[0] || '';
     }
 
     function extractFirstName(fullName) {
-        if (!fullName) return '';
+        if (!fullName || fullName === 'N/A') return '';
         const parts = fullName.split(',');
         if (parts.length > 1) {
             const firstMiddle = parts[1].trim().split(' ');
             return firstMiddle[0] || '';
         }
-        return fullName.split(' ')[0] || '';
+        const nameParts = fullName.split(' ');
+        return nameParts.length > 1 ? nameParts[1] : nameParts[0] || '';
     }
 
     function extractMiddleName(fullName) {
-        if (!fullName) return '';
+        if (!fullName || fullName === 'N/A') return '';
         const parts = fullName.split(',');
         if (parts.length > 1) {
             const firstMiddle = parts[1].trim().split(' ');
             return firstMiddle.length > 1 ? firstMiddle.slice(1).join(' ') : '';
         }
         const nameParts = fullName.split(' ');
-        return nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : '';
+        return nameParts.length > 2 ? nameParts.slice(2).join(' ') : '';
     }
 
     function formatFullName(applicant) {
@@ -3207,49 +3325,957 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'N/A';
     }
 
-    function combineNameParts(record, processedRecord) {
-        const fullNameFields = ['Name', 'name', 'Full Name', 'full name', 'Complete Name', 'NAME'];
-        for (const field of fullNameFields) {
-            if (record[field] && record[field] !== 'N/A') {
-                return record[field];
+
+    function validateAndImportApplicants(newApplicants) {
+        const validationResults = validateImportedDataDuplicates(newApplicants);
+
+        if (validationResults.inImported.length > 0 || validationResults.inMain.length > 0) {
+            showEnhancedImportValidationModal(validationResults, newApplicants);
+        } else {
+            // No duplicates found, proceed with import
+            proceedWithImport(newApplicants, JSON.parse(localStorage.getItem('importedData')) || []);
+        }
+        const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
+        
+        let duplicatesFound = [];
+        let uniqueNewApplicants = [];
+        let importedDuplicates = [];
+
+        // Check against main applicants
+        newApplicants.forEach(newApp => {
+            const duplicateCheck = checkApplicantDuplicate(newApp);
+            
+            if (duplicateCheck.hasMatches) {
+                duplicatesFound.push({
+                    applicant: newApp,
+                    matches: duplicateCheck.matches,
+                    source: 'main'
+                });
+            } else {
+                // Also check against imported data
+                const importedDuplicate = checkImportedDuplicate(newApp, importedData);
+                if (importedDuplicate.hasMatches) {
+                    importedDuplicates.push({
+                        applicant: newApp,
+                        matches: importedDuplicate.matches,
+                        source: 'imported'
+                    });
+                } else {
+                    uniqueNewApplicants.push(newApp);
+                }
             }
+        });
+
+        // Show validation results
+        if (duplicatesFound.length > 0 || importedDuplicates.length > 0) {
+            showImportValidationModal(newApplicants, duplicatesFound, importedDuplicates, uniqueNewApplicants);
+        } else {
+            // No duplicates found, proceed with import
+            proceedWithImport(newApplicants, importedData);
         }
-        
-        const lastName = processedRecord['LAST NAME'] !== 'N/A' ? processedRecord['LAST NAME'] : '';
-        const firstName = processedRecord['FIRST NAME'] !== 'N/A' ? processedRecord['FIRST NAME'] : '';
-        const middleName = processedRecord['MIDDLE NAME'] !== 'N/A' ? processedRecord['MIDDLE NAME'] : '';
-        
-        if (lastName && firstName) {
-            let fullName = `${lastName}, ${firstName}`;
-            if (middleName && middleName.trim()) {
-                fullName += ` ${middleName.trim()}`;
-            }
-            return fullName.trim();
-        }
-        
-        if (firstName && lastName) {
-            return `${lastName}, ${firstName} ${middleName}`.trim();
-        }
-        
-        for (const key in record) {
-            if (typeof record[key] === 'string' && 
-                (key.toLowerCase().includes('name') || 
-                key.toLowerCase().includes('complete') ||
-                key.toLowerCase().includes('full'))) {
-                return record[key];
-            }
-        }
-        
-        return 'N/A';
     }
 
-    function validateApplicantData(applicantData) {
-        const required = ['NAME', 'BDATE'];
-        const missing = required.filter(field => !applicantData[field] || applicantData[field] === 'N/A');
+    function checkImportedDuplicate(newApplicant, importedData) {
+        const matches = [];
         
-        if (missing.length > 0) {
-            throw new Error(`Missing required fields: ${missing.join(', ')}`);
+        // Field mappings for imported data (since imported data might have different field names)
+        const fieldMappings = {
+            'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name'],
+            'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB'],
+            'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number'],
+            'EMAIL': ['EMAIL', 'Email', 'Email Address']
+        };
+        
+        for (const existingApp of importedData) {
+            // Extract values using field mappings for both new and existing applicants
+            const newName = extractFieldValue(newApplicant, fieldMappings['NAME'])?.toLowerCase() || '';
+            const existingName = extractFieldValue(existingApp, fieldMappings['NAME'])?.toLowerCase() || '';
+            
+            const newBdate = extractFieldValue(newApplicant, fieldMappings['BDATE']) || '';
+            const existingBdate = extractFieldValue(existingApp, fieldMappings['BDATE']) || '';
+            
+            const newPhone = extractFieldValue(newApplicant, fieldMappings['CELLPHONE']) || '';
+            const existingPhone = extractFieldValue(existingApp, fieldMappings['CELLPHONE']) || '';
+            
+            const newEmail = extractFieldValue(newApplicant, fieldMappings['EMAIL'])?.toLowerCase() || '';
+            const existingEmail = extractFieldValue(existingApp, fieldMappings['EMAIL'])?.toLowerCase() || '';
+            
+            // Check for matches with better logic
+            const nameMatch = newName && existingName && newName === existingName;
+            const bdateMatch = newBdate && existingBdate && newBdate === existingBdate;
+            const phoneMatch = newPhone && existingPhone && newPhone === existingPhone;
+            const emailMatch = newEmail && existingEmail && newEmail === existingEmail;
+            
+            const sameNameDifferentBday = nameMatch && !bdateMatch;
+            
+            // Consider it a duplicate if we have strong matches
+            if (nameMatch && (bdateMatch || phoneMatch || emailMatch)) {
+                const matchDetails = {
+                    existingApplicant: existingApp,
+                    matchingFields: [],
+                    differences: [],
+                    sameNameDifferentBday: sameNameDifferentBday,
+                    source: 'imported'
+                };
+                
+                if (nameMatch) matchDetails.matchingFields.push('Name');
+                if (bdateMatch) matchDetails.matchingFields.push('Birthday');
+                if (phoneMatch) matchDetails.matchingFields.push('Phone Number');
+                if (emailMatch) matchDetails.matchingFields.push('Email');
+                if (sameNameDifferentBday) matchDetails.matchingFields.push('Same Name, Different Birthday');
+                
+                // Compare other fields for differences
+                const fieldsToCompare = ['BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'];
+                
+                fieldsToCompare.forEach(field => {
+                    const newValue = extractFieldValue(newApplicant, [field]) || '';
+                    const existingValue = extractFieldValue(existingApp, [field]) || '';
+                    
+                    if (newValue && existingValue && newValue.toLowerCase() !== existingValue.toLowerCase()) {
+                        matchDetails.differences.push({
+                            field: field,
+                            newValue: newValue,
+                            existingValue: existingValue
+                        });
+                    }
+                });
+                
+                // Add birthday difference for same name cases
+                if (sameNameDifferentBday) {
+                    matchDetails.differences.push({
+                        field: 'Birthday',
+                        newValue: newBdate || 'Not provided',
+                        existingValue: existingBdate || 'Not provided'
+                    });
+                }
+                
+                matches.push(matchDetails);
+            }
+        }
+        
+        return {
+            hasMatches: matches.length > 0,
+            matches: matches
+        };
+    }
+
+    // Helper function to extract field values using mappings
+    function extractFieldValue(record, possibleLabels) {
+        if (!record) return null;
+        
+        // First try exact matches
+        for (const label of possibleLabels) {
+            if (record[label] && record[label] !== 'N/A') {
+                return record[label];
+            }
+        }
+        
+        // Then try case-insensitive matches
+        for (const recordKey in record) {
+            for (const label of possibleLabels) {
+                if (recordKey.toLowerCase() === label.toLowerCase()) {
+                    return record[recordKey];
+                }
+            }
+        }
+        
+        // Then try partial matches
+        for (const recordKey in record) {
+            for (const label of possibleLabels) {
+                if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
+                    label.toLowerCase().includes(recordKey.toLowerCase())) {
+                    return record[recordKey];
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    function showImportValidationModal(newApplicants, mainDuplicates, importedDuplicates, uniqueNewApplicants) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            
+            let message = `<div class="modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2 style="color: #ff9800;">Import Validation Results</h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="background: #e8f4fd; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 10px 0; color: #1976d2;">
+                            <i class="fas fa-info-circle"></i> Import Summary
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div>
+                                <strong>Total in file:</strong> ${newApplicants.length}
+                            </div>
+                            <div>
+                                <strong>New applicants:</strong> ${uniqueNewApplicants.length}
+                            </div>
+                            <div>
+                                <strong>Duplicates found:</strong> ${mainDuplicates.length + importedDuplicates.length}
+                            </div>
+                        </div>
+                    </div>`;
+            
+            // Show main applicant duplicates
+            if (mainDuplicates.length > 0) {
+                message += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 5px;">
+                            <i class="fas fa-exclamation-triangle"></i> Duplicates in Main Database (${mainDuplicates.length})
+                        </h3>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                            These applicants already exist in your main applicant database.
+                        </p>`;
+                
+                mainDuplicates.forEach((dup, index) => {
+                    const applicant = dup.applicant;
+                    message += `
+                        <div style="background: #ffebee; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #d32f2f;">
+                            <h4 style="margin: 0 0 10px 0; color: #c62828;">
+                                <i class="fas fa-user-times"></i> 
+                                New Applicant: <span style="background: #ffcdd2; padding: 2px 5px;">${applicant.NAME}</span>
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                                <div><strong>Birth Date:</strong> ${applicant.BDATE || 'Not provided'}</div>
+                                <div><strong>Phone:</strong> ${applicant.CELLPHONE || 'Not provided'}</div>
+                                <div><strong>Program:</strong> ${applicant['PROGRAM CATEGORY'] || 'Not specified'}</div>
+                            </div>
+                            <div style="margin-top: 10px; padding: 10px; background: #fce4ec; border-radius: 4px;">
+                                <strong>Matching Existing Applicant(s):</strong>
+                                <ul style="margin: 5px 0; padding-left: 20px;">`;
+                    
+                    dup.matches.forEach(match => {
+                        const existing = match.existingApplicant;
+                        message += `<li>
+                            <strong>${existing.NAME}</strong> 
+                            (Birth: ${existing.BDATE || 'N/A'}, Phone: ${existing.CELLPHONE || 'N/A'})
+                            ${match.sameNameDifferentBday ? '<span style="color: #d32f2f;">- Same Name, Different Birthday</span>' : ''}
+                        </li>`;
+                    });
+                    
+                    message += `</ul></div></div>`;
+                });
+                
+                message += `</div>`;
+            }
+            
+            // Show imported data duplicates
+            if (importedDuplicates.length > 0) {
+                message += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #ff9800; border-bottom: 2px solid #ff9800; padding-bottom: 5px;">
+                            <i class="fas fa-exclamation-circle"></i> Duplicates in Imported Data (${importedDuplicates.length})
+                        </h3>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                            These applicants already exist in your imported data table.
+                        </p>`;
+                
+                importedDuplicates.forEach((dup, index) => {
+                    const applicant = dup.applicant;
+                    message += `
+                        <div style="background: #fff3e0; padding: 15px; margin: 10px 0; border-radius: 4px; border-left: 4px solid #ff9800;">
+                            <h4 style="margin: 0 0 10px 0; color: #ef6c00;">
+                                <i class="fas fa-user-clock"></i> 
+                                New Applicant: <span style="background: #ffe0b2; padding: 2px 5px;">${applicant.NAME}</span>
+                            </h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
+                                <div><strong>Birth Date:</strong> ${applicant.BDATE || 'Not provided'}</div>
+                                <div><strong>Phone:</strong> ${applicant.CELLPHONE || 'Not provided'}</div>
+                                <div><strong>Program:</strong> ${applicant['PROGRAM CATEGORY'] || 'Not specified'}</div>
+                            </div>
+                            <div style="margin-top: 10px; padding: 10px; background: #fff8e1; border-radius: 4px;">
+                                <strong>Matching Imported Record(s):</strong>
+                                <ul style="margin: 5px 0; padding-left: 20px;">`;
+                    
+                    dup.matches.forEach(match => {
+                        const existing = match.existingApplicant;
+                        message += `<li>
+                            <strong>${existing.NAME}</strong> 
+                            (Birth: ${existing.BDATE || 'N/A'}, Phone: ${existing.CELLPHONE || 'N/A'})
+                        </li>`;
+                    });
+                    
+                    message += `</ul></div></div>`;
+                });
+                
+                message += `</div>`;
+            }
+            
+            // Show unique applicants
+            if (uniqueNewApplicants.length > 0) {
+                message += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #4caf50; border-bottom: 2px solid #4caf50; padding-bottom: 5px;">
+                            <i class="fas fa-user-check"></i> New Applicants (${uniqueNewApplicants.length})
+                        </h3>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                            These applicants will be added to the imported data table.
+                        </p>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px;">
+                            <ul style="margin: 0; padding-left: 20px; font-size: 13px;">`;
+                
+                uniqueNewApplicants.slice(0, 10).forEach(applicant => {
+                    message += `<li>${applicant.NAME} (${applicant.BDATE || 'No birth date'})</li>`;
+                });
+                
+                if (uniqueNewApplicants.length > 10) {
+                    message += `<li>... and ${uniqueNewApplicants.length - 10} more applicants</li>`;
+                }
+                
+                message += `</ul></div></div>`;
+            }
+            
+            message += `
+                    <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                        <p><strong>How would you like to proceed?</strong></p>
+                        <div style="font-size: 14px; color: #666;">
+                            <ul>
+                                <li><strong>Import All:</strong> Add all ${newApplicants.length} applicants (including duplicates)</li>
+                                <li><strong>Import Unique Only:</strong> Add only ${uniqueNewApplicants.length} new applicants</li>
+                                <li><strong>Cancel:</strong> Don't import any data</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: space-between; padding: 15px 20px; border-top: 1px solid #e0e0e0;">
+                    <button id="cancel-import" class="cancel-btn">Cancel Import</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="import-unique" class="save-btn" style="background: #4caf50;">
+                            Import Unique Only (${uniqueNewApplicants.length})
+                        </button>
+                        <button id="import-all" class="save-btn" style="background: #ff9800;">
+                            Import All (${newApplicants.length})
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+            
+            modal.innerHTML = message;
+            document.body.appendChild(modal);
+            
+            // Event handlers
+            document.getElementById('cancel-import').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve({ action: 'cancel' });
+            });
+            
+            document.getElementById('import-unique').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve({ action: 'unique', data: uniqueNewApplicants });
+            });
+            
+            document.getElementById('import-all').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve({ action: 'all', data: newApplicants });
+            });
+            
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    resolve({ action: 'cancel' });
+                }
+            });
+        }).then(result => {
+            switch (result.action) {
+                case 'unique':
+                    proceedWithImport(result.data, JSON.parse(localStorage.getItem('importedData')) || []);
+                    break;
+                case 'all':
+                    proceedWithImport(result.data, JSON.parse(localStorage.getItem('importedData')) || []);
+                    break;
+                case 'cancel':
+                    showUploadNotification('Import cancelled.', 'info');
+                    break;
+            }
+        });
+    }
+
+    function proceedWithImport(newApplicants, existingImportedData) {
+        try {
+            const mergedData = [...existingImportedData, ...newApplicants];
+            
+            // Save to imported data
+            localStorage.setItem('importedData', JSON.stringify(mergedData));
+            displayImportedData([]); // This will reload all imported data
+            
+            // Show success message
+            showUploadNotification(`Successfully imported ${newApplicants.length} applicant(s) to imported data table.`, 'success');
+            
+            // Reset form
+            if (elements.uploadFileName) elements.uploadFileName.value = '';
+            if (elements.addBtn) elements.addBtn.disabled = true;
+            if (elements.uploadFileInput) elements.uploadFileInput.value = '';
+            
+        } catch (error) {
+            console.error('Error importing data:', error);
+            showUploadNotification('Error importing data: ' + error.message, 'error');
         }
     }
+
+    function validateImportedDataDuplicates(newApplicants) {
+        console.log('🔍 Starting duplicate validation (Name + Birthday only)...');
+        const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
+        const mainApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        
+        console.log('📊 Data counts:', {
+            newApplicants: newApplicants.length,
+            importedData: importedData.length,
+            mainApplicants: mainApplicants.length
+        });
+
+        const duplicates = {
+            inImported: [],
+            inMain: [],
+            unique: []
+        };
+
+        newApplicants.forEach((newApp, newIndex) => {
+            console.log(`\n🔍 Checking new applicant ${newIndex + 1}:`, newApp.NAME);
+            let isDuplicate = false;
+
+            // Check against imported data (Name + Birthday only)
+            importedData.forEach((importedApp, importedIndex) => {
+                if (isDuplicateByNameAndBirthday(newApp, importedApp)) {
+                    console.log(`✅ Found duplicate in imported data: ${newApp.NAME} (${newApp.BDATE}) matches ${importedApp.NAME} (${importedApp.BDATE})`);
+                    duplicates.inImported.push({
+                        new: newApp,
+                        existing: importedApp,
+                        source: 'imported'
+                    });
+                    isDuplicate = true;
+                }
+            });
+
+            // Check against main applicants (Name + Birthday only)
+            if (!isDuplicate) {
+                mainApplicants.forEach((mainApp, mainIndex) => {
+                    if (isDuplicateByNameAndBirthday(newApp, mainApp)) {
+                        console.log(`✅ Found duplicate in main data: ${newApp.NAME} (${newApp.BDATE}) matches ${mainApp.NAME} (${mainApp.BDATE})`);
+                        duplicates.inMain.push({
+                            new: newApp,
+                            existing: mainApp,
+                            source: 'main'
+                        });
+                        isDuplicate = true;
+                    }
+                });
+            }
+
+            // If no duplicates found, add to unique
+            if (!isDuplicate) {
+                console.log(`✅ No duplicates found for: ${newApp.NAME} (${newApp.BDATE})`);
+                duplicates.unique.push(newApp);
+            }
+        });
+
+        console.log('📋 Final validation results:', duplicates);
+        return duplicates;
+    }
+
+    function isDuplicateByNameAndBirthday(app1, app2) {
+        if (!app1 || !app2) return false;
+
+        // Get names - handle various field names
+        const name1 = (app1.NAME || app1.name || app1['Full Name'] || '').toString().trim();
+        const name2 = (app2.NAME || app2.name || app2['Full Name'] || '').toString().trim();
+        
+        // Get birth dates
+        const bdate1 = (app1.BDATE || app1.bdate || app1['Date of Birth'] || '').toString().trim();
+        const bdate2 = (app2.BDATE || app2.bdate || app2['Date of Birth'] || '').toString().trim();
+
+        console.log('🔍 Comparing by Name + Birthday:', {
+            name1, name2,
+            bdate1, bdate2
+        });
+
+        // Skip if either name is empty or "N/A"
+        if (!name1 || name1 === 'N/A' || !name2 || name2 === 'N/A') {
+            return false;
+        }
+
+        // Rule 1: Exact name match + exact birthday match
+        const nameMatch = name1.toLowerCase() === name2.toLowerCase();
+        const bdateMatch = normalizeDate(bdate1) === normalizeDate(bdate2);
+
+        console.log('🎯 Name match:', nameMatch, 'Birthday match:', bdateMatch);
+
+        // Only consider it a duplicate if BOTH name and birthday match
+        if (nameMatch && bdateMatch) {
+            console.log('🎯 Exact Name + Birthday match found');
+            return true;
+        }
+
+        console.log('❌ No Name + Birthday duplicate match found');
+        return false;
+    }
+
+    function normalizeDate(dateString) {
+        if (!dateString || dateString === 'N/A') return '';
+        
+        try {
+            // Handle MM/DD/YYYY format (common in your system)
+            if (dateString.includes('/')) {
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    const month = parts[0].padStart(2, '0');
+                    const day = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    return `${month}/${day}/${year}`;
+                }
+            }
+            
+            // Handle YYYY-MM-DD format (from date inputs)
+            if (dateString.includes('-')) {
+                const date = new Date(dateString);
+                if (!isNaN(date.getTime())) {
+                    return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                }
+            }
+            
+            // Return original if no specific format matched
+            return dateString;
+        } catch (error) {
+            console.warn('Date normalization error:', error);
+            return dateString;
+        }
+    }
+
+    function areNamesSimilar(name1, name2) {
+        if (name1 === name2) return true;
+        
+        // Remove extra spaces and special characters
+        const clean1 = name1.replace(/\s+/g, ' ').trim().toLowerCase();
+        const clean2 = name2.replace(/\s+/g, ' ').trim().toLowerCase();
+        
+        // Split into parts
+        const parts1 = clean1.split(' ');
+        const parts2 = clean2.split(' ');
+        
+        // Check if they share significant name parts
+        const significantParts1 = parts1.filter(part => part.length > 2);
+        const significantParts2 = parts2.filter(part => part.length > 2);
+        
+        const commonParts = significantParts1.filter(part => 
+            significantParts2.some(otherPart => 
+                part === otherPart || 
+                otherPart.includes(part) || 
+                part.includes(otherPart)
+            )
+        );
+        
+        return commonParts.length >= Math.min(significantParts1.length, significantParts2.length);
+    }
+
+    function formatDateForComparison(dateString) {
+        if (!dateString || dateString === 'N/A') return '';
+        
+        try {
+            // Handle MM/DD/YYYY format
+            if (dateString.includes('/')) {
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    const month = parts[0].padStart(2, '0');
+                    const day = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            
+            // Handle other date formats
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+        } catch (error) {
+            console.warn('Date comparison error:', error);
+        }
+        
+        return dateString;
+    }
+
+    function normalizePhone(phone) {
+        if (!phone || phone === 'N/A') return '';
+        
+        // Remove all non-digit characters
+        return phone.replace(/\D/g, '');
+    }
+
+    function areNamesSimilar(name1, name2) {
+        // Remove extra spaces and convert to lowercase
+        const clean1 = name1.replace(/\s+/g, ' ').trim();
+        const clean2 = name2.replace(/\s+/g, ' ').trim();
+        
+        // Exact match after cleaning
+        if (clean1 === clean2) return true;
+        
+        // Split into parts for comparison
+        const parts1 = clean1.split(' ');
+        const parts2 = clean2.split(' ');
+        
+        // If both have at least 2 parts, check if they're the same but in different order
+        if (parts1.length >= 2 && parts2.length >= 2) {
+            const set1 = new Set(parts1);
+            const set2 = new Set(parts2);
+            
+            // Check if they have the same set of name parts
+            if (set1.size === set2.size && [...set1].every(part => set2.has(part))) {
+                return true;
+            }
+        }
+        
+        // Check for common nicknames or variations
+        const commonVariations = {
+            'jr': ['junior'],
+            'sr': ['senior'],
+            'ii': ['second'],
+            'iii': ['third']
+        };
+        
+        // Simple similarity check - if one name contains the other
+        return clean1.includes(clean2) || clean2.includes(clean1);
+    }
+
+    async function showEnhancedImportValidationModal(validationResults, allApplicants) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            
+            let message = `<div class="modal-content" style="max-width: 1000px; max-height: 85vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h2 style="color: #ff9800;">
+                        <i class="fas fa-search"></i> Import Data Validation
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <!-- Summary Section -->
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                        <h3 style="margin: 0 0 10px 0; color: #1976d2;">
+                            <i class="fas fa-chart-pie"></i> Validation Summary
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #2196f3;">${allApplicants.length}</div>
+                                <div>Total Records</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #4caf50;">${validationResults.unique.length}</div>
+                                <div>New Records</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #ff9800;">${validationResults.inImported.length}</div>
+                                <div>In Imported Data</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #f44336;">${validationResults.inMain.length}</div>
+                                <div>In Main Database</div>
+                            </div>
+                        </div>
+                    </div>`;
+
+            // Imported Data Duplicates Section
+            if (validationResults.inImported.length > 0) {
+                message += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #ff9800; border-bottom: 2px solid #ff9800; padding-bottom: 5px;">
+                            <i class="fas fa-database"></i> Duplicates in Imported Data (${validationResults.inImported.length})
+                        </h3>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                            These records already exist in your imported data table.
+                        </p>
+                        <div style="max-height: 300px; overflow-y: auto;">`;
+                
+                validationResults.inImported.forEach((dup, index) => {
+                    message += `
+                        <div style="background: #fff3e0; padding: 12px; margin: 8px 0; border-radius: 4px; border-left: 4px solid #ff9800;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                <div style="flex: 1;">
+                                    <strong style="color: #e65100;">New Record:</strong> ${dup.new.NAME || 'N/A'}
+                                </div>
+                                <span style="background: #ff9800; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                    Match #${index + 1}
+                                </span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                                <div><strong>Birth:</strong> ${dup.new.BDATE || 'N/A'}</div>
+                                <div><strong>Phone:</strong> ${dup.new.CELLPHONE || 'N/A'}</div>
+                                <div><strong>Email:</strong> ${dup.new.EMAIL || 'N/A'}</div>
+                                <div><strong>Location:</strong> ${dup.new.BARANGAY || 'N/A'}</div>
+                            </div>
+                            <div style="margin-top: 8px; padding: 8px; background: #fff8e1; border-radius: 4px;">
+                                <strong>Matching Imported Record:</strong> ${dup.existing.NAME || 'N/A'}
+                            </div>
+                        </div>`;
+                });
+                
+                message += `</div></div>`;
+            }
+
+            // Main Database Duplicates Section
+            if (validationResults.inMain.length > 0) {
+                message += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #f44336; border-bottom: 2px solid #f44336; padding-bottom: 5px;">
+                            <i class="fas fa-users"></i> Duplicates in Main Database (${validationResults.inMain.length})
+                        </h3>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                            These records already exist in your main applicant database.
+                        </p>
+                        <div style="max-height: 300px; overflow-y: auto;">`;
+                
+                validationResults.inMain.forEach((dup, index) => {
+                    message += `
+                        <div style="background: #ffebee; padding: 12px; margin: 8px 0; border-radius: 4px; border-left: 4px solid #f44336;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                <div style="flex: 1;">
+                                    <strong style="color: #c62828;">New Record:</strong> ${dup.new.NAME || 'N/A'}
+                                </div>
+                                <span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                    Match #${index + 1}
+                                </span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                                <div><strong>Birth:</strong> ${dup.new.BDATE || 'N/A'}</div>
+                                <div><strong>Phone:</strong> ${dup.new.CELLPHONE || 'N/A'}</div>
+                                <div><strong>Email:</strong> ${dup.new.EMAIL || 'N/A'}</div>
+                                <div><strong>Program:</strong> ${dup.new['PROGRAM CATEGORY'] || 'N/A'}</div>
+                            </div>
+                            <div style="margin-top: 8px; padding: 8px; background: #fce4ec; border-radius: 4px;">
+                                <strong>Matching Main Record:</strong> ${dup.existing.NAME || 'N/A'}
+                            </div>
+                        </div>`;
+                });
+                
+                message += `</div></div>`;
+            }
+
+            // Unique Records Section
+            if (validationResults.unique.length > 0) {
+                message += `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: #4caf50; border-bottom: 2px solid #4caf50; padding-bottom: 5px;">
+                            <i class="fas fa-user-check"></i> New Unique Records (${validationResults.unique.length})
+                        </h3>
+                        <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                            These records will be added as new entries.
+                        </p>
+                        <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">`;
+                
+                validationResults.unique.slice(0, 20).forEach((app, index) => {
+                    message += `
+                        <div style="padding: 5px; border-bottom: 1px solid #f0f0f0;">
+                            <strong>${app.NAME || 'Unnamed Record'}</strong><br>
+                            <span style="color: #666;">${app.BDATE || 'No birth date'} | ${app.CELLPHONE || 'No phone'}</span>
+                        </div>`;
+                });
+                
+                if (validationResults.unique.length > 20) {
+                    message += `
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 10px; color: #666;">
+                            ... and ${validationResults.unique.length - 20} more records
+                        </div>`;
+                }
+                
+                message += `</div></div></div>`;
+            }
+
+            // Action Section
+            message += `
+                    <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                        <p><strong>Import Options:</strong></p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                            <div style="background: #e8f5e8; padding: 10px; border-radius: 4px;">
+                                <strong>Import Unique Only</strong><br>
+                                <small>Add only ${validationResults.unique.length} new records</small>
+                            </div>
+                            <div style="background: #fff3e0; padding: 10px; border-radius: 4px;">
+                                <strong>Import All Records</strong><br>
+                                <small>Add all ${allApplicants.length} records (including duplicates)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: space-between; padding: 15px 20px; border-top: 1px solid #e0e0e0;">
+                    <button id="cancel-import" class="cancel-btn">
+                        <i class="fas fa-times"></i> Cancel Import
+                    </button>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="import-unique" class="save-btn" style="background: #4caf50;" 
+                            ${validationResults.unique.length === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-user-check"></i> 
+                            Import Unique (${validationResults.unique.length})
+                        </button>
+                        <button id="import-all" class="save-btn" style="background: #ff9800;">
+                            <i class="fas fa-users"></i> 
+                            Import All (${allApplicants.length})
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+
+            modal.innerHTML = message;
+            document.body.appendChild(modal);
+
+            // Event handlers
+            document.getElementById('cancel-import').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve({ action: 'cancel' });
+            });
+
+            document.getElementById('import-unique').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve({ action: 'unique', data: validationResults.unique });
+            });
+
+            document.getElementById('import-all').addEventListener('click', () => {
+                document.body.removeChild(modal);
+                resolve({ action: 'all', data: allApplicants });
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    document.body.removeChild(modal);
+                    resolve({ action: 'cancel' });
+                }
+            });
+        });
+    }
+
+    function testValidation() {
+        // Test data - create a sample applicant that should match existing data
+        const testApplicant = {
+            'NAME': 'Test Applicant',
+            'BDATE': '01/15/1990',
+            'CELLPHONE': '09123456789',
+            'EMAIL': 'test@example.com',
+            'BARANGAY': 'Test Barangay'
+        };
+        
+        const validationResults = validateImportedDataDuplicates([testApplicant]);
+        console.log('Validation Test Results:', validationResults);
+        
+        if (validationResults.inImported.length > 0 || validationResults.inMain.length > 0) {
+            console.log('✅ Validation is working! Found duplicates.');
+        } else {
+            console.log('❌ No duplicates found. Check your test data.');
+        }
+    }
+
+    // Call this temporarily to test
+    // testValidation();
+
+    function createTestData() {
+        console.log('🧪 Creating test data...');
+        
+        // Create some test imported data
+        const testImportedData = [
+            {
+                'NAME': 'John Smith',
+                'BDATE': '01/15/1990',
+                'CELLPHONE': '09123456789',
+                'EMAIL': 'john.smith@example.com',
+                'BARANGAY': 'Test Barangay',
+                'SRS ID': 'TEST_IMPORT_1'
+            },
+            {
+                'NAME': 'Maria Garcia',
+                'BDATE': '05/20/1985',
+                'CELLPHONE': '09111111111',
+                'EMAIL': 'maria.garcia@example.com',
+                'BARANGAY': 'Sample Village',
+                'SRS ID': 'TEST_IMPORT_2'
+            }
+        ];
+        
+        // Save to imported data
+        localStorage.setItem('importedData', JSON.stringify(testImportedData));
+        console.log('✅ Test imported data created');
+        
+        // Create some test main applicants
+        const testMainApplicants = [
+            {
+                'NAME': 'Robert Johnson',
+                'BDATE': '03/10/1978',
+                'CELLPHONE': '09222222222',
+                'EMAIL': 'robert.johnson@example.com',
+                'BARANGAY': 'Main Town',
+                'SRS ID': 'TEST_MAIN_1'
+            }
+        ];
+        
+        // Save to main applicants
+        localStorage.setItem('mainApplicants', JSON.stringify(testMainApplicants));
+        console.log('✅ Test main applicants created');
+        
+        return {
+            imported: testImportedData,
+            main: testMainApplicants
+        };
+    }
+
+    function testWithForcedDuplicates() {
+        console.log('🧪 Testing with forced duplicates...');
+        
+        // Create test data first
+        createTestData();
+        
+        // Create new applicants that should match the test data
+        const testNewApplicants = [
+            // This should match imported data
+            {
+                'NAME': 'John Smith', // Exact match with imported
+                'BDATE': '01/15/1990',
+                'CELLPHONE': '09123456789',
+                'EMAIL': 'john.smith@example.com',
+                'BARANGAY': 'Different Barangay'
+            },
+            // This should match main data
+            {
+                'NAME': 'Robert Johnson', // Exact match with main
+                'BDATE': '03/10/1978',
+                'CELLPHONE': '09222222222',
+                'EMAIL': 'robert.johnson@example.com',
+                'BARANGAY': 'Different Location'
+            },
+            // This should be unique
+            {
+                'NAME': 'Unique Applicant',
+                'BDATE': '12/25/1995',
+                'CELLPHONE': '09333333333',
+                'EMAIL': 'unique@example.com',
+                'BARANGAY': 'Unique Place'
+            }
+        ];
+        
+        console.log('🧪 Test new applicants:', testNewApplicants);
+        
+        // Run validation
+        const results = validateImportedDataDuplicates(testNewApplicants);
+        
+        console.log('🧪 Test results:', results);
+        
+        // Show results in alert for immediate feedback
+        setTimeout(() => {
+            alert(`Test Results:
+            • Total: ${testNewApplicants.length}
+            • Imported Duplicates: ${results.inImported.length}
+            • Main Duplicates: ${results.inMain.length}
+            • Unique: ${results.unique.length}
+            
+            Check console for details.`);
+        }, 500);
+        
+        return results;
+    }
+
+    // Add this to test immediately - call this function in browser console
+    // testWithForcedDuplicates();
     initializeApp();
 });
