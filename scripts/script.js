@@ -711,6 +711,20 @@ document.addEventListener('DOMContentLoaded', function () {
         applicantData['REG. DATE'] = new Date().toLocaleDateString();
         applicantData['DATE CREATED'] = new Date().toLocaleString();
         applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
+        applicantData['STREET ADDRESS'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
+        applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
+        applicantData['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
+        applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
+
+        formData.forEach((value, key) => {
+            if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
+                !key.startsWith('manual-middle-name') && !key.startsWith('manual-name') &&
+                !key.startsWith('manual-house-street') && !key.startsWith('manual-barangay') &&
+                !key.startsWith('manual-city-municipality') && !key.startsWith('manual-province')) {
+                const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
+                applicantData[fieldName] = value || 'N/A';
+            }
+        });
         
         // Ensure all required fields have values
         const requiredFields = ['NAME', 'BDATE', 'SEX', 'CIVIL STATUS', 'BARANGAY', 'CITY/MUNICIPALITY'];
@@ -1263,6 +1277,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
+        // Replace the Excel Import section in initializeFileUploads function
         if (elements.importBtn) {
             elements.importBtn.addEventListener('click', function() {
                 if (!elements.fileInput) return;
@@ -1291,9 +1306,30 @@ document.addEventListener('DOMContentLoaded', function () {
                         const processedData = smartImportData(jsonData);
                         console.log('🔄 Processed data:', processedData);
                         
-                        // Run validation for IMPORTED DATA (no duplicate checking needed here)
-                        // Just proceed with import to imported data table
-                        proceedWithImportToImportedData(processedData);
+                        // Run validation for IMPORTED DATA - Check for name and birthday
+                        const validationResults = validateNameAndBirthday(processedData);
+                        console.log('✅ Name/Birthday validation completed:', validationResults);
+                        
+                        if (validationResults.invalidRecords.length > 0) {
+                            // Show validation modal for invalid records
+                            showNameBirthdayValidationModal(validationResults, processedData)
+                                .then(result => {
+                                    switch (result.action) {
+                                        case 'valid-only':
+                                            proceedWithImportToImportedData(result.data);
+                                            break;
+                                        case 'all':
+                                            proceedWithImportToImportedData(result.data);
+                                            break;
+                                        case 'cancel':
+                                            showNotification('Import cancelled.', 'info');
+                                            break;
+                                    }
+                                });
+                        } else {
+                            // All records are valid, proceed with import
+                            proceedWithImportToImportedData(processedData);
+                        }
                         
                     } catch (error) {
                         console.error('Error processing file:', error);
@@ -1306,6 +1342,239 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
                 
                 reader.readAsArrayBuffer(file);
+            });
+        }
+
+        // Add these new validation functions:
+
+        function validateNameAndBirthday(applicants) {
+            console.log('🔍 Validating name and birthday for imported data...');
+            
+            const validationResults = {
+                valid: [],
+                invalidRecords: [],
+                summary: {
+                    total: applicants.length,
+                    withNameAndBirthday: 0,
+                    missingName: 0,
+                    missingBirthday: 0,
+                    missingBoth: 0
+                }
+            };
+
+            applicants.forEach((applicant, index) => {
+                const name = applicant.NAME || applicant.name || applicant['Full Name'] || '';
+                const birthday = applicant.BDATE || applicant.bdate || applicant['Date of Birth'] || '';
+                
+                const hasName = name && name.trim() !== '' && name !== 'N/A';
+                const hasBirthday = birthday && birthday.trim() !== '' && birthday !== 'N/A';
+                
+                // Update summary
+                if (hasName && hasBirthday) {
+                    validationResults.summary.withNameAndBirthday++;
+                    validationResults.valid.push(applicant);
+                } else {
+                    const invalidRecord = {
+                        applicant: applicant,
+                        index: index + 1,
+                        missingFields: []
+                    };
+                    
+                    if (!hasName) {
+                        validationResults.summary.missingName++;
+                        invalidRecord.missingFields.push('Name');
+                    }
+                    
+                    if (!hasBirthday) {
+                        validationResults.summary.missingBirthday++;
+                        invalidRecord.missingFields.push('Birthday');
+                    }
+                    
+                    if (!hasName && !hasBirthday) {
+                        validationResults.summary.missingBoth++;
+                    }
+                    
+                    validationResults.invalidRecords.push(invalidRecord);
+                }
+            });
+
+            console.log('📋 Name/Birthday validation results:', validationResults);
+            return validationResults;
+        }
+
+        function showNameBirthdayValidationModal(validationResults, allApplicants) {
+            return new Promise((resolve) => {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'block';
+                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                
+                let message = `<div class="modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h2 style="color: #ff9800;">
+                            <i class="fas fa-exclamation-triangle"></i> Data Quality Check
+                        </h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        <!-- Summary Section -->
+                        <div style="background: #fff3e0; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 10px 0; color: #e65100;">
+                                <i class="fas fa-chart-bar"></i> Data Quality Summary
+                            </h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #2196f3;">${validationResults.summary.total}</div>
+                                    <div>Total Records</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #4caf50;">${validationResults.summary.withNameAndBirthday}</div>
+                                    <div>Complete Records</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #ff9800;">${validationResults.summary.missingName}</div>
+                                    <div>Missing Name</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 24px; font-weight: bold; color: #f44336;">${validationResults.summary.missingBirthday}</div>
+                                    <div>Missing Birthday</div>
+                                </div>
+                            </div>
+                        </div>`;
+
+                // Show invalid records section
+                if (validationResults.invalidRecords.length > 0) {
+                    message += `
+                        <div style="margin-bottom: 25px;">
+                            <h3 style="color: #f44336; border-bottom: 2px solid #f44336; padding-bottom: 5px;">
+                                <i class="fas fa-times-circle"></i> Incomplete Records (${validationResults.invalidRecords.length})
+                            </h3>
+                            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                                These records are missing required name and/or birthday information.
+                            </p>
+                            <div style="max-height: 300px; overflow-y: auto;">`;
+                    
+                    validationResults.invalidRecords.forEach((invalid, index) => {
+                        const applicant = invalid.applicant;
+                        const name = applicant.NAME || applicant.name || 'No Name';
+                        const birthday = applicant.BDATE || applicant.bdate || 'No Birthday';
+                        
+                        message += `
+                            <div style="background: #ffebee; padding: 12px; margin: 8px 0; border-radius: 4px; border-left: 4px solid #f44336;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <div style="flex: 1;">
+                                        <strong style="color: #c62828;">Record ${invalid.index}:</strong>
+                                        <span style="margin-left: 10px; ${!applicant.NAME ? 'color: #f44336;' : ''}">${name}</span>
+                                    </div>
+                                    <span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                        Missing: ${invalid.missingFields.join(', ')}
+                                    </span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                                    <div><strong>Birthday:</strong> <span style="${!applicant.BDATE ? 'color: #f44336;' : ''}">${birthday}</span></div>
+                                    <div><strong>Phone:</strong> ${applicant.CELLPHONE || 'N/A'}</div>
+                                    <div><strong>Email:</strong> ${applicant.EMAIL || 'N/A'}</div>
+                                    <div><strong>Location:</strong> ${applicant.BARANGAY || 'N/A'}</div>
+                                </div>
+                            </div>`;
+                    });
+                    
+                    message += `</div></div>`;
+                }
+
+                // Show valid records section
+                if (validationResults.valid.length > 0) {
+                    message += `
+                        <div style="margin-bottom: 25px;">
+                            <h3 style="color: #4caf50; border-bottom: 2px solid #4caf50; padding-bottom: 5px;">
+                                <i class="fas fa-check-circle"></i> Complete Records (${validationResults.valid.length})
+                            </h3>
+                            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                                These records have both name and birthday information.
+                            </p>
+                            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">`;
+                    
+                    validationResults.valid.slice(0, 10).forEach((app, index) => {
+                        message += `
+                            <div style="padding: 5px; border-bottom: 1px solid #f0f0f0;">
+                                <strong>${app.NAME || 'Unnamed Record'}</strong><br>
+                                <span style="color: #666;">${app.BDATE || 'No birth date'} | ${app.CELLPHONE || 'No phone'}</span>
+                            </div>`;
+                    });
+                    
+                    if (validationResults.valid.length > 10) {
+                        message += `
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 10px; color: #666;">
+                                ... and ${validationResults.valid.length - 10} more complete records
+                            </div>`;
+                    }
+                    
+                    message += `</div></div></div>`;
+                }
+
+                // Action Section
+                message += `
+                        <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
+                            <p><strong>Import Options:</strong></p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                                <div style="background: #e8f5e8; padding: 10px; border-radius: 4px;">
+                                    <strong>Import Complete Records Only</strong><br>
+                                    <small>Add only ${validationResults.valid.length} records with name and birthday</small>
+                                </div>
+                                <div style="background: #fff3e0; padding: 10px; border-radius: 4px;">
+                                    <strong>Import All Records</strong><br>
+                                    <small>Add all ${allApplicants.length} records (including incomplete ones)</small>
+                                </div>
+                            </div>
+                            <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Note:</strong> Records without name and birthday may be difficult to identify and manage.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; justify-content: space-between; padding: 15px 20px; border-top: 1px solid #e0e0e0;">
+                        <button id="cancel-import" class="cancel-btn">
+                            <i class="fas fa-times"></i> Cancel Import
+                        </button>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="import-valid-only" class="save-btn" style="background: #4caf50;" 
+                                ${validationResults.valid.length === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-check-circle"></i> 
+                                Import Complete (${validationResults.valid.length})
+                            </button>
+                            <button id="import-all" class="save-btn" style="background: #ff9800;">
+                                <i class="fas fa-users"></i> 
+                                Import All (${allApplicants.length})
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+
+                modal.innerHTML = message;
+                document.body.appendChild(modal);
+
+                // Event handlers
+                document.getElementById('cancel-import').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve({ action: 'cancel' });
+                });
+
+                document.getElementById('import-valid-only').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve({ action: 'valid-only', data: validationResults.valid });
+                });
+
+                document.getElementById('import-all').addEventListener('click', () => {
+                    document.body.removeChild(modal);
+                    resolve({ action: 'all', data: allApplicants });
+                });
+
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                        resolve({ action: 'cancel' });
+                    }
+                });
             });
         }
         
@@ -2847,19 +3116,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     let value = 'N/A';
                     const fieldMap = {
-                        'Last Name': record['Last Name'] || record['LAST NAME'] || record['last_name'] || record['LASTNAME'] || record['Surname'],
-                        'Given Name': record['Given Name'] || record['GIVEN NAME'] || record['given_name'] || record['First Name'] || record['FIRST NAME'] || record['first name'] || record['FIRSTNAME'],
+                        'Last Name': record['Last Name'] || record['LAST NAME'] || record['last_name'] || record['LASTNAME'] || record['Surname'] || record['SURNAME'] || record['surname'],
+                        'Given Name': record['Given Name'] || record['GIVEN NAME'] || record['given name'] || record['given_name'] || record['First Name'] || record['FIRST NAME'] || record['first name'] || record['FIRSTNAME'],
                         'Middle Name': record['Middle Name'] || record['MIDDLE NAME'] || record['middle_name'] || record['MIDDLENAME'],
                         'Full Name': record['Full Name'] || record['FULL NAME'] || record['full name'] || record['NAME'] || record['Name'] || record['name'] || record['Complete Name'] || record['COMPLETE NAME'] || record['complete name'] || record['Applicant Name'] || record['APPLICANT NAME'] || record['applicant name'],
                         'Date of Birth': record['Date of Birth'] || record['DATE OF BIRTH'] || record['date of birth'] || record['Birthday'] || record['BIRTHDAY'] || record['birthday'] || record['Bdate'] || record['BDATE'] || record['bdate'] || record['bDate'],
                         'Age': record['Age'] || record['AGE'] || record['age'],
                         'Sex': record['Sex'] || record['SEX'] || record['sex'] || record['Gender'] || record['GENDER'] || record['gender'],
                         'Civil Status': record['Civil Status'] || record['CIVIL STATUS'] || record['civil status'],
-                        'Street': record['Street'] || record['STREET'] || record['street'] || record['Street Address'] || record['STREET ADDRESS'] || record['street address'],
+                        'Street': record['Street'] || record['STREET'] || record['street'] || record['Street Address'] || record['STREET ADDRESS'] || record['street address'] || record['House No./Street/Village'] || record['HOUSE NO./STREET/VILLAGE'] || record['house no./street/village'] || record['House No.'] || record['HOUSE NO.'] || record['house no.'] || record['Street'] || record['STREET'] || record['street'] || record['Village'] || record['VILLAGE'] || record['village'],
                         'Barangay': record['Barangay'] || record['BARANGAY'] || record['barangay'],
-                        'City': record['City'] || record['CITY'] || record['city'] || record['City/Municipality'] || record['CITY/MUNICIPALITY'] || record['city/municipality'],
+                        'City': record['City'] || record['CITY'] || record['city'] || record['City/Municipality'] || record['CITY/MUNICIPALITY'] || record['city/municipality'] || record['MUNICIPALITY'] || record['Municipality'] || record['municipality'],
                         'Province': record['Province'] || record['PROVINCE'] || record['province'],
-                        'Contact No.': record['Contact No.'] || record['CONTACT NO.'] || record['contact no.'] || record['Cellphone'] || record['CELLPHONE'] || record['cellphone'] || record['Phone No.'] || record['PHONE NO.'] || record['phone no.'],
+                        'Contact No.': record['Contact No.'] || record['CONTACT NO.'] || record['contact no.'] || record['Cellphone'] || record['CELLPHONE'] || record['cellphone'] || record['Phone No.'] || record['PHONE NO.'] || record['phone no.'] || record['Cellphone Number'] || record['CELLPHONE NUMBER'] || record['cellphone number'],
                         'Employment Status': record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Emp. Status'] || record['EMP. STATUS'] || record['emp. status'],
                         'If Employed/Self Employment': record['If Employed/Self Employment'] || record['IF EMPLOYED/SELF EMPLOYMENT'] || record['if employed/self employment'] || record['If Employed'] || record['IF EMPLOYED'] || record['if employed'] || record['Self Employed'] || record['SELF EMPLOYED'] || record['self employed'],
                         'Educational Attainment': record['Educational Attainment'] || record['EDUCATIONAL ATTAINMENT'] || record['educational attainment'] || record['Educ Level'] || record['EDUC LEVEL'] || record['educ level'],
@@ -3113,14 +3382,14 @@ document.addEventListener('DOMContentLoaded', function () {
             'AGE': ['AGE', 'Age'],
             'SEX': ['SEX', 'Gender', 'SEX/GENDER', 'gender'],
             'CIVIL STATUS': ['CIVIL STATUS', 'Civil Status', 'Status', 'Marital Status'],
-            'STREET ADDRESS': ['STREET ADDRESS', 'Street Address', 'Address', 'STREET', 'Street'],
+            'STREET ADDRESS': ['STREET ADDRESS', 'Street Address', 'Address', 'STREET', 'Street', 'House No', 'House Number', 'Village', 'House No./Street/Village'],
             'BARANGAY': ['BARANGAY', 'Barangay', 'BRGY', 'Brgy'],
             'CITY/MUNICIPALITY': ['CITY/MUNICIPALITY', 'City/Municipality', 'City', 'Municipality', 'CITY', 'MUNICIPALITY'],
             'PROVINCE': ['PROVINCE', 'Province'],
             'REGION': ['REGION', 'Region'],
             'EMAIL': ['EMAIL', 'Email', 'Email Address'],
-            'TELEPHONE': ['TELEPHONE', 'Telephone', 'Phone', 'Landline'],
-            'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number'],
+            'TELEPHONE': ['TELEPHONE', 'Telephone', 'Phone', 'Landline', 'LANDLINE NUMBER', 'Landline Number'],
+            'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number', 'Cellphone Number'],
             'EMP. STATUS': ['EMP. STATUS', 'Employment Status', 'EMP STATUS', 'Employment'],
             'EMP. TYPE': ['EMP. TYPE', 'Employment Type', 'EMP TYPE', 'Type of Employment'],
             'EDUC LEVEL': ['EDUC LEVEL', 'Educational Level', 'Education', 'Educational Attainment'],
