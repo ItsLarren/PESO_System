@@ -2518,3 +2518,61 @@ input[type="date"]:after {
     border-radius: 8px;
     justify-content: center;
 }
+
+/* Manual form in edit mode */
+.manual-form-edit-mode .save-btn {
+    background: #ff9800 !important;
+}
+
+.manual-form-edit-mode .save-btn:hover {
+    background: #f57c00 !important;
+}
+
+/* Section navigation in manual form */
+.section-navigation {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e9ecef;
+}
+
+.section-selector {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    font-size: 14px;
+}
+
+/* Form sections */
+.form-section {
+    background: white;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.form-section h3 {
+    color: #1e88e5;
+    border-bottom: 2px solid #e3f2fd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Required field styling */
+.required-field {
+    color: #d32f2f;
+}
+
+.form-group.required label {
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group.required label::after {
+    content: " *";
+    color: #d32f2f;
+}

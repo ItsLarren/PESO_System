@@ -158,11 +158,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         
         // Set up edit button
-        const editFromViewBtn = document.getElementById('edit-from-view-btn');
-        if (editFromViewBtn) {
-            editFromViewBtn.onclick = function() {
-                elements.viewModal.style.display = 'none';
-                openEditModal(applicant);
+        const editFullBtn = document.getElementById('edit-full-applicant-btn');
+        if (editFullBtn) {
+            editFullBtn.onclick = function() {
+                openManualFormWithData(applicant);
             };
         }
         
@@ -663,6 +662,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 openCamera();
             });
         }
+
+        initializeManualFormControls();
+        setDefaultManualFormValues();
     }
 
     function openManualModal() {
@@ -681,6 +683,23 @@ document.addEventListener('DOMContentLoaded', function () {
     function closeManualModal() {
         if (!elements.manualModal) return;
         elements.manualModal.style.display = 'none';
+        
+        // Reset to add mode
+        const modalHeader = elements.manualModal.querySelector('.modal-header h2');
+        if (modalHeader) {
+            modalHeader.textContent = 'Add New Applicant';
+            modalHeader.style.color = '';
+        }
+        
+        elements.manualModal.classList.remove('manual-form-edit-mode');
+        
+        // Always reset to add mode when closing
+        setTimeout(() => {
+            resetManualFormToAddMode();
+        }, 100);
+        
+        // Clear any temporary photo
+        localStorage.removeItem('tempManualPhoto');
     }
 
     function handleManualPhotoUpload(e) {
@@ -3174,7 +3193,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         'Employment Status': record['Employment Status'] || record['EMPLOYMENT STATUS'] || record['employment status'] || record['Emp. Status'] || record['EMP. STATUS'] || record['emp. status'],
                         'If Employed/Self Employment': record['If Employed/Self Employment'] || record['IF EMPLOYED/SELF EMPLOYMENT'] || record['if employed/self employment'] || record['If Employed'] || record['IF EMPLOYED'] || record['if employed'] || record['Self Employed'] || record['SELF EMPLOYED'] || record['self employed'],
                         'Educational Attainment': record['Educational Attainment'] || record['EDUCATIONAL ATTAINMENT'] || record['educational attainment'] || record['Educ Level'] || record['EDUC LEVEL'] || record['educ level'],
-                        'Course': record['Course'] || record['COURSE'] || record['course'],
+                        'Course': record['Course'] || record['COURSE'] || record['course'] || record['Graduate Studies'] || record['GRADUATE STUDIES'] || record['graduate studies'],
                         'Skills': record['Skills'] || record['SKILLS'] || record['skills'],
                         'Work Experience': record['Work Experience'] || record['WORK EXPERIENCE'] || record['work experience'],
                         'Sector': record['Sector'] || record['SECTOR'] || record['sector'],
@@ -4550,10 +4569,501 @@ document.addEventListener('DOMContentLoaded', function () {
         return results;
     }
 
-    // Add this to test immediately - call this function in browser console
-    // testWithForcedDuplicates();
+    // Function to open manual form with existing applicant data
+    function openManualFormWithData(applicant) {
+        if (!elements.manualModal) return;
+        
+        // Close view modal first
+        elements.viewModal.style.display = 'none';
+        
+        // Open manual modal
+        elements.manualModal.style.display = 'block';
+        
+        // Update modal header for edit mode
+        const modalHeader = elements.manualModal.querySelector('.modal-header h2');
+        if (modalHeader) {
+            modalHeader.textContent = 'Edit Applicant';
+            modalHeader.style.color = '#ff9800';
+        }
+        
+        // Add edit mode class
+        elements.manualModal.classList.add('manual-form-edit-mode');
+        
+        // Store the applicant ID for updating
+        currentEditId = applicant['SRS ID'] || applicant.ID;
+        
+        // Populate the manual form with applicant data
+        populateManualForm(applicant);
+    }
 
-    // REMOVED: Duplicate generateAgePyramid function definition that was here
-    
+    // Function to populate manual form with data
+    function populateManualForm(applicant) {
+        if (!applicant) return;
+        
+        console.log('Populating manual form with data:', applicant);
+        
+        // Personal Information Section
+        document.getElementById('manual-surname').value = applicant['LAST NAME'] || '';
+        document.getElementById('manual-first-name').value = applicant['FIRST NAME'] || '';
+        document.getElementById('manual-middle-name').value = applicant['MIDDLE NAME'] || '';
+        
+        // Suffix (extract from name if needed)
+        const suffix = extractSuffix(applicant.NAME);
+        if (suffix && document.getElementById('manual-suffix')) {
+            document.getElementById('manual-suffix').value = suffix;
+        }
+        
+        // Date of Birth - convert format if needed
+        if (applicant.BDATE && applicant.BDATE !== 'N/A') {
+            const bdate = formatDateForInput(applicant.BDATE);
+            document.getElementById('manual-bdate').value = bdate;
+        }
+        
+        document.getElementById('manual-place-birth').value = applicant['PLACE OF BIRTH'] || '';
+        
+        // Address Information
+        document.getElementById('manual-house-street').value = applicant['STREET ADDRESS'] || '';
+        document.getElementById('manual-barangay').value = applicant.BARANGAY || '';
+        document.getElementById('manual-city-municipality').value = applicant['CITY/MUNICIPALITY'] || '';
+        document.getElementById('manual-province').value = applicant.PROVINCE || '';
+        
+        // Personal Details
+        setSelectValue('manual-sex', applicant.SEX);
+        setSelectValue('manual-civil-status', applicant['CIVIL STATUS']);
+        
+        document.getElementById('manual-tin').value = applicant.TIN || '';
+        document.getElementById('manual-gsis-sss').value = applicant['GSIS/SSS NO.'] || '';
+        document.getElementById('manual-pagibig').value = applicant['PAGIBIG NO.'] || '';
+        document.getElementById('manual-philhealth').value = applicant['PHILHEALTH NO.'] || '';
+        document.getElementById('manual-height').value = applicant.HEIGHT || '';
+        document.getElementById('manual-email').value = applicant.EMAIL || '';
+        document.getElementById('manual-landline').value = applicant.TELEPHONE || '';
+        document.getElementById('manual-cellphone').value = applicant.CELLPHONE || '';
+        
+        // Disability
+        if (applicant.DISABILITY && applicant.DISABILITY !== 'N/A') {
+            const disabilities = applicant.DISABILITY.split(',').map(d => d.trim());
+            disabilities.forEach(disability => {
+                const checkbox = document.querySelector(`input[name="manual-disability"][value="${disability}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+            
+            // Handle "Others" disability
+            if (applicant.DISABILITY.includes('Others') && applicant['DISABILITY SPECIFY']) {
+                document.getElementById('manual-disability-others').checked = true;
+                document.getElementById('manual-disability-specify').style.display = 'block';
+                document.getElementById('manual-disability-specify').value = applicant['DISABILITY SPECIFY'];
+            }
+        }
+        
+        // Employment Status
+        setSelectValue('manual-emp-status', applicant['EMP. STATUS']);
+        
+        // 4Ps
+        if (applicant['4Ps'] && applicant['4Ps'] !== 'N/A') {
+            const fourPsValue = applicant['4Ps'].toLowerCase() === 'yes' ? 'Yes' : 'No';
+            document.querySelector(`input[name="manual-4ps"][value="${fourPsValue}"]`).checked = true;
+            
+            if (fourPsValue === 'Yes' && applicant['4PS ID']) {
+                document.getElementById('manual-4ps-id').style.display = 'block';
+                document.getElementById('manual-4ps-id').value = applicant['4PS ID'];
+            }
+        }
+        
+        // Job Preference Section
+        document.getElementById('manual-pref-occupation1').value = applicant['PREFERRED POSITION'] || '';
+        
+        // Expected Salary
+        document.getElementById('manual-expected-salary').value = applicant['EXPECTED SALARY'] || '';
+        
+        // Passport Information
+        document.getElementById('manual-passport').value = applicant.PASSPORT || '';
+        if (applicant['PASSPORT EXPIRY']) {
+            document.getElementById('manual-passport-expiry').value = formatDateForInput(applicant['PASSPORT EXPIRY']);
+        }
+        
+        // Language Proficiency
+        populateLanguageProficiency(applicant);
+        
+        // Educational Background
+        populateEducationalBackground(applicant);
+        
+        // Program Information
+        setSelectValue('manual-program-category', applicant['PROGRAM CATEGORY']);
+        document.getElementById('manual-specific-program').value = applicant['SPECIFIC PROGRAM'] || '';
+        setSelectValue('manual-program-status', applicant['PROGRAM STATUS']);
+        
+        // Load photo if exists
+        const photoId = applicant['SRS ID'] || applicant.ID;
+        const savedPhoto = localStorage.getItem(`photo_${photoId}`);
+        if (savedPhoto) {
+            elements.manualPhotoPreview.src = savedPhoto;
+            elements.manualPhotoPreview.style.display = 'block';
+            elements.manualPhotoPlaceholder.style.display = 'none';
+            elements.manualRemovePhotoBtn.style.display = 'block';
+        }
+        
+        // Update form submission to handle edit instead of add
+        updateManualFormForEdit(applicant);
+    }
+
+    // Helper function to set select values
+    function setSelectValue(selectId, value) {
+        const select = document.getElementById(selectId);
+        if (select && value && value !== 'N/A') {
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === value) {
+                    select.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Extract suffix from full name
+    function extractSuffix(fullName) {
+        if (!fullName) return '';
+        const suffixes = ['Jr.', 'Sr.', 'II', 'III', 'IV'];
+        const nameParts = fullName.split(' ');
+        const lastPart = nameParts[nameParts.length - 1];
+        return suffixes.includes(lastPart) ? lastPart : '';
+    }
+
+    // Populate language proficiency
+    function populateLanguageProficiency(applicant) {
+        // This would need to be customized based on how you store language data
+        // For now, setting basic English and Filipino if skills indicate
+        if (applicant.SKILLS && applicant.SKILLS.toLowerCase().includes('english')) {
+            document.getElementById('manual-lang-english-read').checked = true;
+            document.getElementById('manual-lang-english-write').checked = true;
+            document.getElementById('manual-lang-english-speak').checked = true;
+            document.getElementById('manual-lang-english-understand').checked = true;
+        }
+        
+        if (applicant.SKILLS && applicant.SKILLS.toLowerCase().includes('filipino')) {
+            document.getElementById('manual-lang-filipino-read').checked = true;
+            document.getElementById('manual-lang-filipino-write').checked = true;
+            document.getElementById('manual-lang-filipino-speak').checked = true;
+            document.getElementById('manual-lang-filipino-understand').checked = true;
+        }
+    }
+
+    // Populate educational background
+    function populateEducationalBackground(applicant) {
+        // Populate based on EDUC LEVEL and COURSE
+        const educLevel = applicant['EDUC LEVEL'] || '';
+        const course = applicant.COURSE || '';
+        
+        if (educLevel.includes('Elementary')) {
+            document.getElementById('manual-edu-elem-course').value = course;
+        } else if (educLevel.includes('Secondary') || educLevel.includes('High School')) {
+            document.getElementById('manual-edu-secondary-course').value = course;
+        } else if (educLevel.includes('College') || educLevel.includes('Bachelor')) {
+            document.getElementById('manual-edu-tertiary-course').value = course;
+        } else if (educLevel.includes('Graduate')) {
+            document.getElementById('manual-edu-graduate-course').value = course;
+        }
+    }
+
+    // Update manual form to handle edits instead of new entries
+    // Replace the updateManualFormForEdit function with this improved version
+    function updateManualFormForEdit(applicant) {
+        // Remove ALL existing submit event listeners by cloning the form
+        const newForm = elements.manualApplicantForm.cloneNode(true);
+        elements.manualApplicantForm.parentNode.replaceChild(newForm, elements.manualApplicantForm);
+        elements.manualApplicantForm = newForm;
+        
+        // Re-initialize photo controls for the new form
+        initializeManualPhotoControls();
+        
+        // Add submit handler for editing
+        elements.manualApplicantForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            updateApplicantFromManualForm(applicant);
+        });
+        
+        // Update the submit button text
+        const submitBtn = elements.manualApplicantForm.querySelector('.save-btn');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Applicant';
+            submitBtn.type = 'button'; // Change to button to prevent form submission
+            submitBtn.onclick = function() {
+                updateApplicantFromManualForm(applicant);
+            };
+        }
+        
+        // Remove required attributes temporarily to avoid validation issues
+        removeTemporaryValidation();
+    }
+
+    // Function to re-initialize photo controls after form clone
+    function initializeManualPhotoControls() {
+        // Re-bind photo controls
+        const manualUploadPhotoBtn = document.getElementById('manual-upload-photo-btn');
+        const manualPhotoInput = document.getElementById('manual-photo-input');
+        const manualRemovePhotoBtn = document.getElementById('manual-remove-photo-btn');
+        const manualTakePhotoBtn = document.getElementById('manual-take-photo-btn');
+        
+        if (manualUploadPhotoBtn && manualPhotoInput) {
+            manualUploadPhotoBtn.addEventListener('click', function() {
+                manualPhotoInput.click();
+            });
+        }
+
+        if (manualPhotoInput) {
+            manualPhotoInput.addEventListener('change', function(e) {
+                handleManualPhotoUpload(e);
+            });
+        }
+
+        if (manualRemovePhotoBtn) {
+            manualRemovePhotoBtn.addEventListener('click', function() {
+                const manualPhotoPreview = document.getElementById('manual-photo-preview');
+                const manualPhotoPlaceholder = document.getElementById('manual-photo-placeholder');
+                
+                manualPhotoPreview.src = '';
+                manualPhotoPreview.style.display = 'none';
+                manualPhotoPlaceholder.style.display = 'flex';
+                manualRemovePhotoBtn.style.display = 'none';
+                manualPhotoInput.value = '';
+            });
+        }
+
+        if (manualTakePhotoBtn) {
+            manualTakePhotoBtn.addEventListener('click', function() {
+                currentEditId = 'manual_' + Date.now();
+                openCamera();
+            });
+        }
+    }
+
+    // Remove temporary validation requirements
+    function removeTemporaryValidation() {
+        const requiredFields = elements.manualApplicantForm.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            field.dataset.wasRequired = 'true';
+            field.removeAttribute('required');
+        });
+    }
+
+    // Restore validation when going back to add mode
+    function restoreValidation() {
+        const fields = elements.manualApplicantForm.querySelectorAll('[data-was-required="true"]');
+        fields.forEach(field => {
+            field.setAttribute('required', 'true');
+            delete field.dataset.wasRequired;
+        });
+    }
+
+    // Function to update applicant from manual form
+    function updateApplicantFromManualForm(originalApplicant) {
+        // Basic validation
+        if (!validateManualForm(true)) { // true for edit mode (less strict validation)
+            return;
+        }
+        
+        const formData = new FormData(elements.manualApplicantForm);
+        const updatedApplicant = { ...originalApplicant };
+        
+        // Process all form data
+        const lastName = document.getElementById('manual-surname').value.trim() || '';
+        const firstName = document.getElementById('manual-first-name').value.trim() || '';
+        const middleName = document.getElementById('manual-middle-name').value.trim() || '';
+        
+        // Update name fields
+        if (lastName && firstName) {
+            let fullName = `${lastName}, ${firstName}`;
+            if (middleName) {
+                fullName += ` ${middleName}`;
+            }
+            updatedApplicant['NAME'] = fullName;
+        }
+        
+        updatedApplicant['LAST NAME'] = lastName || 'N/A';
+        updatedApplicant['FIRST NAME'] = firstName || 'N/A';
+        updatedApplicant['MIDDLE NAME'] = middleName || 'N/A';
+        
+        // Process other form fields - FIXED: Include all fields
+        formData.forEach((value, key) => {
+            const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
+            
+            // Skip name fields we already processed
+            if (!fieldName.includes('SURNAME') && !fieldName.includes('FIRST NAME') && !fieldName.includes('MIDDLE NAME')) {
+                updatedApplicant[fieldName] = value || 'N/A';
+            }
+        });
+        
+        // Process specific fields
+        if (updatedApplicant['BDATE']) {
+            try {
+                const date = new Date(updatedApplicant['BDATE']);
+                if (!isNaN(date.getTime())) {
+                    updatedApplicant['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                }
+            } catch (error) {
+                console.warn('Date parsing error:', error);
+                updatedApplicant['BDATE'] = 'N/A';
+            }
+        } else {
+            updatedApplicant['BDATE'] = 'N/A';
+        }
+        
+        // Address fields - FIXED: Get values directly from form
+        updatedApplicant['STREET ADDRESS'] = document.getElementById('manual-house-street').value.trim() || 'N/A';
+        updatedApplicant['BARANGAY'] = document.getElementById('manual-barangay').value.trim() || 'N/A';
+        updatedApplicant['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality').value.trim() || 'N/A';
+        updatedApplicant['PROVINCE'] = document.getElementById('manual-province').value.trim() || 'N/A';
+        
+        // FIXED: Ensure email is properly captured
+        updatedApplicant['EMAIL'] = document.getElementById('manual-email').value.trim() || 'N/A';
+        
+        // Handle photo update
+        const tempPhoto = localStorage.getItem('tempManualPhoto');
+        if (tempPhoto) {
+            const photoId = updatedApplicant['SRS ID'];
+            localStorage.setItem(`photo_${photoId}`, tempPhoto);
+            localStorage.removeItem('tempManualPhoto');
+            updatedApplicant['PHOTO'] = tempPhoto;
+        }
+        
+        // Update timestamps
+        updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
+        updatedApplicant['LAST MODIFIED BY'] = localStorage.getItem('currentUser') || 'System';
+        
+        console.log('Updated applicant data:', updatedApplicant);
+        
+        // Save updated applicant
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        const updatedApplicants = savedApplicants.map(applicant => {
+            if (applicant['SRS ID'] === updatedApplicant['SRS ID']) {
+                return updatedApplicant;
+            }
+            return applicant;
+        });
+        
+        saveMainApplicants(updatedApplicants);
+        displayMainApplicants(updatedApplicants);
+        
+        // Close modal and show success message
+        elements.manualModal.style.display = 'none';
+        showNotification('Applicant updated successfully!', 'success', elements.manualNotification);
+        
+        // Reset form handler back to add mode
+        resetManualFormToAddMode();
+    }
+
+    // Add form validation function
+    function validateManualForm(isEditMode = false) {
+        const requiredFields = [
+            'manual-surname',
+            'manual-first-name',
+            'manual-bdate',
+            'manual-barangay',
+            'manual-city-municipality',
+            'manual-province',
+            'manual-sex'
+        ];
+        
+        let isValid = true;
+        let firstInvalidField = null;
+        
+        for (const fieldId of requiredFields) {
+            const field = document.getElementById(fieldId);
+            if (field && !field.value.trim()) {
+                isValid = false;
+                if (!firstInvalidField) {
+                    firstInvalidField = field;
+                }
+                
+                // Highlight missing field
+                field.style.borderColor = '#f44336';
+                setTimeout(() => {
+                    if (field) field.style.borderColor = '';
+                }, 3000);
+            }
+        }
+        
+        if (!isValid && firstInvalidField) {
+            showNotification('Please fill in all required fields.', 'error', elements.manualNotification);
+            firstInvalidField.focus();
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Reset manual form back to add mode
+    function resetManualFormToAddMode() {
+        // Restore validation requirements
+        restoreValidation();
+        
+        // Remove the form and replace with a fresh clone to clear all event listeners
+        const newForm = elements.manualApplicantForm.cloneNode(true);
+        elements.manualApplicantForm.parentNode.replaceChild(newForm, elements.manualApplicantForm);
+        elements.manualApplicantForm = newForm;
+        
+        // Re-initialize the form for add mode
+        initializeManualFormControls();
+        
+        // Update the submit button
+        const submitBtn = elements.manualApplicantForm.querySelector('.save-btn');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Add Applicant';
+            submitBtn.type = 'submit'; // Change back to submit
+        }
+    }
+
+    // Re-initialize manual form controls
+    function initializeManualFormControls() {
+        // Initialize photo controls
+        initializeManualPhotoControls();
+        
+        // Initialize dynamic form elements
+        initializeDynamicFormElements();
+        
+        // Initialize add entry buttons
+        initializeAddEntryButtons();
+        
+        // Add submit handler for adding new applicants
+        elements.manualApplicantForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            if (validateManualForm(false)) {
+                addManualApplicant();
+            }
+        });
+    }
+
+    function setDefaultManualFormValues() {
+        // Set default values for optional fields when in add mode
+        const optionalFields = [
+            'manual-street-address', 'manual-course', 'manual-disability',
+            'manual-preferred-position', 'manual-skills', 'manual-work-experience',
+            'manual-country', 'manual-latest-country', 'manual-remarks'
+        ];
+        
+        // Don't set defaults in edit mode, only when opening fresh for add
+        if (!elements.manualModal.classList.contains('manual-form-edit-mode')) {
+            optionalFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && !field.value) {
+                    field.value = 'N/A';
+                }
+            });
+            
+            const defaultDropdowns = {
+                'manual-4ps': 'No',
+                'manual-pwd': 'No',
+                'manual-ofw': 'No',
+                'manual-former-ofw': 'No'
+            };
+            
+            Object.keys(defaultDropdowns).forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field && field.value === '') {
+                    field.value = defaultDropdowns[fieldId];
+                }
+            });
+        }
+    }
     initializeApp();
 });
