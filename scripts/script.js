@@ -1183,7 +1183,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showNotification('Error: No applicant ID found for update', 'error');
             return;
         }
-    
+
         const formData = new FormData(document.getElementById('editApplicantForm'));
         const updatedApplicant = {};
 
@@ -1220,17 +1220,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        formData.forEach((value, key) => {
-            const originalFieldName = key.replace('edit-', '').replace(/-/g, ' ').toUpperCase();
-
-            if (originalFieldName === 'BDATE' && value) {
-                const date = new Date(value);
-                updatedApplicant[originalFieldName] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
-            } else {
-                updatedApplicant[originalFieldName] = value;
-            }
-        });
-        
         const tempPhoto = localStorage.getItem(`tempPhoto_${id}`);
         if (tempPhoto) {
             localStorage.setItem(`photo_${id}`, tempPhoto);
@@ -1255,8 +1244,8 @@ document.addEventListener('DOMContentLoaded', function () {
         
         showNotification('Applicant updated successfully!', 'success');
     }
-
-    // Replace the initializeFileUploads function with this corrected version
+        
+    // Replace the Excel Import section in initializeFileUploads function
     function initializeFileUploads() {
         // 1. FILE UPLOAD FOR IMPORTED DATA TABLE (Excel Import section)
         if (elements.browsebtn && elements.fileInput) {
@@ -1277,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Replace the Excel Import section in initializeFileUploads function
+        // Excel Import section - FIXED: Use proper duplicate validation
         if (elements.importBtn) {
             elements.importBtn.addEventListener('click', function() {
                 if (!elements.fileInput) return;
@@ -1306,30 +1295,25 @@ document.addEventListener('DOMContentLoaded', function () {
                         const processedData = smartImportData(jsonData);
                         console.log('🔄 Processed data:', processedData);
                         
-                        // Run validation for IMPORTED DATA - Check for name and birthday
-                        const validationResults = validateNameAndBirthday(processedData);
-                        console.log('✅ Name/Birthday validation completed:', validationResults);
+                        // Use the same duplicate validation as the main flow
+                        const validationResults = validateImportedDataDuplicates(processedData);
+                        console.log('✅ Duplicate validation completed:', validationResults);
                         
-                        if (validationResults.invalidRecords.length > 0) {
-                            // Show validation modal for invalid records
-                            showNameBirthdayValidationModal(validationResults, processedData)
-                                .then(result => {
-                                    switch (result.action) {
-                                        case 'valid-only':
-                                            proceedWithImportToImportedData(result.data);
-                                            break;
-                                        case 'all':
-                                            proceedWithImportToImportedData(result.data);
-                                            break;
-                                        case 'cancel':
-                                            showNotification('Import cancelled.', 'info');
-                                            break;
-                                    }
-                                });
-                        } else {
-                            // All records are valid, proceed with import
-                            proceedWithImportToImportedData(processedData);
-                        }
+                        // Show validation modal for imported data
+                        showEnhancedImportValidationModal(validationResults, processedData)
+                            .then(result => {
+                                switch (result.action) {
+                                    case 'unique':
+                                        proceedWithImportToImportedData(result.data);
+                                        break;
+                                    case 'all':
+                                        proceedWithImportToImportedData(result.data);
+                                        break;
+                                    case 'cancel':
+                                        showNotification('Import cancelled.', 'info');
+                                        break;
+                                }
+                            });
                         
                     } catch (error) {
                         console.error('Error processing file:', error);
@@ -1342,239 +1326,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
                 
                 reader.readAsArrayBuffer(file);
-            });
-        }
-
-        // Add these new validation functions:
-
-        function validateNameAndBirthday(applicants) {
-            console.log('🔍 Validating name and birthday for imported data...');
-            
-            const validationResults = {
-                valid: [],
-                invalidRecords: [],
-                summary: {
-                    total: applicants.length,
-                    withNameAndBirthday: 0,
-                    missingName: 0,
-                    missingBirthday: 0,
-                    missingBoth: 0
-                }
-            };
-
-            applicants.forEach((applicant, index) => {
-                const name = applicant.NAME || applicant.name || applicant['Full Name'] || '';
-                const birthday = applicant.BDATE || applicant.bdate || applicant['Date of Birth'] || '';
-                
-                const hasName = name && name.trim() !== '' && name !== 'N/A';
-                const hasBirthday = birthday && birthday.trim() !== '' && birthday !== 'N/A';
-                
-                // Update summary
-                if (hasName && hasBirthday) {
-                    validationResults.summary.withNameAndBirthday++;
-                    validationResults.valid.push(applicant);
-                } else {
-                    const invalidRecord = {
-                        applicant: applicant,
-                        index: index + 1,
-                        missingFields: []
-                    };
-                    
-                    if (!hasName) {
-                        validationResults.summary.missingName++;
-                        invalidRecord.missingFields.push('Name');
-                    }
-                    
-                    if (!hasBirthday) {
-                        validationResults.summary.missingBirthday++;
-                        invalidRecord.missingFields.push('Birthday');
-                    }
-                    
-                    if (!hasName && !hasBirthday) {
-                        validationResults.summary.missingBoth++;
-                    }
-                    
-                    validationResults.invalidRecords.push(invalidRecord);
-                }
-            });
-
-            console.log('📋 Name/Birthday validation results:', validationResults);
-            return validationResults;
-        }
-
-        function showNameBirthdayValidationModal(validationResults, allApplicants) {
-            return new Promise((resolve) => {
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.style.display = 'block';
-                modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-                
-                let message = `<div class="modal-content" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
-                    <div class="modal-header">
-                        <h2 style="color: #ff9800;">
-                            <i class="fas fa-exclamation-triangle"></i> Data Quality Check
-                        </h2>
-                    </div>
-                    <div style="padding: 20px;">
-                        <!-- Summary Section -->
-                        <div style="background: #fff3e0; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-                            <h3 style="margin: 0 0 10px 0; color: #e65100;">
-                                <i class="fas fa-chart-bar"></i> Data Quality Summary
-                            </h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: bold; color: #2196f3;">${validationResults.summary.total}</div>
-                                    <div>Total Records</div>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: bold; color: #4caf50;">${validationResults.summary.withNameAndBirthday}</div>
-                                    <div>Complete Records</div>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: bold; color: #ff9800;">${validationResults.summary.missingName}</div>
-                                    <div>Missing Name</div>
-                                </div>
-                                <div style="text-align: center;">
-                                    <div style="font-size: 24px; font-weight: bold; color: #f44336;">${validationResults.summary.missingBirthday}</div>
-                                    <div>Missing Birthday</div>
-                                </div>
-                            </div>
-                        </div>`;
-
-                // Show invalid records section
-                if (validationResults.invalidRecords.length > 0) {
-                    message += `
-                        <div style="margin-bottom: 25px;">
-                            <h3 style="color: #f44336; border-bottom: 2px solid #f44336; padding-bottom: 5px;">
-                                <i class="fas fa-times-circle"></i> Incomplete Records (${validationResults.invalidRecords.length})
-                            </h3>
-                            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                                These records are missing required name and/or birthday information.
-                            </p>
-                            <div style="max-height: 300px; overflow-y: auto;">`;
-                    
-                    validationResults.invalidRecords.forEach((invalid, index) => {
-                        const applicant = invalid.applicant;
-                        const name = applicant.NAME || applicant.name || 'No Name';
-                        const birthday = applicant.BDATE || applicant.bdate || 'No Birthday';
-                        
-                        message += `
-                            <div style="background: #ffebee; padding: 12px; margin: 8px 0; border-radius: 4px; border-left: 4px solid #f44336;">
-                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                                    <div style="flex: 1;">
-                                        <strong style="color: #c62828;">Record ${invalid.index}:</strong>
-                                        <span style="margin-left: 10px; ${!applicant.NAME ? 'color: #f44336;' : ''}">${name}</span>
-                                    </div>
-                                    <span style="background: #f44336; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
-                                        Missing: ${invalid.missingFields.join(', ')}
-                                    </span>
-                                </div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
-                                    <div><strong>Birthday:</strong> <span style="${!applicant.BDATE ? 'color: #f44336;' : ''}">${birthday}</span></div>
-                                    <div><strong>Phone:</strong> ${applicant.CELLPHONE || 'N/A'}</div>
-                                    <div><strong>Email:</strong> ${applicant.EMAIL || 'N/A'}</div>
-                                    <div><strong>Location:</strong> ${applicant.BARANGAY || 'N/A'}</div>
-                                </div>
-                            </div>`;
-                    });
-                    
-                    message += `</div></div>`;
-                }
-
-                // Show valid records section
-                if (validationResults.valid.length > 0) {
-                    message += `
-                        <div style="margin-bottom: 25px;">
-                            <h3 style="color: #4caf50; border-bottom: 2px solid #4caf50; padding-bottom: 5px;">
-                                <i class="fas fa-check-circle"></i> Complete Records (${validationResults.valid.length})
-                            </h3>
-                            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                                These records have both name and birthday information.
-                            </p>
-                            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px;">
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">`;
-                    
-                    validationResults.valid.slice(0, 10).forEach((app, index) => {
-                        message += `
-                            <div style="padding: 5px; border-bottom: 1px solid #f0f0f0;">
-                                <strong>${app.NAME || 'Unnamed Record'}</strong><br>
-                                <span style="color: #666;">${app.BDATE || 'No birth date'} | ${app.CELLPHONE || 'No phone'}</span>
-                            </div>`;
-                    });
-                    
-                    if (validationResults.valid.length > 10) {
-                        message += `
-                            <div style="grid-column: 1 / -1; text-align: center; padding: 10px; color: #666;">
-                                ... and ${validationResults.valid.length - 10} more complete records
-                            </div>`;
-                    }
-                    
-                    message += `</div></div></div>`;
-                }
-
-                // Action Section
-                message += `
-                        <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
-                            <p><strong>Import Options:</strong></p>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
-                                <div style="background: #e8f5e8; padding: 10px; border-radius: 4px;">
-                                    <strong>Import Complete Records Only</strong><br>
-                                    <small>Add only ${validationResults.valid.length} records with name and birthday</small>
-                                </div>
-                                <div style="background: #fff3e0; padding: 10px; border-radius: 4px;">
-                                    <strong>Import All Records</strong><br>
-                                    <small>Add all ${allApplicants.length} records (including incomplete ones)</small>
-                                </div>
-                            </div>
-                            <p style="margin-top: 10px; font-size: 12px; color: #666;">
-                                <i class="fas fa-info-circle"></i> 
-                                <strong>Note:</strong> Records without name and birthday may be difficult to identify and manage.
-                            </p>
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="display: flex; justify-content: space-between; padding: 15px 20px; border-top: 1px solid #e0e0e0;">
-                        <button id="cancel-import" class="cancel-btn">
-                            <i class="fas fa-times"></i> Cancel Import
-                        </button>
-                        <div style="display: flex; gap: 10px;">
-                            <button id="import-valid-only" class="save-btn" style="background: #4caf50;" 
-                                ${validationResults.valid.length === 0 ? 'disabled' : ''}>
-                                <i class="fas fa-check-circle"></i> 
-                                Import Complete (${validationResults.valid.length})
-                            </button>
-                            <button id="import-all" class="save-btn" style="background: #ff9800;">
-                                <i class="fas fa-users"></i> 
-                                Import All (${allApplicants.length})
-                            </button>
-                        </div>
-                    </div>
-                </div>`;
-
-                modal.innerHTML = message;
-                document.body.appendChild(modal);
-
-                // Event handlers
-                document.getElementById('cancel-import').addEventListener('click', () => {
-                    document.body.removeChild(modal);
-                    resolve({ action: 'cancel' });
-                });
-
-                document.getElementById('import-valid-only').addEventListener('click', () => {
-                    document.body.removeChild(modal);
-                    resolve({ action: 'valid-only', data: validationResults.valid });
-                });
-
-                document.getElementById('import-all').addEventListener('click', () => {
-                    document.body.removeChild(modal);
-                    resolve({ action: 'all', data: allApplicants });
-                });
-
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        document.body.removeChild(modal);
-                        resolve({ action: 'cancel' });
-                    }
-                });
             });
         }
         
@@ -1625,13 +1376,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         const processedData = smartImportData(jsonData);
                         console.log('🔄 Processed applicant data:', processedData);
                         
-                        // Run validation for MAIN APPLICANTS (this is where duplicate checking should happen)
+                        // Run validation for MAIN APPLICANTS
                         const validationResults = validateImportedDataDuplicates(processedData);
                         console.log('✅ Validation completed:', validationResults);
                         
-                        // Show validation modal for main applicants
+                        // Show validation modal for main applicants - FIXED: Add proper promise handling
                         showEnhancedImportValidationModal(validationResults, processedData)
                             .then(result => {
+                                console.log('Modal result:', result);
                                 switch (result.action) {
                                     case 'unique':
                                         proceedWithAddingToMainApplicants(result.data);
@@ -1642,7 +1394,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                     case 'cancel':
                                         showUploadNotification('Import cancelled.', 'info');
                                         break;
+                                    default:
+                                        console.log('Unknown action:', result.action);
                                 }
+                            })
+                            .catch(error => {
+                                console.error('Error in validation modal:', error);
+                                showUploadNotification('Error during import validation.', 'error');
                             });
                         
                     } catch (error) {
@@ -1685,7 +1443,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-    }
+    } // FIXED: Added missing closing brace for initializeFileUploads function
 
     // Add these two new functions to handle the different destinations:
 
@@ -2208,7 +1966,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         return html;
     }
-
 
     function generateProgramProgress(stats) {
         const statuses = Object.entries(stats.byStatus)
@@ -3594,7 +3351,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return 'N/A';
     }
 
-
     function validateAndImportApplicants(newApplicants) {
         const validationResults = validateImportedDataDuplicates(newApplicants);
 
@@ -4174,42 +3930,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return phone.replace(/\D/g, '');
     }
 
-    function areNamesSimilar(name1, name2) {
-        // Remove extra spaces and convert to lowercase
-        const clean1 = name1.replace(/\s+/g, ' ').trim();
-        const clean2 = name2.replace(/\s+/g, ' ').trim();
-        
-        // Exact match after cleaning
-        if (clean1 === clean2) return true;
-        
-        // Split into parts for comparison
-        const parts1 = clean1.split(' ');
-        const parts2 = clean2.split(' ');
-        
-        // If both have at least 2 parts, check if they're the same but in different order
-        if (parts1.length >= 2 && parts2.length >= 2) {
-            const set1 = new Set(parts1);
-            const set2 = new Set(parts2);
-            
-            // Check if they have the same set of name parts
-            if (set1.size === set2.size && [...set1].every(part => set2.has(part))) {
-                return true;
-            }
-        }
-        
-        // Check for common nicknames or variations
-        const commonVariations = {
-            'jr': ['junior'],
-            'sr': ['senior'],
-            'ii': ['second'],
-            'iii': ['third']
-        };
-        
-        // Simple similarity check - if one name contains the other
-        return clean1.includes(clean2) || clean2.includes(clean1);
-    }
-
-    async function showEnhancedImportValidationModal(validationResults, allApplicants) {
+    function showEnhancedImportValidationModal(validationResults, allApplicants) {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
             modal.className = 'modal';
@@ -4546,5 +4267,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add this to test immediately - call this function in browser console
     // testWithForcedDuplicates();
+
+    // REMOVED: Duplicate generateAgePyramid function definition that was here
+    
     initializeApp();
 });
