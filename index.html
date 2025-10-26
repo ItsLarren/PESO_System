@@ -305,6 +305,235 @@
         </div>
     </div>
 
+    <!-- View Applicant Modal -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>View Applicant Details</h2>
+                <span class="close-view">&times;</span>
+            </div>
+            
+            <div class="view-photo-section">
+                <div class="photo-preview-container">
+                    <img id="view-photo-preview" src="" alt="Applicant Photo" class="photo-preview">
+                    <div class="photo-placeholder" id="view-photo-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>No Photo</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <div class="form-grid">
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <h3>Personal Information</h3>
+                        <div class="view-field">
+                            <label>SRS ID:</label>
+                            <span id="view-srs-id">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Full Name:</label>
+                            <span id="view-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Last Name:</label>
+                            <span id="view-last-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>First Name:</label>
+                            <span id="view-first-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Middle Name:</label>
+                            <span id="view-middle-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Birth Date:</label>
+                            <span id="view-bdate">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Age:</label>
+                            <span id="view-age">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Sex:</label>
+                            <span id="view-sex">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Civil Status:</label>
+                            <span id="view-civil-status">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <h3>Contact Information</h3>
+                        <div class="view-field">
+                            <label>Street Address:</label>
+                            <span id="view-street-address">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Barangay:</label>
+                            <span id="view-barangay">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>City/Municipality:</label>
+                            <span id="view-city-municipality">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Province:</label>
+                            <span id="view-province">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Region:</label>
+                            <span id="view-region">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Email:</label>
+                            <span id="view-email">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Telephone:</label>
+                            <span id="view-telephone">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Cellphone:</label>
+                            <span id="view-cellphone">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Employment & Education -->
+                    <div class="form-section">
+                        <h3>Employment & Education</h3>
+                        <div class="view-field">
+                            <label>Employment Status:</label>
+                            <span id="view-emp-status">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Employment Type:</label>
+                            <span id="view-emp-type">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Education Level:</label>
+                            <span id="view-educ-level">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Course:</label>
+                            <span id="view-course">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Skills:</label>
+                            <span id="view-skills">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Work Experience:</label>
+                            <span id="view-work-experience">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Preferred Position:</label>
+                            <span id="view-preferred-position">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Program Information -->
+                    <div class="form-section">
+                        <h3>Program Information</h3>
+                        <div class="view-field">
+                            <label>Program Category:</label>
+                            <span id="view-program-category">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Specific Program:</label>
+                            <span id="view-specific-program">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Program Status:</label>
+                            <span id="view-program-status">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Registration Date:</label>
+                            <span id="view-reg-date">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div class="form-section">
+                        <h3>Additional Information</h3>
+                        <div class="view-field">
+                            <label>4Ps Member:</label>
+                            <span id="view-4ps">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>PWD:</label>
+                            <span id="view-pwd">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Disability:</label>
+                            <span id="view-disability">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>OFW:</label>
+                            <span id="view-ofw">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Country:</label>
+                            <span id="view-country">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Former OFW:</label>
+                            <span id="view-former-ofw">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Latest Country:</label>
+                            <span id="view-latest-country">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Remarks:</label>
+                            <span id="view-remarks">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- System Information -->
+                    <div class="form-section">
+                        <h3>System Information</h3>
+                        <div class="view-field">
+                            <label>Created By:</label>
+                            <span id="view-created-by">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Date Created:</label>
+                            <span id="view-date-created">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Last Modified By:</label>
+                            <span id="view-last-modified-by">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Date Last Modified:</label>
+                            <span id="view-date-last-modified">N/A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="download-pdf-btn" class="action-btn" style="background: #f44336;">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+                <button id="download-excel-btn" class="action-btn" style="background: #4caf50;">
+                    <i class="fas fa-file-excel"></i> Download Excel
+                </button>
+                <button id="edit-from-view-btn" class="action-btn" style="background: #ff9800;">
+                    <i class="fas fa-edit"></i> Edit Applicant
+                </button>
+                <button class="cancel-btn" onclick="document.getElementById('viewModal').style.display='none'">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">

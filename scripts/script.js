@@ -55,8 +55,282 @@ document.addEventListener('DOMContentLoaded', function () {
         clearFiltersBtn: document.getElementById('clear-filters-btn'),
         sortSelect: document.getElementById('sort-select'),
         generateReportBtn: document.getElementById('generate-report-btn'),
-        exportReportBtn: document.getElementById('export-report-btn')
+        exportReportBtn: document.getElementById('export-report-btn'),
+        viewModal: document.getElementById('viewModal'),
+        closeView: document.querySelector('.close-view'),
     };
+
+    // Add this function to initialize the view modal
+    function initializeViewModal() {
+        if (elements.viewModal) {
+            const closeBtn = elements.viewModal.querySelector('.close-view');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    elements.viewModal.style.display = 'none';
+                });
+            }
+            
+            elements.viewModal.addEventListener('click', function(event) {
+                if (event.target === elements.viewModal) {
+                    elements.viewModal.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    // Add this function to open the view modal
+    function openViewModal(applicant) {
+        if (!elements.viewModal) return;
+        
+        // Populate the view modal with applicant data
+        const fieldToIdMap = {
+            'SRS ID': 'view-srs-id',
+            'LAST NAME': 'view-last-name',
+            'FIRST NAME': 'view-first-name',
+            'MIDDLE NAME': 'view-middle-name',
+            'NAME': 'view-name',
+            'BDATE': 'view-bdate',
+            'AGE': 'view-age',
+            'SEX': 'view-sex',
+            'CIVIL STATUS': 'view-civil-status',
+            'STREET ADDRESS': 'view-street-address',
+            'BARANGAY': 'view-barangay',
+            'CITY/MUNICIPALITY': 'view-city-municipality',
+            'PROVINCE': 'view-province',
+            'REGION': 'view-region',
+            'EMAIL': 'view-email',
+            'TELEPHONE': 'view-telephone',
+            'CELLPHONE': 'view-cellphone',
+            'EMP. STATUS': 'view-emp-status',
+            'EMP. TYPE': 'view-emp-type',
+            'EDUC LEVEL': 'view-educ-level',
+            'COURSE': 'view-course',
+            '4Ps': 'view-4ps',
+            'PWD': 'view-pwd',
+            'DISABILITY': 'view-disability',
+            'PREFERRED POSITION': 'view-preferred-position',
+            'SKILLS': 'view-skills',
+            'WORK EXPERIENCE': 'view-work-experience',
+            'OFW': 'view-ofw',
+            'COUNTRY': 'view-country',
+            'FORMER OFW': 'view-former-ofw',
+            'LATEST COUNTRY': 'view-latest-country',
+            'REG. DATE': 'view-reg-date',
+            'REMARKS': 'view-remarks',
+            'CREATED BY': 'view-created-by',
+            'DATE CREATED': 'view-date-created',
+            'LAST MODIFIED BY': 'view-last-modified-by',
+            'DATE LAST MODIFIED': 'view-date-last-modified',
+            'PROGRAM CATEGORY': 'view-program-category',
+            'SPECIFIC PROGRAM': 'view-specific-program',
+            'PROGRAM STATUS': 'view-program-status'
+        };
+        
+        for (const field in applicant) {
+            if (fieldToIdMap[field]) {
+                const element = document.getElementById(fieldToIdMap[field]);
+                if (element) {
+                    if (element.tagName === 'INPUT' || element.tagName === 'SELECT') {
+                        element.value = applicant[field] || '';
+                    } else {
+                        element.textContent = applicant[field] || 'N/A';
+                    }
+                }
+            }
+        }
+        
+        // Handle photo
+        const photoId = applicant['SRS ID'] || applicant.ID;
+        const viewPhotoPreview = document.getElementById('view-photo-preview');
+        const viewPhotoPlaceholder = document.getElementById('view-photo-placeholder');
+        
+        if (viewPhotoPreview && viewPhotoPlaceholder) {
+            const savedPhoto = localStorage.getItem(`photo_${photoId}`);
+            if (savedPhoto) {
+                viewPhotoPreview.src = savedPhoto;
+                viewPhotoPreview.style.display = 'block';
+                viewPhotoPlaceholder.style.display = 'none';
+            } else {
+                viewPhotoPreview.src = '';
+                viewPhotoPreview.style.display = 'none';
+                viewPhotoPlaceholder.style.display = 'flex';
+            }
+        }
+        
+        // Set up edit button
+        const editFromViewBtn = document.getElementById('edit-from-view-btn');
+        if (editFromViewBtn) {
+            editFromViewBtn.onclick = function() {
+                elements.viewModal.style.display = 'none';
+                openEditModal(applicant);
+            };
+        }
+        
+        // Set up download buttons
+        const downloadPdfBtn = document.getElementById('download-pdf-btn');
+        const downloadExcelBtn = document.getElementById('download-excel-btn');
+        
+        if (downloadPdfBtn) {
+            downloadPdfBtn.onclick = function() {
+                downloadApplicantAsPDF(applicant);
+            };
+        }
+        
+        if (downloadExcelBtn) {
+            downloadExcelBtn.onclick = function() {
+                downloadApplicantData(applicant);
+            };
+        }
+        
+        elements.viewModal.style.display = 'block';
+    }
+
+    // Add this function to download as PDF
+    function downloadApplicantAsPDF(applicant) {
+        try {
+            // Create a new window with the applicant data formatted for PDF
+            const printWindow = window.open('', '_blank');
+            const applicantName = applicant.NAME || 'applicant';
+            const fileName = `applicant_${applicantName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
+            
+            const photoId = applicant['SRS ID'] || applicant.ID;
+            const savedPhoto = localStorage.getItem(`photo_${photoId}`);
+            
+            let photoHTML = '';
+            if (savedPhoto) {
+                photoHTML = `<img src="${savedPhoto}" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px;">`;
+            }
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Applicant Data - ${applicantName}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                        .photo-section { text-align: center; margin-bottom: 20px; }
+                        .section { margin-bottom: 25px; }
+                        .section-title { background: #f5f5f5; padding: 8px 12px; font-weight: bold; border-left: 4px solid #1e88e5; margin-bottom: 10px; }
+                        .field-row { display: flex; margin-bottom: 8px; }
+                        .field-label { font-weight: bold; min-width: 200px; }
+                        .field-value { flex: 1; }
+                        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f5f5f5; }
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Applicant Information</h1>
+                        <p>Generated on: ${new Date().toLocaleString()}</p>
+                    </div>
+                    
+                    <div class="photo-section">
+                        ${photoHTML}
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Personal Information</div>
+                        <table>
+                            <tr><td><strong>SRS ID:</strong></td><td>${applicant['SRS ID'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Full Name:</strong></td><td>${applicant.NAME || 'N/A'}</td></tr>
+                            <tr><td><strong>Last Name:</strong></td><td>${applicant['LAST NAME'] || 'N/A'}</td></tr>
+                            <tr><td><strong>First Name:</strong></td><td>${applicant['FIRST NAME'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Middle Name:</strong></td><td>${applicant['MIDDLE NAME'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Birth Date:</strong></td><td>${applicant.BDATE || 'N/A'}</td></tr>
+                            <tr><td><strong>Age:</strong></td><td>${applicant.AGE || 'N/A'}</td></tr>
+                            <tr><td><strong>Sex:</strong></td><td>${applicant.SEX || 'N/A'}</td></tr>
+                            <tr><td><strong>Civil Status:</strong></td><td>${applicant['CIVIL STATUS'] || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Contact Information</div>
+                        <table>
+                            <tr><td><strong>Street Address:</strong></td><td>${applicant['STREET ADDRESS'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Barangay:</strong></td><td>${applicant.BARANGAY || 'N/A'}</td></tr>
+                            <tr><td><strong>City/Municipality:</strong></td><td>${applicant['CITY/MUNICIPALITY'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Province:</strong></td><td>${applicant.PROVINCE || 'N/A'}</td></tr>
+                            <tr><td><strong>Region:</strong></td><td>${applicant.REGION || 'N/A'}</td></tr>
+                            <tr><td><strong>Email:</strong></td><td>${applicant.EMAIL || 'N/A'}</td></tr>
+                            <tr><td><strong>Telephone:</strong></td><td>${applicant.TELEPHONE || 'N/A'}</td></tr>
+                            <tr><td><strong>Cellphone:</strong></td><td>${applicant.CELLPHONE || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Employment & Education</div>
+                        <table>
+                            <tr><td><strong>Employment Status:</strong></td><td>${applicant['EMP. STATUS'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Employment Type:</strong></td><td>${applicant['EMP. TYPE'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Education Level:</strong></td><td>${applicant['EDUC LEVEL'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Course:</strong></td><td>${applicant.COURSE || 'N/A'}</td></tr>
+                            <tr><td><strong>Skills:</strong></td><td>${applicant.SKILLS || 'N/A'}</td></tr>
+                            <tr><td><strong>Work Experience:</strong></td><td>${applicant['WORK EXPERIENCE'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Preferred Position:</strong></td><td>${applicant['PREFERRED POSITION'] || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Program Information</div>
+                        <table>
+                            <tr><td><strong>Program Category:</strong></td><td>${applicant['PROGRAM CATEGORY'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Specific Program:</strong></td><td>${applicant['SPECIFIC PROGRAM'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Program Status:</strong></td><td>${applicant['PROGRAM STATUS'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Registration Date:</strong></td><td>${applicant['REG. DATE'] || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">Additional Information</div>
+                        <table>
+                            <tr><td><strong>4Ps Member:</strong></td><td>${applicant['4Ps'] || 'N/A'}</td></tr>
+                            <tr><td><strong>PWD:</strong></td><td>${applicant.PWD || 'N/A'}</td></tr>
+                            <tr><td><strong>Disability:</strong></td><td>${applicant.DISABILITY || 'N/A'}</td></tr>
+                            <tr><td><strong>OFW:</strong></td><td>${applicant.OFW || 'N/A'}</td></tr>
+                            <tr><td><strong>Country:</strong></td><td>${applicant.COUNTRY || 'N/A'}</td></tr>
+                            <tr><td><strong>Former OFW:</strong></td><td>${applicant['FORMER OFW'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Latest Country:</strong></td><td>${applicant['LATEST COUNTRY'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Remarks:</strong></td><td>${applicant.REMARKS || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="section-title">System Information</div>
+                        <table>
+                            <tr><td><strong>Created By:</strong></td><td>${applicant['CREATED BY'] || 'System'}</td></tr>
+                            <tr><td><strong>Date Created:</strong></td><td>${applicant['DATE CREATED'] || 'N/A'}</td></tr>
+                            <tr><td><strong>Last Modified By:</strong></td><td>${applicant['LAST MODIFIED BY'] || 'System'}</td></tr>
+                            <tr><td><strong>Date Last Modified:</strong></td><td>${applicant['DATE LAST MODIFIED'] || 'N/A'}</td></tr>
+                        </table>
+                    </div>
+                    
+                    <div class="no-print" style="margin-top: 30px; text-align: center;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #1e88e5; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                            Print as PDF
+                        </button>
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+                            Close
+                        </button>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            
+            showNotification('PDF document generated. Please use the print dialog to save as PDF.', 'success');
+            
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            showNotification('Error generating PDF: ' + error.message, 'error');
+        }
+    }
 
     let currentEditId = null;
     let stream = null;
@@ -73,6 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeReporting();
         loadMainApplicants();
         loadImportedData();
+        initializeViewModal();
         
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'login.html';
@@ -2687,6 +2962,15 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const actionButtons = document.createElement('div');
             actionButtons.className = 'action-buttons';
+
+            // Add View Button
+            const viewBtn = document.createElement('button');
+            viewBtn.className = 'view-btn';
+            viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            viewBtn.title = 'View Applicant Details';
+            viewBtn.addEventListener('click', function() {
+                openViewModal(applicant);
+            });
             
             const editBtn = document.createElement('button');
             editBtn.className = 'edit-btn';
@@ -2714,6 +2998,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 downloadApplicantData(applicant);
             });
             
+            actionButtons.appendChild(viewBtn);
             actionButtons.appendChild(editBtn);
             actionButtons.appendChild(downloadBtn);
             actionButtons.appendChild(deleteBtn);
