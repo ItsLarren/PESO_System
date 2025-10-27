@@ -1096,13 +1096,87 @@ document.addEventListener('DOMContentLoaded', function () {
             removeHighlights();
             
             closeManualModal();
-            showNotification('Applicant added successfully!', 'success', elements.manualNotification);
+            
+            // Check if it's a Livelihood Program and show special prompt
+            const programCategory = applicantData['PROGRAM CATEGORY'] || '';
+            if (programCategory.toLowerCase().includes('livelihood')) {
+                showLivelihoodProgramPrompt(applicantData);
+            } else {
+                showNotification('Applicant added successfully!', 'success', elements.manualNotification);
+            }
             
             localStorage.removeItem('tempManualPhoto');
         } catch (error) {
             console.error('Error adding applicant:', error);
             showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
+    }
+
+    function showLivelihoodProgramPrompt(applicantData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const applicantName = applicantData.NAME || 'New Applicant';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 style="color: #28a745;">
+                        <i class="fas fa-seedling"></i> Livelihood Program Applicant Added
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #28a745; margin-bottom: 15px;"></i>
+                        <h3 style="color: #28a745; margin: 10px 0;">Successfully Added to Livelihood Program!</h3>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Applicant Name:</strong></div>
+                            <div>${applicantName}</div>
+                            <div><strong>Program:</strong></div>
+                            <div>${applicantData['PROGRAM CATEGORY'] || 'Livelihood Program'}</div>
+                            <div><strong>Date Added:</strong></div>
+                            <div>${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <h4 style="margin: 0 0 10px 0; color: #0056b3;">
+                            <i class="fas fa-info-circle"></i> Next Steps
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #0056b3;">
+                            <li>Schedule skills assessment</li>
+                            <li>Arrange livelihood training</li>
+                            <li>Coordinate with livelihood officer</li>
+                            <li>Plan resource allocation</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-livelihood-prompt" class="save-btn" style="background: #28a745;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('close-livelihood-prompt').addEventListener('click', function() {
+            document.body.removeChild(modal);
+            showNotification('Livelihood program applicant added successfully!', 'success', elements.manualNotification);
+        });
+        
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                document.body.removeChild(modal);
+                showNotification('Livelihood program applicant added successfully!', 'success', elements.manualNotification);
+            }
+        });
     }
 
     function initializeCamera() {
@@ -2073,6 +2147,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('export-full-btn').addEventListener('click', exportReportsToExcel);
         
         initializeExpandableSections();
+        debugDataIssues();
         reportsContainer.style.display = 'block';
     }
 
@@ -2476,7 +2551,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 '50-59': 0,
                 '60 and above': 0
             },
-
             agePyramid: {
                 'Below 20': { male: 0, female: 0 },
                 '20-29': { male: 0, female: 0 },
@@ -2487,160 +2561,64 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
         
-        applicants.forEach(applicant => {
-            const category = applicant['PROGRAM CATEGORY'] || 'Uncategorized';
-            const status = applicant['PROGRAM STATUS'] || 'Not Specified';
-            const specificProgram = applicant['SPECIFIC PROGRAM'] || 'No Specific Program';
-            const education = applicant['EDUC LEVEL'] || 'Not Specified';
-            let course = applicant['COURSE'] || 'No Course Specified';
-            const age = parseInt(applicant.AGE) || 0;
-            const gender = (applicant.SEX || '').toLowerCase();
-
-            if (age < 20) stats.byAgeGroup['Below 20']++;
-            else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
-            else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
-            else if (age >= 40 && age <= 49) stats.byAgeGroup['40-49']++;
-            else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
-            else if (age >= 60) stats.byAgeGroup['60 and above']++;
-            
-            let ageGroup;
-            if (age < 20) ageGroup = 'Below 20';
-            else if (age >= 20 && age <= 29) ageGroup = '20-29';
-            else if (age >= 30 && age <= 39) ageGroup = '30-39';
-            else if (age >= 40 && age <= 49) ageGroup = '40-49';
-            else if (age >= 50 && age <= 59) ageGroup = '50-59';
-            else if (age >= 60) ageGroup = '60 and above';
-            else ageGroup = null;
-            
-            if (ageGroup) {
-                const gender = normalizeGender(applicant.SEX);
-                if (gender === 'male') {
-                    stats.agePyramid[ageGroup].male++;
-                } else if (gender === 'female') {
-                    stats.agePyramid[ageGroup].female++;
+        applicants.forEach((applicant, index) => {
+            try {
+                const category = applicant['PROGRAM CATEGORY'] || 'Uncategorized';
+                const status = applicant['PROGRAM STATUS'] || 'Not Specified';
+                const specificProgram = applicant['SPECIFIC PROGRAM'] || 'No Specific Program';
+                const education = applicant['EDUC LEVEL'] || 'Not Specified';
+                
+                // SAFE course extraction with null checks
+                let course = 'No Course Specified';
+                if (applicant) {
+                    course = applicant['COURSE'] || applicant['Course'] || applicant['course'] || 
+                            applicant['COURSE/DEGREE'] || applicant['COLLEGE COURSE'] || 
+                            applicant['DEGREE'] || 'No Course Specified';
                 }
+                
+                // Safe course categorization
+                const categorizedCourse = categorizeCourse(course);
+                stats.byCourse[categorizedCourse] = (stats.byCourse[categorizedCourse] || 0) + 1;
+
+                // Age processing with safety
+                const age = parseInt(applicant.AGE) || 0;
+                const gender = normalizeGender(applicant.SEX);
+
+                // Age group classification
+                if (age < 20) stats.byAgeGroup['Below 20']++;
+                else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
+                else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
+                else if (age >= 40 && age <= 49) stats.byAgeGroup['40-49']++;
+                else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
+                else if (age >= 60) stats.byAgeGroup['60 and above']++;
+
+                // Age pyramid with safety
+                let ageGroup;
+                if (age < 20) ageGroup = 'Below 20';
+                else if (age >= 20 && age <= 29) ageGroup = '20-29';
+                else if (age >= 30 && age <= 39) ageGroup = '30-39';
+                else if (age >= 40 && age <= 49) ageGroup = '40-49';
+                else if (age >= 50 && age <= 59) ageGroup = '50-59';
+                else if (age >= 60) ageGroup = '60 and above';
+                
+                if (ageGroup && gender) {
+                    if (gender === 'male') {
+                        stats.agePyramid[ageGroup].male++;
+                    } else if (gender === 'female') {
+                        stats.agePyramid[ageGroup].female++;
+                    }
+                }
+                
+                // Count categories
+                stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
+                stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
+                stats.bySpecificProgram[specificProgram] = (stats.bySpecificProgram[specificProgram] || 0) + 1;
+                stats.byEducation[education] = (stats.byEducation[education] || 0) + 1;
+                
+            } catch (error) {
+                console.error(`Error processing applicant ${index}:`, error, applicant);
+                // Continue with next applicant instead of breaking
             }
-            
-            function categorizeCourse(course) {
-            if (!course || course === 'No Course Specified' || course === 'N/A' || course === '') {
-                return 'No Course Specified';
-            }
-            
-            course = course.trim().toLowerCase();
-            
-            // Information Technology & Computer-related
-            if (course.includes('information technology') || course.includes('it') || 
-                course.includes('computer science') || course.includes('comsci') ||
-                course.includes('computer engineering') || course.includes('comeng') ||
-                course.includes('information system') || course.includes('is') ||
-                course.includes('software engineering') || course.includes('computer programming')) {
-                return 'Information Technology & Computer Science';
-            }
-            
-            // Business & Management
-            if (course.includes('business administration') || course.includes('bussiness') ||
-                course.includes('business management') || course.includes('marketing') ||
-                course.includes('management') || course.includes('entrepreneurship') ||
-                course.includes('hr') || course.includes('human resource') ||
-                course.includes('office administration') || course.includes('office management')) {
-                return 'Business Administration & Management';
-            }
-            
-            // Education
-            if (course.includes('education') || course.includes('educ') ||
-                course.includes('elementary education') || course.includes('secondary education') ||
-                course.includes('physical education') || course.includes('pe') ||
-                course.includes('special education') || course.includes('sped') ||
-                course.includes('early childhood education')) {
-                return 'Education';
-            }
-            
-            // Engineering
-            if (course.includes('engineering') || course.includes('civil engineering') ||
-                course.includes('electrical engineering') || course.includes('mechanical engineering') ||
-                course.includes('electronics engineering') || course.includes('chemical engineering') ||
-                course.includes('industrial engineering') || course.includes('sanitary engineering')) {
-                return 'Engineering';
-            }
-            
-            // Accounting & Finance
-            if (course.includes('accounting') || course.includes('accountancy') ||
-                course.includes('finance') || course.includes('banking') ||
-                course.includes('financial management') || course.includes('management accounting')) {
-                return 'Accounting & Finance';
-            }
-            
-            // Healthcare & Nursing
-            if (course.includes('nursing') || course.includes('midwifery') ||
-                course.includes('medical technology') || course.includes('medtech') ||
-                course.includes('pharmacy') || course.includes('physical therapy') ||
-                course.includes('radiological technology') || course.includes('respiratory therapy')) {
-                return 'Healthcare & Nursing';
-            }
-            
-            // Hospitality & Tourism
-            if (course.includes('hotel') || course.includes('restaurant') ||
-                course.includes('tourism') || course.includes('hospitality') ||
-                course.includes('culinary') || course.includes('cookery')) {
-                return 'Hospitality & Tourism Management';
-            }
-            
-            // Maritime
-            if (course.includes('marine') || course.includes('maritime') ||
-                course.includes('seaman') || course.includes('seafaring')) {
-                return 'Maritime Education';
-            }
-            
-            // Arts & Sciences
-            if (course.includes('psychology') || course.includes('sociology') ||
-                course.includes('political science') || course.includes('pol sci') ||
-                course.includes('biology') || course.includes('chemistry') ||
-                course.includes('mathematics') || course.includes('physics') ||
-                course.includes('english') || course.includes('filipino') ||
-                course.includes('history') || course.includes('communication')) {
-                return 'Arts & Sciences';
-            }
-            
-            // Criminology
-            if (course.includes('criminology') || course.includes('criminal justice')) {
-                return 'Criminology';
-            }
-            
-            // Architecture & Design
-            if (course.includes('architecture') || course.includes('interior design') ||
-                course.includes('fine arts') || course.includes('graphic design')) {
-                return 'Architecture & Design';
-            }
-            
-            // Agriculture
-            if (course.includes('agriculture') || course.includes('fishery') ||
-                course.includes('veterinary') || course.includes('agribusiness')) {
-                return 'Agriculture';
-            }
-            
-            // Technical Vocational
-            if (course.includes('automotive') || course.includes('welding') ||
-                course.includes('electrical technology') || course.includes('refrigeration') ||
-                course.includes('driving') || course.includes('heavy equipment')) {
-                return 'Technical Vocational';
-            }
-            
-            // Return original course if no category matches
-            return course.charAt(0).toUpperCase() + course.slice(1);
-        }
-            
-            if (age < 20) stats.byAgeGroup['Below 20']++;
-            else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
-            else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
-            else if (age >= 40 && age <= 49) stats.byAgeGroup['40-49']++;
-            else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
-            else if (age >= 60) stats.byAgeGroup['60 and above']++;
-            
-            stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
-            stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
-            stats.bySpecificProgram[specificProgram] = (stats.bySpecificProgram[specificProgram] || 0) + 1;
-            stats.byEducation[education] = (stats.byEducation[education] || 0) + 1;
-            stats.byCourse[course] = (stats.byCourse[course] || 0) + 1;
         });
         
         return stats;
@@ -2668,23 +2646,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function normalizeGender(genderValue) {
-        if (!genderValue || genderValue === 'N/A') return null;
-        
-        const gender = genderValue.toString().trim().toLowerCase();
-        
-        // Handle single letters
-        if (gender === 'm' || gender === 'male') return 'male';
-        if (gender === 'f' || gender === 'female') return 'female';
-        
-        // Handle full words and variations
-        if (gender.includes('male') && !gender.includes('female')) return 'male';
-        if (gender.includes('female')) return 'female';
-        
-        // Handle common abbreviations
-        if (gender === 'm' || gender === 'm.') return 'male';
-        if (gender === 'f' || gender === 'f.') return 'female';
-        
-        return null;
+        try {
+            if (!genderValue || genderValue === 'N/A' || genderValue === 'null' || genderValue === 'undefined') {
+                return null;
+            }
+            
+            const gender = String(genderValue).trim().toLowerCase();
+            
+            // Handle single letters
+            if (gender === 'm' || gender === 'male') return 'male';
+            if (gender === 'f' || gender === 'female') return 'female';
+            
+            // Handle full words and variations
+            if (gender.includes('male') && !gender.includes('female')) return 'male';
+            if (gender.includes('female')) return 'female';
+            
+            // Handle common abbreviations
+            if (gender === 'm' || gender === 'm.') return 'male';
+            if (gender === 'f' || gender === 'f.') return 'female';
+            
+            return null;
+        } catch (error) {
+            console.error('Error in normalizeGender:', error, 'for value:', genderValue);
+            return null;
+        }
     }
 
 
@@ -3501,31 +3486,41 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function generateExpandableCourseStats(stats) {
-        const collegeGrads = (stats.byEducation['College Graduate'] || 0) + 
-                            (stats.byEducation['College'] || 0) + 
-                            (stats.byEducation['Bachelor'] || 0) +
-                            (stats.byEducation['Bachelor\'s Degree'] || 0);
-
+        console.log('🔍 Debug: Starting course stats generation');
+        console.log('📊 Education levels:', stats.byEducation);
+        console.log('📚 All courses:', stats.byCourse);
+        
+        // More comprehensive college graduate detection
+        const collegeGrads = calculateCollegeGraduates(stats.byEducation);
+        
+        console.log(`🎓 College graduates count: ${collegeGrads}`);
+        
         if (collegeGrads === 0) {
-            return '<p style="text-align: center; color: #666; margin: 10px 0;">No college graduates found.</p>';
+            return '<p style="text-align: center; color: #666; margin: 10px 0;">No college graduates found in the data.</p>';
         }
         
+        // Get all courses with proper filtering
         const allCourses = Object.entries(stats.byCourse)
             .filter(([course, count]) => {
-                return course && 
+                const isValidCourse = course && 
                     course !== 'No Course Specified' && 
                     course !== 'N/A' && 
                     course !== '' && 
                     course !== 'null' &&
                     course !== 'undefined' &&
                     count > 0;
+                
+                console.log(`📖 Course: "${course}", Count: ${count}, Valid: ${isValidCourse}`);
+                return isValidCourse;
             })
             .sort((a, b) => b[1] - a[1]);
 
+        console.log(`✅ Valid courses found: ${allCourses.length}`);
+        
         let coursesHTML = '';
         
         if (allCourses.length === 0) {
-            coursesHTML = '<p style="text-align: center; color: #666; padding: 10px;">No course data available for college graduates.</p>';
+            coursesHTML = '<p style="text-align: center; color: #666; padding: 10px;">Course data is available but no specific courses were recorded for college graduates.</p>';
         } else {
             allCourses.forEach(([course, count]) => {
                 const percentage = ((count / collegeGrads) * 100).toFixed(1);
@@ -3564,6 +3559,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </div>
         `;
+    }
+
+    // Add this helper function to better detect college graduates
+    function calculateCollegeGraduates(educationLevels) {
+        let total = 0;
+        
+        // Comprehensive list of education levels that indicate college graduation
+        const collegeLevels = [
+            'College Graduate', 'College', 'Bachelor', 'Bachelor\'s Degree',
+            'BS', 'B.S.', 'AB', 'A.B.', 'B.A.', 'BA',
+            'Bachelor of Science', 'Bachelor of Arts',
+            'Undergraduate', 'University', 'College Level',
+            'Tertiary', 'Higher Education'
+        ];
+        
+        Object.entries(educationLevels).forEach(([level, count]) => {
+            const lowerLevel = level.toLowerCase();
+            
+            // Check if this education level indicates college
+            const isCollegeLevel = collegeLevels.some(collegeLevel => 
+                lowerLevel.includes(collegeLevel.toLowerCase()) || 
+                collegeLevel.toLowerCase().includes(lowerLevel)
+            );
+            
+            // Also check for common patterns
+            const hasCollegeKeywords = 
+                lowerLevel.includes('college') ||
+                lowerLevel.includes('bachelor') ||
+                lowerLevel.includes('university') ||
+                lowerLevel.includes('tertiary') ||
+                lowerLevel.includes('degree');
+                
+            if (isCollegeLevel || hasCollegeKeywords) {
+                console.log(`🎓 Counting as college: "${level}" with ${count} graduates`);
+                total += count;
+            }
+        });
+        
+        return total;
     }
     function extractLastName(fullName) {
         if (!fullName || fullName === 'N/A') return '';
@@ -3620,7 +3654,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'CITY/MUNICIPALITY': ['CITY/MUNICIPALITY', 'City/Municipality', 'City', 'Municipality', 'CITY', 'MUNICIPALITY'],
             'PROVINCE': ['PROVINCE', 'Province'],
             'REGION': ['REGION', 'Region'],
-            'EMAIL': ['EMAIL', 'Email', 'Email Address'],
+            'EMAIL': ['EMAIL', 'Email', 'Email Address', 'email', 'username', 'Username', 'USERNAME', 'user name','Email Address', 'E-mail', 'e-mail', 'E-Mail','Contact Email', 'contact email', 'CONTACT EMAIL','Email ID', 'email id', 'EmailId'],
             'TELEPHONE': ['TELEPHONE', 'Telephone', 'Phone', 'Landline', 'LANDLINE NUMBER', 'Landline Number'],
             'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number', 'Cellphone Number'],
             'EMP. STATUS': ['EMP. STATUS', 'Employment Status', 'EMP STATUS', 'Employment'],
@@ -3646,6 +3680,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function findMatchingValue(record, possibleLabels) {
+        if (!record) return null;
+        
+        // First: Exact case-insensitive match
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase() === label.toLowerCase()) {
@@ -3654,6 +3691,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
+        // Second: Partial match (contains)
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
@@ -3663,12 +3701,31 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
+        // Third: Remove spaces/special chars and match
         for (const label of possibleLabels) {
-            const cleanLabel = label.toLowerCase().replace(/[\s_]/g, '');
+            const cleanLabel = label.toLowerCase().replace(/[\s_\-]/g, '');
             for (const recordKey in record) {
-                const cleanRecordKey = recordKey.toLowerCase().replace(/[\s_]/g, '');
+                const cleanRecordKey = recordKey.toLowerCase().replace(/[\s_\-]/g, '');
                 if (cleanRecordKey === cleanLabel) {
                     return record[recordKey];
+                }
+            }
+        }
+        
+        // Fourth: Common field name variations
+        const commonVariations = {
+            'username': ['userid', 'login', 'emailaddress', 'e-mail'],
+            'email': ['mail', 'electronicmail', 'contactinfo']
+        };
+        
+        for (const label of possibleLabels) {
+            const variations = commonVariations[label.toLowerCase()] || [];
+            for (const variation of variations) {
+                for (const recordKey in record) {
+                    const cleanRecordKey = recordKey.toLowerCase().replace(/[\s_\-]/g, '');
+                    if (cleanRecordKey === variation) {
+                        return record[recordKey];
+                    }
                 }
             }
         }
@@ -3753,6 +3810,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (jsonData.length === 0) {
             return [];
         }
+        jsonData.forEach((record, index) => {
+            console.log(`Record ${index} course fields:`, {
+                'COURSE': record.COURSE,
+                'Course': record.Course,
+                'course': record.course,
+                'COURSE/DEGREE': record['COURSE/DEGREE'],
+                'All keys': Object.keys(record)
+            });
+        });
         
         const processedData = jsonData.map((record, index) => {
             const processedRecord = {};
@@ -3835,7 +3901,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name'],
             'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB'],
             'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number'],
-            'EMAIL': ['EMAIL', 'Email', 'Email Address']
+            'EMAIL': ['EMAIL', 'Email', 'email', 'Email Address', 'EMAIL ADDRESS', 'email address', 'Username', 'USERNAME', 'username']
         };
         
         for (const existingApp of importedData) {
@@ -5577,7 +5643,205 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Call this function during development to test
-    // testGenderDetection();
+
+    function categorizeCourse(course) {
+        try {
+            if (!course || course === 'No Course Specified' || course === 'N/A' || 
+                course === '' || course === 'null' || course === 'undefined') {
+                return 'No Course Specified';
+            }
+            
+            // Ensure course is a string
+            course = String(course).trim().toLowerCase();
+            
+            if (!course || course === 'no course specified' || course === 'n/a') {
+                return 'No Course Specified';
+            }
+            
+            console.log('🔍 Processing course:', course);
+            
+            // Information Technology & Computer-related
+            if (course.includes('information technology') || course.includes(' it ') || 
+                course.includes('it,') || course.includes('computer science') || 
+                course.includes('comsci') || course.includes('comp sci') ||
+                course.includes('computer engineering') || course.includes('comeng') || 
+                course.includes('comp eng') || course.includes('information system') || 
+                course.includes(' info sys') || course.includes('is,') ||
+                course.includes('software') || course.includes('programming') || 
+                course.includes('developer') || course.includes('computer') || 
+                course.includes('tech')) {
+                return 'Information Technology & Computer Science';
+            }
+            
+            // Business & Management
+            if (course.includes('business administration') || course.includes('bussiness') || 
+                course.includes('bus adm') || course.includes('business management') || 
+                course.includes('bus management') || course.includes('marketing') ||
+                course.includes('management') || course.includes('entrepreneurship') || 
+                course.includes('enterprise') || course.includes('hr') || 
+                course.includes('human resource') || course.includes('human resources') ||
+                course.includes('office administration') || course.includes('office management') || 
+                course.includes('office')) {
+                return 'Business Administration & Management';
+            }
+            
+            // Education
+            if (course.includes('education') || course.includes('educ') || 
+                course.includes('teacher') || course.includes('elementary education') || 
+                course.includes('secondary education') || course.includes('high school') ||
+                course.includes('physical education') || course.includes(' p.e.') || 
+                course.includes(' p.e ') || course.includes('special education') || 
+                course.includes('sped') || course.includes('special ed') ||
+                course.includes('early childhood') || course.includes('preschool')) {
+                return 'Education';
+            }
+            
+            // Engineering
+            if (course.includes('engineering') || course.includes('engineer') || 
+                course.includes('eng\'g') || course.includes('civil engineering') || 
+                course.includes('civil eng') || course.includes('ce,') ||
+                course.includes('electrical engineering') || course.includes('electrical eng') || 
+                course.includes('ee,') || course.includes('mechanical engineering') || 
+                course.includes('mechanical eng') || course.includes('me,') ||
+                course.includes('electronics engineering') || course.includes('electronics eng') || 
+                course.includes('ece') || course.includes('chemical engineering') || 
+                course.includes('chemical eng') || course.includes('che') ||
+                course.includes('industrial engineering') || course.includes('industrial eng') || 
+                course.includes('ie,') || course.includes('sanitary engineering') || 
+                course.includes('sanitary eng')) {
+                return 'Engineering';
+            }
+            
+            // Accounting & Finance
+            if (course.includes('accounting') || course.includes('accountancy') || 
+                course.includes('bsa') || course.includes('finance') || 
+                course.includes('banking') || course.includes('financial') ||
+                course.includes('financial management') || course.includes('management accounting') || 
+                course.includes('fin mgt')) {
+                return 'Accounting & Finance';
+            }
+            
+            // Healthcare & Nursing
+            if (course.includes('nursing') || course.includes('nurse') || 
+                course.includes('bsn') || course.includes('midwifery') || 
+                course.includes('midwife') || course.includes('mid') ||
+                course.includes('medical technology') || course.includes('medtech') || 
+                course.includes('med tech') || course.includes('pharmacy') || 
+                course.includes('pharmacist') || course.includes('bs pharmacy') ||
+                course.includes('physical therapy') || course.includes('physiotherapy') || 
+                course.includes('pt,') || course.includes('radiological') || 
+                course.includes('rad tech') || course.includes('x-ray') ||
+                course.includes('respiratory therapy') || course.includes('respiratory')) {
+                return 'Healthcare & Nursing';
+            }
+            
+            // Hospitality & Tourism
+            if (course.includes('hotel') || course.includes('restaurant') || 
+                course.includes('hr') || course.includes('tourism') || 
+                course.includes('tourist') || course.includes('travel') ||
+                course.includes('hospitality') || course.includes('culinary') || 
+                course.includes('cookery') || course.includes('chef') || 
+                course.includes('food') || course.includes('beverage')) {
+                return 'Hospitality & Tourism Management';
+            }
+            
+            // Maritime
+            if (course.includes('marine') || course.includes('maritime') || 
+                course.includes('seaman') || course.includes('seafaring') || 
+                course.includes('seafarer') || course.includes('bsmt')) {
+                return 'Maritime Education';
+            }
+            
+            // Arts & Sciences
+            if (course.includes('psychology') || course.includes('psych') || 
+                course.includes('bs psych') || course.includes('sociology') || 
+                course.includes('socio') || course.includes('bs socio') ||
+                course.includes('political science') || course.includes('pol sci') || 
+                course.includes('political') || course.includes('biology') || 
+                course.includes('biological') || course.includes('bs bio') ||
+                course.includes('chemistry') || course.includes('chemical') || 
+                course.includes('bs chem') || course.includes('mathematics') || 
+                course.includes('math') || course.includes('bs math') ||
+                course.includes('physics') || course.includes('physical') || 
+                course.includes('bs physics') || course.includes('english') || 
+                course.includes('literature') || course.includes('ab english') ||
+                course.includes('filipino') || course.includes('philippine') || 
+                course.includes('ab fil') || course.includes('history') || 
+                course.includes('historical') || course.includes('ab history') ||
+                course.includes('communication') || course.includes('mass comm') || 
+                course.includes('ab comm')) {
+                return 'Arts & Sciences';
+            }
+            
+            // Criminology
+            if (course.includes('criminology') || course.includes('criminal justice') || 
+                course.includes('criminal') || course.includes('bs crim')) {
+                return 'Criminology';
+            }
+            
+            // Architecture & Design
+            if (course.includes('architecture') || course.includes('architect') || 
+                course.includes('bs arch') || course.includes('interior design') || 
+                course.includes('interior') || course.includes('indesign') ||
+                course.includes('fine arts') || course.includes('fine art') || 
+                course.includes('bfa') || course.includes('graphic design') || 
+                course.includes('graphic') || course.includes('graphics')) {
+                return 'Architecture & Design';
+            }
+            
+            // Agriculture
+            if (course.includes('agriculture') || course.includes('agricultural') || 
+                course.includes('bsa') || course.includes('fishery') || 
+                course.includes('fisheries') || course.includes('bsf') ||
+                course.includes('veterinary') || course.includes('vet') || 
+                course.includes('dvm') || course.includes('agribusiness') || 
+                course.includes('agri business') || course.includes('agri-business')) {
+                return 'Agriculture';
+            }
+            
+            // Technical Vocational
+            if (course.includes('automotive') || course.includes('auto') || 
+                course.includes('auto mech') || course.includes('welding') || 
+                course.includes('welder') || course.includes('weld') ||
+                course.includes('electrical technology') || course.includes('electrical tech') || 
+                course.includes('elec tech') || course.includes('refrigeration') || 
+                course.includes('refrigerator') || course.includes('hvac') ||
+                course.includes('driving') || course.includes('driver') || 
+                course.includes('chauffeur') || course.includes('heavy equipment') || 
+                course.includes('heavy equip') || course.includes('heavy')) {
+                return 'Technical Vocational';
+            }
+            
+            // Return original course if no category matches (with proper capitalization)
+            return course.charAt(0).toUpperCase() + course.slice(1);
+            
+        } catch (error) {
+            console.error('Error in categorizeCourse:', error, 'for course:', course);
+            return 'No Course Specified';
+        }
+    }
+
+    function debugDataIssues() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        console.log('🔍 DEBUG: Checking for data issues');
+        
+        savedApplicants.forEach((applicant, index) => {
+            try {
+                // Test course categorization
+                const course = applicant['COURSE'] || applicant['Course'] || 'No Course';
+                categorizeCourse(course);
+                
+                // Test gender normalization
+                normalizeGender(applicant.SEX);
+                
+            } catch (error) {
+                console.error(`❌ Error in applicant ${index}:`, error);
+                console.error('Problematic applicant data:', applicant);
+            }
+        });
+        
+        console.log('✅ Debug complete');
+    }
+
     initializeApp();
 });
