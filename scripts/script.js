@@ -1097,10 +1097,24 @@ document.addEventListener('DOMContentLoaded', function () {
             
             closeManualModal();
             
-            // Check if it's a Livelihood Program and show special prompt
+            // Check program category and show appropriate prompt
             const programCategory = applicantData['PROGRAM CATEGORY'] || '';
-            if (programCategory.toLowerCase().includes('livelihood')) {
+            const programLower = programCategory.toLowerCase();
+            
+            if (programLower.includes('livelihood')) {
                 showLivelihoodProgramPrompt(applicantData);
+            } else if (programLower.includes('employment')) {
+                showEmploymentProgramPrompt(applicantData);
+            } else if (programLower.includes('educational') || programLower.includes('education')) {
+                showEducationProgramPrompt(applicantData);
+            } else if (programLower.includes('skills training') || programLower.includes('skills')) {
+                showSkillsTrainingProgramPrompt(applicantData);
+            } else if (programLower.includes('ofw') || programLower.includes('reintegration')) {
+                showOFWProgramPrompt(applicantData);
+            } else if (programLower.includes('pwd')) {
+                showPWDProgramPrompt(applicantData);
+            } else if (programLower.includes('4ps') || programLower.includes('monitoring')) {
+                show4PsProgramPrompt(applicantData);
             } else {
                 showNotification('Applicant added successfully!', 'success', elements.manualNotification);
             }
@@ -1144,11 +1158,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>
                     
-                    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
-                        <h4 style="margin: 0 0 10px 0; color: #0056b3;">
+                    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <h4 style="margin: 0 0 10px 0; color: #1e7e34;">
                             <i class="fas fa-info-circle"></i> Next Steps
                         </h4>
-                        <ul style="margin: 0; padding-left: 20px; color: #0056b3;">
+                        <ul style="margin: 0; padding-left: 20px; color: #1e7e34;">
                             <li>Schedule skills assessment</li>
                             <li>Arrange livelihood training</li>
                             <li>Coordinate with livelihood officer</li>
@@ -1175,6 +1189,414 @@ document.addEventListener('DOMContentLoaded', function () {
             if (event.target === modal) {
                 document.body.removeChild(modal);
                 showNotification('Livelihood program applicant added successfully!', 'success', elements.manualNotification);
+            }
+        });
+    }
+
+    // Employment Assistance Program Prompt
+    function showEmploymentProgramPrompt(applicantData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const applicantName = applicantData.NAME || 'New Applicant';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 style="color: #007bff;">
+                        <i class="fas fa-briefcase"></i> Employment Assistance Applicant Added
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #007bff; margin-bottom: 15px;"></i>
+                        <h3 style="color: #007bff; margin: 10px 0;">Successfully Added to Employment Assistance!</h3>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Applicant Name:</strong></div>
+                            <div>${applicantName}</div>
+                            <div><strong>Program:</strong></div>
+                            <div>${applicantData['PROGRAM CATEGORY'] || 'Employment Assistance'}</div>
+                            <div><strong>Date Added:</strong></div>
+                            <div>${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
+                        <h4 style="margin: 0 0 10px 0; color: #0056b3;">
+                            <i class="fas fa-info-circle"></i> Next Steps
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #0056b3;">
+                            <li>Schedule job interview</li>
+                            <li>Conduct skills assessment</li>
+                            <li>Match with job opportunities</li>
+                            <li>Provide employment counseling</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-employment-prompt" class="save-btn" style="background: #007bff;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('close-employment-prompt').addEventListener('click', function() {
+            document.body.removeChild(modal);
+            showNotification('Employment assistance applicant added successfully!', 'success', elements.manualNotification);
+        });
+        
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                document.body.removeChild(modal);
+                showNotification('Employment assistance applicant added successfully!', 'success', elements.manualNotification);
+            }
+        });
+    }
+
+    // Educational Assistance Program Prompt
+    function showEducationProgramPrompt(applicantData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const applicantName = applicantData.NAME || 'New Applicant';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 style="color: #6f42c1;">
+                        <i class="fas fa-graduation-cap"></i> Educational Assistance Applicant Added
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #6f42c1; margin-bottom: 15px;"></i>
+                        <h3 style="color: #6f42c1; margin: 10px 0;">Successfully Added to Educational Assistance!</h3>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Applicant Name:</strong></div>
+                            <div>${applicantName}</div>
+                            <div><strong>Program:</strong></div>
+                            <div>${applicantData['PROGRAM CATEGORY'] || 'Educational Assistance'}</div>
+                            <div><strong>Date Added:</strong></div>
+                            <div>${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f3e8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #6f42c1;">
+                        <h4 style="margin: 0 0 10px 0; color: #5a32a3;">
+                            <i class="fas fa-info-circle"></i> Next Steps
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #5a32a3;">
+                            <li>Process scholarship application</li>
+                            <li>Schedule educational assessment</li>
+                            <li>Coordinate with schools/universities</li>
+                            <li>Arrange educational materials</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-education-prompt" class="save-btn" style="background: #6f42c1;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('close-education-prompt').addEventListener('click', function() {
+            document.body.removeChild(modal);
+            showNotification('Educational assistance applicant added successfully!', 'success', elements.manualNotification);
+        });
+        
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                document.body.removeChild(modal);
+                showNotification('Educational assistance applicant added successfully!', 'success', elements.manualNotification);
+            }
+        });
+    }
+
+    // Skills Training Program Prompt
+    function showSkillsTrainingProgramPrompt(applicantData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const applicantName = applicantData.NAME || 'New Applicant';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 style="color: #fd7e14;">
+                        <i class="fas fa-tools"></i> Skills Training Applicant Added
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #fd7e14; margin-bottom: 15px;"></i>
+                        <h3 style="color: #fd7e14; margin: 10px 0;">Successfully Added to Skills Training!</h3>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Applicant Name:</strong></div>
+                            <div>${applicantName}</div>
+                            <div><strong>Program:</strong></div>
+                            <div>${applicantData['PROGRAM CATEGORY'] || 'Skills Training'}</div>
+                            <div><strong>Date Added:</strong></div>
+                            <div>${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #fd7e14;">
+                        <h4 style="margin: 0 0 10px 0; color: #e65100;">
+                            <i class="fas fa-info-circle"></i> Next Steps
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #e65100;">
+                            <li>Schedule training orientation</li>
+                            <li>Assign to appropriate skills course</li>
+                            <li>Coordinate with training providers</li>
+                            <li>Arrange training materials and venue</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-skills-prompt" class="save-btn" style="background: #fd7e14;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('close-skills-prompt').addEventListener('click', function() {
+            document.body.removeChild(modal);
+            showNotification('Skills training applicant added successfully!', 'success', elements.manualNotification);
+        });
+        
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                document.body.removeChild(modal);
+                showNotification('Skills training applicant added successfully!', 'success', elements.manualNotification);
+            }
+        });
+    }
+
+    // OFW Reintegration Program Prompt
+    function showOFWProgramPrompt(applicantData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const applicantName = applicantData.NAME || 'New Applicant';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 style="color: #20c997;">
+                        <i class="fas fa-plane"></i> OFW Reintegration Applicant Added
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #20c997; margin-bottom: 15px;"></i>
+                        <h3 style="color: #20c997; margin: 10px 0;">Successfully Added to OFW Reintegration!</h3>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Applicant Name:</strong></div>
+                            <div>${applicantName}</div>
+                            <div><strong>Program:</strong></div>
+                            <div>${applicantData['PROGRAM CATEGORY'] || 'OFW Reintegration'}</div>
+                            <div><strong>Date Added:</strong></div>
+                            <div>${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #e6f7f2; padding: 15px; border-radius: 8px; border-left: 4px solid #20c997;">
+                        <h4 style="margin: 0 0 10px 0; color: #17a2b8;">
+                            <i class="fas fa-info-circle"></i> Next Steps
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #17a2b8;">
+                            <li>Schedule reintegration assessment</li>
+                            <li>Provide livelihood counseling</li>
+                            <li>Coordinate with OWWA services</li>
+                            <li>Arrange family support services</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-ofw-prompt" class="save-btn" style="background: #20c997;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('close-ofw-prompt').addEventListener('click', function() {
+            document.body.removeChild(modal);
+            showNotification('OFW reintegration applicant added successfully!', 'success', elements.manualNotification);
+        });
+        
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                document.body.removeChild(modal);
+                showNotification('OFW reintegration applicant added successfully!', 'success', elements.manualNotification);
+            }
+        });
+    }
+
+    // PWD Assistance Program Prompt
+    function showPWDProgramPrompt(applicantData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const applicantName = applicantData.NAME || 'New Applicant';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 style="color: #e83e8c;">
+                        <i class="fas fa-wheelchair"></i> PWD Assistance Applicant Added
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #e83e8c; margin-bottom: 15px;"></i>
+                        <h3 style="color: #e83e8c; margin: 10px 0;">Successfully Added to PWD Assistance!</h3>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Applicant Name:</strong></div>
+                            <div>${applicantName}</div>
+                            <div><strong>Program:</strong></div>
+                            <div>${applicantData['PROGRAM CATEGORY'] || 'PWD Assistance'}</div>
+                            <div><strong>Date Added:</strong></div>
+                            <div>${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fce4ec; padding: 15px; border-radius: 8px; border-left: 4px solid #e83e8c;">
+                        <h4 style="margin: 0 0 10px 0; color: #d81b60;">
+                            <i class="fas fa-info-circle"></i> Next Steps
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #d81b60;">
+                            <li>Schedule disability assessment</li>
+                            <li>Provide assistive devices if needed</li>
+                            <li>Coordinate with PWD organizations</li>
+                            <li>Arrange accessibility services</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-pwd-prompt" class="save-btn" style="background: #e83e8c;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('close-pwd-prompt').addEventListener('click', function() {
+            document.body.removeChild(modal);
+            showNotification('PWD assistance applicant added successfully!', 'success', elements.manualNotification);
+        });
+        
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                document.body.removeChild(modal);
+                showNotification('PWD assistance applicant added successfully!', 'success', elements.manualNotification);
+            }
+        });
+    }
+
+    // 4Ps Monitoring Program Prompt
+    function show4PsProgramPrompt(applicantData) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        const applicantName = applicantData.NAME || 'New Applicant';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 style="color: #dc3545;">
+                        <i class="fas fa-home"></i> 4Ps Monitoring Applicant Added
+                    </h2>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #dc3545; margin-bottom: 15px;"></i>
+                        <h3 style="color: #dc3545; margin: 10px 0;">Successfully Added to 4Ps Monitoring!</h3>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                            <div><strong>Applicant Name:</strong></div>
+                            <div>${applicantName}</div>
+                            <div><strong>Program:</strong></div>
+                            <div>${applicantData['PROGRAM CATEGORY'] || '4Ps Monitoring'}</div>
+                            <div><strong>Date Added:</strong></div>
+                            <div>${new Date().toLocaleDateString()}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                        <h4 style="margin: 0 0 10px 0; color: #c82333;">
+                            <i class="fas fa-info-circle"></i> Next Steps
+                        </h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #c82333;">
+                            <li>Schedule household visit</li>
+                            <li>Verify 4Ps membership</li>
+                            <li>Conduct compliance monitoring</li>
+                            <li>Update family progress records</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="close-4ps-prompt" class="save-btn" style="background: #dc3545;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        document.getElementById('close-4ps-prompt').addEventListener('click', function() {
+            document.body.removeChild(modal);
+            showNotification('4Ps monitoring applicant added successfully!', 'success', elements.manualNotification);
+        });
+        
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                document.body.removeChild(modal);
+                showNotification('4Ps monitoring applicant added successfully!', 'success', elements.manualNotification);
             }
         });
     }
