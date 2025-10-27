@@ -2513,9 +2513,10 @@ document.addEventListener('DOMContentLoaded', function () {
             else ageGroup = null;
             
             if (ageGroup) {
-                if (gender.includes('male') && !gender.includes('female')) {
+                const gender = normalizeGender(applicant.SEX);
+                if (gender === 'male') {
                     stats.agePyramid[ageGroup].male++;
-                } else if (gender.includes('female')) {
+                } else if (gender === 'female') {
                     stats.agePyramid[ageGroup].female++;
                 }
             }
@@ -2666,22 +2667,48 @@ document.addEventListener('DOMContentLoaded', function () {
         return stats;
     }
 
+    function normalizeGender(genderValue) {
+        if (!genderValue || genderValue === 'N/A') return null;
+        
+        const gender = genderValue.toString().trim().toLowerCase();
+        
+        // Handle single letters
+        if (gender === 'm' || gender === 'male') return 'male';
+        if (gender === 'f' || gender === 'female') return 'female';
+        
+        // Handle full words and variations
+        if (gender.includes('male') && !gender.includes('female')) return 'male';
+        if (gender.includes('female')) return 'female';
+        
+        // Handle common abbreviations
+        if (gender === 'm' || gender === 'm.') return 'male';
+        if (gender === 'f' || gender === 'f.') return 'female';
+        
+        return null;
+    }
+
+
     function calculateDemographicStatistics(applicants) {
         const stats = {
             male: 0,
             female: 0,
-            averageAge: 0
+            averageAge: 0,
+            unknown: 0 // track unknown genders
         };
         
         let totalAge = 0;
         let ageCount = 0;
         
         applicants.forEach(applicant => {
-            const gender = (applicant.SEX || '').toLowerCase();
-            if (gender.includes('male') && !gender.includes('female')) {
+            const gender = normalizeGender(applicant.SEX);
+            
+            if (gender === 'male') {
                 stats.male++;
-            } else if (gender.includes('female')) {
+            } else if (gender === 'female') {
                 stats.female++;
+            } else {
+                stats.unknown++;
+                console.log('Unknown gender format:', applicant.SEX); // Debug logging
             }
             
             const age = parseInt(applicant.AGE);
@@ -3586,7 +3613,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name'],
             'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB'],
             'AGE': ['AGE', 'Age'],
-            'SEX': ['SEX', 'Gender', 'SEX/GENDER', 'gender'],
+            'SEX': ['SEX', 'Gender', 'SEX/GENDER', 'gender', 'GENDER', 'Sex'],
             'CIVIL STATUS': ['CIVIL STATUS', 'Civil Status', 'Status', 'Marital Status'],
             'STREET ADDRESS': ['STREET ADDRESS', 'Street Address', 'Address', 'STREET', 'Street', 'House No', 'House Number', 'Village', 'House No./Street/Village'],
             'BARANGAY': ['BARANGAY', 'Barangay', 'BRGY', 'Brgy'],
@@ -5535,5 +5562,22 @@ document.addEventListener('DOMContentLoaded', function () {
         html += `</tbody></table>`;
         return html;
     }
+
+    function testGenderDetection() {
+        const testCases = [
+            'M', 'm', 'Male', 'male', 'MALE',
+            'F', 'f', 'Female', 'female', 'FEMALE',
+            'Other', 'Unknown', 'N/A', ''
+        ];
+        
+        console.log('Gender Detection Test:');
+        testCases.forEach(testCase => {
+            const result = normalizeGender(testCase);
+            console.log(`"${testCase}" → ${result}`);
+        });
+    }
+
+    // Call this function during development to test
+    // testGenderDetection();
     initializeApp();
 });
