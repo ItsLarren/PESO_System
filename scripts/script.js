@@ -367,26 +367,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Initialize all components
-            initializeManualForm();
-            initializeCamera();
-            initializeSearch();
-            initializeEditModal();
-            initializeFileUploads();
-            initializeAdvancedFilters();
-            initializeReporting();
-            initializeViewModal();
-            
-            // Load data
-            loadMainApplicants();
-            loadImportedData();
-            
-            // Initialize UI components
-            initializeDynamicFormElements();
-            initializeAddEntryButtons();
-            displayCurrentUser();
+            // Wait a bit for DOM to be fully ready
+            setTimeout(() => {
+                // Initialize all components
+                initializeManualForm();
+                initializeCamera();
+                initializeSearch();
+                initializeEditModal();
+                initializeFileUploads();
+                initializeAdvancedFilters();
+                initializeReporting();
+                initializeViewModal();
+                
+                // Load data
+                loadMainApplicants();
+                loadImportedData();
+                
+                // Initialize UI components
+                initializeDynamicFormElements();
+                initializeAddEntryButtons();
+                displayCurrentUser();
 
-            console.log('Application initialized successfully');
+                console.log('Application initialized successfully');
+            }, 100);
+            
         } catch (error) {
             console.error('Error during application initialization:', error);
             showNotification('Error initializing application: ' + error.message, 'error');
@@ -734,85 +738,113 @@ document.addEventListener('DOMContentLoaded', function () {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const photoData = e.target.result;
-                    localStorage.setItem('tempManualPhoto', photoData);
                     
+                    // Set the photo preview immediately
                     elements.manualPhotoPreview.src = photoData;
                     elements.manualPhotoPreview.style.display = 'block';
                     elements.manualPhotoPlaceholder.style.display = 'none';
                     elements.manualRemovePhotoBtn.style.display = 'block';
+                    
+                    // Store temporarily for form submission
+                    localStorage.setItem('tempManualPhoto', photoData);
                 };
                 reader.readAsDataURL(file);
             } else {
-                showNotification('Please select a valid image file.', 'error', elements.manualNotification);
+                showNotification('Please select a valid image file (JPEG, PNG, etc.).', 'error', elements.manualNotification);
             }
         }
+    }
+
+    // Update the remove photo function
+    if (elements.manualRemovePhotoBtn) {
+        elements.manualRemovePhotoBtn.addEventListener('click', function() {
+            elements.manualPhotoPreview.src = '';
+            elements.manualPhotoPreview.style.display = 'none';
+            elements.manualPhotoPlaceholder.style.display = 'flex';
+            elements.manualRemovePhotoBtn.style.display = 'none';
+            elements.manualPhotoInput.value = '';
+            
+            // Remove temporary photo
+            localStorage.removeItem('tempManualPhoto');
+        });
     }
 
     function checkApplicantDuplicate(applicantData) {
         try {
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-            const matches = [];
             
+            // If no existing applicants, no duplicates
+            if (savedApplicants.length === 0) {
+                return {
+                    hasMatches: false,
+                    matches: []
+                };
+            }
+
+            const matches = [];
+            const newName = (applicantData.NAME || '').toString().toLowerCase().trim();
+            const newBdate = (applicantData.BDATE || '').toString().trim();
+
+            // Skip if new applicant has no name
+            if (!newName || newName === 'n/a') {
+                return {
+                    hasMatches: false,
+                    matches: []
+                };
+            }
+
             for (const existingApp of savedApplicants) {
-                // Add null checks for all property accesses
-                const applicantName = applicantData.NAME ? applicantData.NAME.toLowerCase() : '';
-                const existingName = existingApp.NAME ? existingApp.NAME.toLowerCase() : '';
-                
-                const applicantBdate = applicantData.BDATE || '';
-                const existingBdate = existingApp.BDATE || '';
-                
-                const nameMatch = applicantName && existingName && 
-                                applicantName === existingName;
-                
-                const bdateMatch = applicantBdate && existingBdate && 
-                                applicantBdate === existingBdate;
-                
-                // Check for same name but different birthday
-                const sameNameDifferentBday = nameMatch && !bdateMatch;
-                
-                if (nameMatch || bdateMatch || sameNameDifferentBday) {
-                    const matchDetails = {
-                        existingApplicant: existingApp,
-                        matchingFields: [],
-                        differences: [],
-                        sameNameDifferentBday: sameNameDifferentBday
-                    };
-                    
-                    if (nameMatch) matchDetails.matchingFields.push('Name');
-                    if (bdateMatch) matchDetails.matchingFields.push('Birthday');
-                    if (sameNameDifferentBday) matchDetails.matchingFields.push('Same Name, Different Birthday');
-                    
-                    // Compare other fields to show differences (with null checks)
-                    const fieldsToCompare = [
-                        'CELLPHONE', 'EMAIL', 'BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'
-                    ];
-                    
-                    fieldsToCompare.forEach(field => {
-                        const newValue = applicantData[field] || '';
-                        const existingValue = existingApp[field] || '';
-                        
-                        if (newValue && existingValue && newValue.toLowerCase() !== existingValue.toLowerCase()) {
-                            matchDetails.differences.push({
-                                field: field,
-                                newValue: newValue,
-                                existingValue: existingValue
-                            });
-                        }
+                const existingName = (existingApp.NAME || '').toString().toLowerCase().trim();
+                const existingBdate = (existingApp.BDATE || '').toString().trim();
+
+                // Skip if existing applicant has no name
+                if (!existingName || existingName === 'n/a') {
+                    continue;
+                }
+
+                // Only consider it a duplicate if:
+                // 1. Names match EXACTLY (case insensitive)
+                // 2. AND birthdates match EXACTLY
+                // 3. AND both are not "N/A"
+                const nameMatch = newName === existingName;
+                const bdateMatch = newBdate && existingBdate && 
+                                newBdate === existingBdate &&
+                                newBdate !== 'N/A' && 
+                                existingBdate !== 'N/A';
+
+                // STRICT duplicate: must have both name AND birthday match
+                if (nameMatch && bdateMatch) {
+                    console.log('🔴 STRICT DUPLICATE FOUND:', {
+                        newName,
+                        newBdate,
+                        existingName,
+                        existingBdate
                     });
                     
-                    // Add birthday difference for same name cases
-                    if (sameNameDifferentBday) {
-                        matchDetails.differences.push({
-                            field: 'Birthday',
-                            newValue: applicantData.BDATE || 'Not provided',
-                            existingValue: existingApp.BDATE || 'Not provided'
-                        });
-                    }
-                    
-                    matches.push(matchDetails);
+                    matches.push({
+                        existingApplicant: existingApp,
+                        matchingFields: ['Name', 'Birthday'],
+                        differences: [],
+                        sameNameDifferentBday: false
+                    });
+                }
+                // Only name match (different birthday) - just log for info
+                else if (nameMatch) {
+                    console.log('🟡 SAME NAME, DIFFERENT BIRTHDAY:', {
+                        newName,
+                        newBdate,
+                        existingName,
+                        existingBdate
+                    });
                 }
             }
-            
+
+            console.log('🔍 Duplicate check result:', {
+                totalApplicants: savedApplicants.length,
+                matchesFound: matches.length,
+                newApplicant: { name: newName, bdate: newBdate }
+            });
+
             return {
                 hasMatches: matches.length > 0,
                 matches: matches
@@ -976,110 +1008,113 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function addManualApplicant() {
-        const formData = new FormData(elements.manualApplicantForm);
-        const applicantData = {};
-        
-        // Get individual name parts - FIXED: Using correct field IDs
-        const lastName = document.getElementById('manual-surname')?.value.trim() || '';
-        const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
-        const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
-        
-        // Combine into full name format: "Last Name, First Name Middle Name"
-        if (lastName && firstName) {
-            let fullName = `${lastName}, ${firstName}`;
-            if (middleName) {
-                fullName += ` ${middleName}`;
-            }
-            applicantData['NAME'] = fullName;
-        } else {
-            // Fallback to the full name field if provided
-            applicantData['NAME'] = document.getElementById('manual-name')?.value.trim() || 'N/A';
-        }
-        
-        // Store individual name parts for reference
-        applicantData['LAST NAME'] = lastName || 'N/A';
-        applicantData['FIRST NAME'] = firstName || 'N/A';
-        applicantData['MIDDLE NAME'] = middleName || 'N/A';
-        
-        // Process other form data with null checks
-        formData.forEach((value, key) => {
-            if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
-                !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
-                const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
-                applicantData[fieldName] = value || 'N/A';
-            }
-        });
-        
-        applicantData['SRS ID'] = generateUniqueId();
-        
-        // Process date field
-        if (applicantData['BDATE']) {
-            try {
-                const date = new Date(applicantData['BDATE']);
-                if (!isNaN(date.getTime())) {
-                    applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+        try {
+            console.log('Starting manual applicant addition...');
+            
+            const formData = new FormData(elements.manualApplicantForm);
+            const applicantData = {};
+            
+            // Get individual name parts
+            const lastName = document.getElementById('manual-surname')?.value.trim() || '';
+            const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
+            const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
+            
+            // Combine into full name
+            if (lastName && firstName) {
+                let fullName = `${lastName}, ${firstName}`;
+                if (middleName) {
+                    fullName += ` ${middleName}`;
                 }
-            } catch (error) {
-                console.warn('Date parsing error:', error);
+                applicantData['NAME'] = fullName;
+            } else {
+                applicantData['NAME'] = 'N/A';
+            }
+            
+            // Store individual name parts
+            applicantData['LAST NAME'] = lastName || 'N/A';
+            applicantData['FIRST NAME'] = firstName || 'N/A';
+            applicantData['MIDDLE NAME'] = middleName || 'N/A';
+            
+            // Process other form data
+            formData.forEach((value, key) => {
+                if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
+                    !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
+                    const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
+                    applicantData[fieldName] = value || 'N/A';
+                }
+            });
+            
+            // Generate unique ID
+            applicantData['SRS ID'] = generateUniqueId();
+            
+            // Process date field
+            if (applicantData['BDATE']) {
+                try {
+                    const date = new Date(applicantData['BDATE']);
+                    if (!isNaN(date.getTime())) {
+                        applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
+                    }
+                } catch (error) {
+                    console.warn('Date parsing error:', error);
+                    applicantData['BDATE'] = 'N/A';
+                }
+            } else {
                 applicantData['BDATE'] = 'N/A';
             }
-        } else {
-            applicantData['BDATE'] = 'N/A';
-        }
-        
-        applicantData['REG. DATE'] = new Date().toLocaleDateString();
-        applicantData['DATE CREATED'] = new Date().toLocaleString();
-        applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
-        applicantData['STREET ADDRESS'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
-        applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
-        applicantData['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
-        applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
+            
+            // Add system fields
+            applicantData['REG. DATE'] = new Date().toLocaleDateString();
+            applicantData['DATE CREATED'] = new Date().toLocaleString();
+            applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
+            applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
+            
+            // Address fields
+            applicantData['STREET ADDRESS'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
+            applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
+            applicantData['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
+            applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
 
-        formData.forEach((value, key) => {
-            if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
-                !key.startsWith('manual-middle-name') && !key.startsWith('manual-name') &&
-                !key.startsWith('manual-house-street') && !key.startsWith('manual-barangay') &&
-                !key.startsWith('manual-city-municipality') && !key.startsWith('manual-province')) {
-                const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
-                applicantData[fieldName] = value || 'N/A';
-            }
-        });
-        
-        // Ensure all required fields have values
-        const requiredFields = ['NAME', 'BDATE', 'SEX', 'CIVIL STATUS', 'BARANGAY', 'CITY/MUNICIPALITY'];
-        requiredFields.forEach(field => {
-            if (!applicantData[field] || applicantData[field] === '') {
-                applicantData[field] = 'N/A';
-            }
-        });
-        
-        try {
+            console.log('📝 New applicant data:', applicantData);
+
+            // Check for duplicates (with strict matching)
             const duplicateCheck = checkApplicantDuplicate(applicantData);
             
             if (duplicateCheck.hasMatches) {
+                console.log('🟡 Potential duplicate found, showing confirmation');
                 highlightMatchingApplicants(duplicateCheck.matches);
                 
                 showDuplicateConfirmation(applicantData, duplicateCheck.matches)
                     .then(shouldProceed => {
                         if (!shouldProceed) {
                             removeHighlights();
+                            console.log('❌ User cancelled duplicate addition');
                             return;
                         }
                         
+                        console.log('✅ User confirmed to add anyway');
                         proceedWithAddingApplicant(applicantData);
                     });
             } else {
+                console.log('✅ No duplicates found, proceeding with addition');
                 proceedWithAddingApplicant(applicantData);
             }
         } catch (error) {
-            console.error('Error in duplicate check:', error);
-            // Proceed with adding anyway if duplicate check fails
-            proceedWithAddingApplicant(applicantData);
+            console.error('❌ Error in addManualApplicant:', error);
+            showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
     }
 
     function proceedWithAddingApplicant(applicantData) {
         try {
+            // Generate a unique ID for the new applicant
+            applicantData['SRS ID'] = generateUniqueId();
+            
+            // Add timestamps
+            applicantData['DATE CREATED'] = new Date().toLocaleString();
+            applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
+            applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
+            
+            // Handle photo
             const tempPhoto = localStorage.getItem('tempManualPhoto');
             if (tempPhoto) {
                 const photoId = applicantData['SRS ID'];
@@ -1088,41 +1123,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['PHOTO'] = tempPhoto;
             }
             
+            // Save to main applicants
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             savedApplicants.push(applicantData);
             saveMainApplicants(savedApplicants);
             
+            // Update display
             displayMainApplicants(savedApplicants);
             removeHighlights();
             
+            // Close modal and show success
             closeManualModal();
             
-            // Check program category and show appropriate prompt
-            const programCategory = applicantData['PROGRAM CATEGORY'] || '';
-            const programLower = programCategory.toLowerCase();
+            // Show appropriate program prompt
+            showProgramSuccessPrompt(applicantData);
             
-            if (programLower.includes('livelihood')) {
-                showLivelihoodProgramPrompt(applicantData);
-            } else if (programLower.includes('employment')) {
-                showEmploymentProgramPrompt(applicantData);
-            } else if (programLower.includes('educational') || programLower.includes('education')) {
-                showEducationProgramPrompt(applicantData);
-            } else if (programLower.includes('skills training') || programLower.includes('skills')) {
-                showSkillsTrainingProgramPrompt(applicantData);
-            } else if (programLower.includes('ofw') || programLower.includes('reintegration')) {
-                showOFWProgramPrompt(applicantData);
-            } else if (programLower.includes('pwd')) {
-                showPWDProgramPrompt(applicantData);
-            } else if (programLower.includes('4ps') || programLower.includes('monitoring')) {
-                show4PsProgramPrompt(applicantData);
-            } else {
-                showNotification('Applicant added successfully!', 'success', elements.manualNotification);
-            }
-            
-            localStorage.removeItem('tempManualPhoto');
         } catch (error) {
             console.error('Error adding applicant:', error);
             showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
+        }
+    }
+
+    // Helper function to show success message
+    function showProgramSuccessPrompt(applicantData) {
+        const programCategory = applicantData['PROGRAM CATEGORY'] || '';
+        const programLower = programCategory.toLowerCase();
+        
+        if (programLower.includes('livelihood')) {
+            showLivelihoodProgramPrompt(applicantData);
+        } else if (programLower.includes('employment')) {
+            showEmploymentProgramPrompt(applicantData);
+        } else if (programLower.includes('educational') || programLower.includes('education')) {
+            showEducationProgramPrompt(applicantData);
+        } else if (programLower.includes('skills training') || programLower.includes('skills')) {
+            showSkillsTrainingProgramPrompt(applicantData);
+        } else if (programLower.includes('ofw') || programLower.includes('reintegration')) {
+            showOFWProgramPrompt(applicantData);
+        } else if (programLower.includes('pwd')) {
+            showPWDProgramPrompt(applicantData);
+        } else if (programLower.includes('4ps') || programLower.includes('monitoring')) {
+            show4PsProgramPrompt(applicantData);
+        } else {
+            showNotification('Applicant added successfully!', 'success', elements.manualNotification);
         }
     }
 
@@ -1632,7 +1674,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function openCamera() {
+        if (elements.manualModal) elements.manualModal.style.display = 'none';
+        if (elements.editModal) elements.editModal.style.display = 'none';
         elements.cameraModal.style.display = 'block';
+        elements.cameraModal.style.zIndex = '9999';
         elements.cameraError.style.display = 'none';
         elements.cameraVideo.style.display = 'block';
         elements.cameraCanvas.style.display = 'none';
@@ -5321,24 +5366,71 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Re-initialize manual form controls
     function initializeManualFormControls() {
-        // Initialize photo controls
-        initializeManualPhotoControls();
-        
-        // Initialize dynamic form elements
-        initializeDynamicFormElements();
-        
-        // Initialize add entry buttons
-        initializeAddEntryButtons();
-        
-        // Add submit handler for adding new applicants
-        elements.manualApplicantForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            if (validateManualForm(false)) {
-                addManualApplicant();
+        try {
+            console.log('Initializing manual form controls...');
+            
+            // Check if elements exist before using them
+            if (!elements.manualApplicantForm) {
+                console.warn('Manual applicant form not found');
+                return;
             }
-        });
+
+            // Initialize photo controls only if elements exist
+            if (elements.manualUploadPhotoBtn && elements.manualPhotoInput) {
+                elements.manualUploadPhotoBtn.addEventListener('click', function() {
+                    elements.manualPhotoInput.click();
+                });
+            }
+
+            if (elements.manualPhotoInput) {
+                elements.manualPhotoInput.addEventListener('change', function(e) {
+                    handleManualPhotoUpload(e);
+                });
+            }
+
+            if (elements.manualRemovePhotoBtn) {
+                elements.manualRemovePhotoBtn.addEventListener('click', function() {
+                    const manualPhotoPreview = document.getElementById('manual-photo-preview');
+                    const manualPhotoPlaceholder = document.getElementById('manual-photo-placeholder');
+                    
+                    if (manualPhotoPreview && manualPhotoPlaceholder) {
+                        manualPhotoPreview.src = '';
+                        manualPhotoPreview.style.display = 'none';
+                        manualPhotoPlaceholder.style.display = 'flex';
+                        elements.manualRemovePhotoBtn.style.display = 'none';
+                        elements.manualPhotoInput.value = '';
+                        localStorage.removeItem('tempManualPhoto');
+                    }
+                });
+            }
+
+            if (elements.manualTakePhotoBtn) {
+                elements.manualTakePhotoBtn.addEventListener('click', function() {
+                    currentEditId = 'manual_' + Date.now();
+                    openCamera();
+                });
+            }
+            
+            // Initialize dynamic form elements
+            initializeDynamicFormElements();
+            
+            // Initialize add entry buttons
+            initializeAddEntryButtons();
+            
+            // Add submit handler for adding new applicants
+            elements.manualApplicantForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                console.log('Manual form submitted');
+                if (validateManualForm(false)) {
+                    addManualApplicant();
+                }
+            });
+            
+            console.log('Manual form controls initialized successfully');
+        } catch (error) {
+            console.error('Error initializing manual form controls:', error);
+        }
     }
 
     function setDefaultManualFormValues() {
