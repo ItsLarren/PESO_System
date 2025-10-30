@@ -2785,3 +2785,36 @@ input[type="date"]:after {
 #cameraModal .modal-content {
     z-index: 10000;
 }
+
+.connection-status {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    padding: 8px 12px;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 10000;
+    transition: all 0.3s ease;
+}
+
+.connection-status.offline {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.connection-status i {
+    margin-right: 5px;
+}
+
+.offline-warning {
+    background: #fff3e0;
+    border: 1px solid #ffb74d;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 4px;
+    text-align: center;
+    color: #e65100;
+}

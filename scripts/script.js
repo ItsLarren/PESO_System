@@ -367,6 +367,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            // Initialize sync manager first
+            window.syncManager = new SyncManager();
+
             // Wait a bit for DOM to be fully ready
             setTimeout(() => {
                 // Initialize all components
@@ -379,8 +382,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 initializeReporting();
                 initializeViewModal();
                 
-                // Load data
-                loadMainApplicants();
+                // Load data (will handle online/offline automatically)
+                loadApplicantsData();
                 loadImportedData();
                 
                 // Initialize UI components
@@ -1025,6 +1028,19 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const formData = new FormData(elements.manualApplicantForm);
             const applicantData = {};
+            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            savedApplicants.push(applicantData);
+            saveMainApplicants(savedApplicants);
+
+            if (!syncManager.isOnline) {
+                syncManager.addPendingChange({
+                    type: 'add_applicant',
+                    data: applicantData
+                });
+            } else {
+                // If online, sync immediately
+                syncManager.syncAddApplicant(applicantData);
+            }
             
             // Get individual name parts
             const lastName = document.getElementById('manual-surname')?.value.trim() || '';
@@ -1114,6 +1130,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('❌ Error in addManualApplicant:', error);
             showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
+        
     }
 
     function proceedWithAddingApplicant(applicantData) {
@@ -2054,6 +2071,16 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!id) {
             showNotification('Error: No applicant ID found for update', 'error');
             return;
+        }
+
+        if (!syncManager.isOnline) {
+            syncManager.addPendingChange({
+                type: 'update_applicant',
+                data: updatedApplicant
+            });
+        } else {
+            // If online, sync immediately
+            syncManager.syncUpdateApplicant(updatedApplicant);
         }
 
         const formData = new FormData(document.getElementById('editApplicantForm'));
@@ -3727,6 +3754,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const updatedApplicants = savedApplicants.filter(applicant => 
             applicant['SRS ID'] !== id && applicant.ID !== id
         );
+
+        if (!syncManager.isOnline) {
+            syncManager.addPendingChange({
+                type: 'delete_applicant',
+                data: id
+            });
+        } else {
+            // If online, sync immediately
+            syncManager.syncDeleteApplicant(id);
+        }
         
         saveMainApplicants(updatedApplicants);
         displayMainApplicants(updatedApplicants);
@@ -6367,6 +6404,195 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         
         console.log('✅ Debug complete');
+    }
+
+    // Online/Offline Detection and Sync
+    class SyncManager {
+    constructor() {
+        this.isOnline = navigator.onLine;
+        this.pendingChanges = [];
+        this.init();
+    }
+
+    init() {
+        // Listen for online/offline events
+        window.addEventListener('online', () => this.handleOnline());
+        window.addEventListener('offline', () => this.handleOffline());
+        
+        // Check initial status
+        this.updateOnlineStatus();
+        
+        // Load pending changes
+        this.loadPendingChanges();
+    }
+
+    updateOnlineStatus() {
+        this.isOnline = navigator.onLine;
+        const statusElement = document.getElementById('connection-status');
+        
+        if (statusElement) {
+        if (this.isOnline) {
+            statusElement.innerHTML = '<i class="fas fa-wifi"></i> Online';
+            statusElement.style.color = '#4caf50';
+        } else {
+            statusElement.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline';
+            statusElement.style.color = '#f44336';
+        }
+        }
+    }
+
+    handleOnline() {
+        console.log('Connection restored - syncing data...');
+        this.updateOnlineStatus();
+        this.syncPendingChanges();
+        this.loadMainApplicants(); // Reload data that might have been updated online
+    }
+
+    handleOffline() {
+        console.log('Connection lost - working offline...');
+        this.updateOnlineStatus();
+        showNotification('Working offline. Changes will sync when connection is restored.', 'warning');
+    }
+
+    // Store pending changes when offline
+    addPendingChange(change) {
+        const pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+        pendingChanges.push({
+        ...change,
+        timestamp: new Date().toISOString(),
+        id: Date.now() + Math.random()
+        });
+        localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
+        this.pendingChanges = pendingChanges;
+    }
+
+    loadPendingChanges() {
+        this.pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+        return this.pendingChanges;
+    }
+
+    // Sync pending changes when online
+    async syncPendingChanges() {
+        if (!this.isOnline || this.pendingChanges.length === 0) return;
+
+        const pendingChanges = [...this.pendingChanges];
+        
+        try {
+        for (const change of pendingChanges) {
+            await this.processChange(change);
+        }
+        
+        // Clear pending changes after successful sync
+        localStorage.removeItem('pendingChanges');
+        this.pendingChanges = [];
+        
+        showNotification('All offline changes have been synchronized.', 'success');
+        
+        } catch (error) {
+        console.error('Sync failed:', error);
+        showNotification('Some changes failed to sync. They will retry later.', 'error');
+        }
+    }
+
+    async processChange(change) {
+        // Here you would send the change to your server
+        // For now, we'll just simulate API calls
+        switch (change.type) {
+        case 'add_applicant':
+            return await this.syncAddApplicant(change.data);
+        case 'update_applicant':
+            return await this.syncUpdateApplicant(change.data);
+        case 'delete_applicant':
+            return await this.syncDeleteApplicant(change.data);
+        default:
+            console.warn('Unknown change type:', change.type);
+        }
+    }
+
+    // Simulated API methods - replace with your actual API endpoints
+    async syncAddApplicant(applicant) {
+        // Simulate API call
+        console.log('Syncing new applicant:', applicant);
+        // await fetch('/api/applicants', { method: 'POST', body: JSON.stringify(applicant) });
+        return new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    async syncUpdateApplicant(applicant) {
+        console.log('Syncing updated applicant:', applicant);
+        // await fetch(`/api/applicants/${applicant.id}`, { method: 'PUT', body: JSON.stringify(applicant) });
+        return new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    async syncDeleteApplicant(applicantId) {
+        console.log('Syncing deleted applicant:', applicantId);
+        // await fetch(`/api/applicants/${applicantId}`, { method: 'DELETE' });
+        return new Promise(resolve => setTimeout(resolve, 500));
+    }
+    }
+
+    // Initialize sync manager
+    const syncManager = new SyncManager();
+
+    // Enhanced data loading function
+    async function loadApplicantsData() {
+        try {
+            // First try to load from server if online
+            if (syncManager.isOnline) {
+                await loadFromServer();
+            } else {
+                // Load from local storage when offline
+                loadFromLocalStorage();
+            }
+        } catch (error) {
+            console.log('Falling back to local storage:', error);
+            loadFromLocalStorage();
+        }
+    }
+
+    async function loadFromServer() {
+        try {
+            // Replace with your actual API endpoint
+            // const response = await fetch('/api/applicants');
+            // const serverData = await response.json();
+            
+            // For now, we'll simulate this
+            const serverData = JSON.parse(localStorage.getItem('serverApplicants') || '[]');
+            
+            if (serverData.length > 0) {
+                // Merge server data with local data
+                const localData = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+                const mergedData = mergeData(serverData, localData);
+                
+                saveMainApplicants(mergedData);
+                // Also save to server storage for offline reference
+                localStorage.setItem('serverApplicants', JSON.stringify(mergedData));
+            }
+            
+            displayMainApplicants(mergedData || serverData);
+            
+        } catch (error) {
+            console.error('Failed to load from server:', error);
+            throw error;
+        }
+    }
+
+    function loadFromLocalStorage() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        displayMainApplicants(savedApplicants);
+    }
+
+    function mergeData(serverData, localData) {
+        // Simple merge - in production, you'd want more sophisticated conflict resolution
+        const merged = [...serverData];
+        
+        localData.forEach(localItem => {
+            const exists = merged.some(serverItem => serverItem['SRS ID'] === localItem['SRS ID']);
+            if (!exists) {
+                merged.push(localItem);
+            }
+        });
+        
+        return merged;
     }
 
     initializeApp();
