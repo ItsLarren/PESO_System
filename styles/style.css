@@ -2023,7 +2023,6 @@ input[type="date"]:after {
     animation: pulse-warning 2s infinite;
 }
 
-/* Section Navigation */
 .section-navigation {
     margin-bottom: 20px;
     padding: 10px;
@@ -2042,7 +2041,6 @@ input[type="date"]:after {
     flex: 1;
 }
 
-/* Form Sections */
 .form-section {
     margin-bottom: 30px;
     padding-bottom: 20px;
@@ -2057,7 +2055,6 @@ input[type="date"]:after {
     padding-bottom: 8px;
 }
 
-/* Checkbox and Radio Groups */
 .checkbox-group, .radio-group {
     display: flex;
     flex-wrap: wrap;
@@ -2071,7 +2068,6 @@ input[type="date"]:after {
     gap: 5px;
 }
 
-/* Location Group */
 .location-group {
     display: flex;
     gap: 20px;
@@ -2082,7 +2078,6 @@ input[type="date"]:after {
     flex: 1;
 }
 
-/* Table Styles */
 .language-table table, 
 .education-table table, 
 .training-table table, 
@@ -2117,7 +2112,6 @@ input[type="date"]:after {
     font-weight: 600;
 }
 
-/* Skills Checkbox Group */
 .skills-checkbox-group {
     display: flex;
     gap: 20px;
@@ -2136,7 +2130,6 @@ input[type="date"]:after {
     gap: 5px;
 }
 
-/* Add Entry Button */
 .add-entry-btn {
     background: #4caf50;
     color: white;
@@ -2152,7 +2145,6 @@ input[type="date"]:after {
     background: #388e3c;
 }
 
-/* Form Grid for Manual Form */
 .manual-form-grid {
     display: block;
     max-height: 60vh;
@@ -2162,7 +2154,6 @@ input[type="date"]:after {
     border-radius: 4px;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .location-group {
         flex-direction: column;
@@ -2186,7 +2177,6 @@ input[type="date"]:after {
     }
 }
 
-/* Table Container for Horizontal Scrolling */
 .table-container-scroll {
     width: 100%;
     overflow-x: auto;
@@ -2195,14 +2185,13 @@ input[type="date"]:after {
     border-radius: 4px;
 }
 
-/* Table Styles with Minimum Width */
 .language-table, 
 .education-table, 
 .training-table, 
 .eligibility-table, 
 .work-experience-table {
     width: 100%;
-    min-width: 600px; /* Ensure tables have minimum width for scrolling */
+    min-width: 600px; 
 }
 
 .language-table table, 
@@ -2216,7 +2205,6 @@ input[type="date"]:after {
     table-layout: fixed;
 }
 
-/* Specific table widths for better layout */
 .language-table table {
     min-width: 500px;
 }
@@ -2255,7 +2243,6 @@ input[type="date"]:after {
     text-overflow: ellipsis;
 }
 
-/* Column widths for specific tables */
 .language-table th:nth-child(1),
 .language-table td:nth-child(1) {
     width: 25%;
@@ -2384,7 +2371,6 @@ input[type="date"]:after {
     left: 0;
 }
 
-/* Input styles within tables */
 .language-table input[type="text"],
 .education-table input[type="text"],
 .training-table input[type="text"],
@@ -2411,7 +2397,6 @@ input[type="date"]:after {
     transform: scale(1.2);
 }
 
-/* Scrollbar styling for table containers */
 .table-container-scroll::-webkit-scrollbar {
     height: 8px;
 }
@@ -2430,7 +2415,6 @@ input[type="date"]:after {
     background: #a8a8a8;
 }
 
-/* Import Validation Modal Styles */
 .modal-content {
     background: white;
     border-radius: 8px;
@@ -2490,7 +2474,6 @@ input[type="date"]:after {
     background: #0d47a1;
 }
 
-/* View modal specific styles */
 .view-field {
     margin-bottom: 10px;
     padding: 8px;
@@ -2519,7 +2502,6 @@ input[type="date"]:after {
     justify-content: center;
 }
 
-/* Manual form in edit mode */
 .manual-form-edit-mode .save-btn {
     background: #ff9800 !important;
 }
@@ -2528,7 +2510,6 @@ input[type="date"]:after {
     background: #f57c00 !important;
 }
 
-/* Section navigation in manual form */
 .section-navigation {
     background: #f8f9fa;
     padding: 15px;
@@ -2546,7 +2527,6 @@ input[type="date"]:after {
     font-size: 14px;
 }
 
-/* Form sections */
 .form-section {
     background: white;
     padding: 20px;
@@ -2562,7 +2542,6 @@ input[type="date"]:after {
     margin-bottom: 20px;
 }
 
-/* Required field styling */
 .required-field {
     color: #d32f2f;
 }
@@ -2577,7 +2556,6 @@ input[type="date"]:after {
     color: #d32f2f;
 }
 
-/* Enhanced Statistics Styles */
 .enhanced-stats-container {
     margin: 20px 0;
 }
@@ -2682,7 +2660,6 @@ input[type="date"]:after {
     display: inline-block;
 }
 
-/* PDF Export Button */
 .pdf-export-btn {
     background: linear-gradient(135deg, #e74c3c, #c0392b) !important;
     color: white;
@@ -2705,7 +2682,6 @@ input[type="date"]:after {
     background: linear-gradient(135deg, #c0392b, #a93226) !important;
 }
 
-/* Livelihood Program Prompt Styles */
 .modal-content .fa-seedling {
     color: #28a745;
     margin-right: 10px;
@@ -2727,25 +2703,22 @@ input[type="date"]:after {
     }
 }
 
-/* Add to your CSS file */
 .modal {
     z-index: 1000;
 }
 
 #cameraModal {
-    z-index: 1001 !important; /* Higher than other modals */
+    z-index: 1001 !important; 
 }
 
 .modal-content {
     z-index: 1002;
 }
 
-/* Ensure camera modal backdrop covers everything */
 .modal-backdrop {
     z-index: 999;
 }
 
-/* Fix modal stacking context */
 .modal {
     position: fixed;
     top: 0;
@@ -2773,7 +2746,6 @@ input[type="date"]:after {
     overflow-y: auto;
 }
 
-/* Add this to your CSS */
 #cameraModal {
     z-index: 9999 !important;
 }

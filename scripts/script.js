@@ -1,6 +1,5 @@
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Elements definition
     const elements = {
         fileInput: document.getElementById('file-input'),
         fileName: document.getElementById('file-name'),
@@ -61,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
         closeView: document.querySelector('.close-view'),
     };
 
-    // Initialize manual form controls - SINGLE DEFINITION
     function initializeManualFormControls() {
         initializeManualPhotoControls();
         initializeDynamicFormElements();
@@ -77,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initialize view modal
     function initializeViewModal() {
         if (elements.viewModal) {
             const closeBtn = elements.viewModal.querySelector('.close-view');
@@ -95,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Open view modal
     function openViewModal(applicant) {
         if (!elements.viewModal) return;
         
@@ -155,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Handle photo
         const photoId = applicant['SRS ID'] || applicant.ID;
         const viewPhotoPreview = document.getElementById('view-photo-preview');
         const viewPhotoPlaceholder = document.getElementById('view-photo-placeholder');
@@ -173,7 +168,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Set up edit button
         const editFullBtn = document.getElementById('edit-full-applicant-btn');
         if (editFullBtn) {
             editFullBtn.onclick = function() {
@@ -181,7 +175,6 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         }
         
-        // Set up download buttons
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
         const downloadExcelBtn = document.getElementById('download-excel-btn');
         
@@ -200,7 +193,6 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.viewModal.style.display = 'block';
     }
 
-    // Download as PDF function
     function downloadApplicantAsPDF(applicant) {
         try {
             const printWindow = window.open('', 'CPESO Comprehensive Program Report');
@@ -354,18 +346,15 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             console.log('Initializing application...');
             
-            // Check authentication
             if (localStorage.getItem('isLoggedIn') !== 'true') {
                 window.location.href = 'login.html';
                 return;
             }
             
-            // Restore backup if main data is missing
             if (syncManager.restoreBackupIfNeeded()) {
                 console.log('✅ Data restored from backup');
             }
 
-            // Initialize components with error handling
             const initSteps = [
                 { name: 'Manual Form', fn: initializeManualForm },
                 { name: 'Camera', fn: initializeCamera },
@@ -386,19 +375,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             
-            // Load data
             loadApplicantsData();
             loadApplicantsDataWithRetry();
             loadImportedData();
             
-            // Initialize UI components
             initializeDynamicFormElements();
             initializeAddEntryButtons();
             displayCurrentUser();
 
             console.log('Application initialized successfully');
             
-            // Show online status
             if (syncManager) {
                 syncManager.updateOnlineStatus();
             }
@@ -425,7 +411,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (savedApplicants.length === 0 && retries > 0) {
                     console.warn('No applicants found, attempting restore...');
                     if (syncManager.restoreBackupIfNeeded()) {
-                        // Retry after restore
                         setTimeout(attemptLoad, 100);
                     }
                 } else {
@@ -448,7 +433,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initializeDynamicFormElements() {
-        // Disability "Others" specification
         const disabilityOthers = document.getElementById('manual-disability-others');
         const disabilitySpecify = document.getElementById('manual-disability-specify');
         
@@ -458,7 +442,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Employment status specification
         const empStatus = document.getElementById('manual-emp-status');
         const empStatusSpecify = document.getElementById('manual-emp-status-specify');
         const empStatusCountry = document.getElementById('manual-emp-status-country');
@@ -470,7 +453,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Looking for work duration
         const lookingWorkYes = document.getElementById('manual-looking-work-yes');
         const lookingWorkDuration = document.getElementById('manual-looking-work-duration');
         
@@ -480,7 +462,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Work immediately when
         const workImmediatelyNo = document.getElementById('manual-work-immediately-no');
         const workImmediatelyWhen = document.getElementById('manual-work-immediately-when');
         
@@ -490,7 +471,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // 4Ps beneficiary ID
         const fourPsYes = document.getElementById('manual-4ps-yes');
         const fourPsId = document.getElementById('manual-4ps-id');
         
@@ -500,7 +480,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Work location inputs
         const workLocationLocal = document.querySelector('input[name="manual-work-location"][value="Local"]');
         const workLocationOverseas = document.querySelector('input[name="manual-work-location"][value="Overseas"]');
         
@@ -510,7 +489,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('manual-work-location-local2').style.display = this.checked ? 'block' : 'none';
                 document.getElementById('manual-work-location-local3').style.display = this.checked ? 'block' : 'none';
                 
-                // Hide overseas inputs
                 document.getElementById('manual-work-location-overseas1').style.display = 'none';
                 document.getElementById('manual-work-location-overseas2').style.display = 'none';
                 document.getElementById('manual-work-location-overseas3').style.display = 'none';
@@ -523,14 +501,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('manual-work-location-overseas2').style.display = this.checked ? 'block' : 'none';
                 document.getElementById('manual-work-location-overseas3').style.display = this.checked ? 'block' : 'none';
                 
-                // Hide local inputs
                 document.getElementById('manual-work-location-local1').style.display = 'none';
                 document.getElementById('manual-work-location-local2').style.display = 'none';
                 document.getElementById('manual-work-location-local3').style.display = 'none';
             });
         }
         
-        // Skills "Others" specification
         const skillOthers = document.getElementById('manual-skill-others');
         const skillOthersSpecify = document.getElementById('manual-skill-others-specify');
         
@@ -541,9 +517,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initialize add entry buttons for dynamic tables
     function initializeAddEntryButtons() {
-        // Training entries
         const addTrainingBtn = document.getElementById('add-training-btn');
         if (addTrainingBtn) {
             addTrainingBtn.addEventListener('click', function() {
@@ -551,7 +525,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Eligibility entries
         const addEligibilityBtn = document.getElementById('add-eligibility-btn');
         if (addEligibilityBtn) {
             addEligibilityBtn.addEventListener('click', function() {
@@ -559,7 +532,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Work experience entries
         const addWorkBtn = document.getElementById('add-work-btn');
         if (addWorkBtn) {
             addWorkBtn.addEventListener('click', function() {
@@ -568,7 +540,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add new row to tables
     function addTableEntry(tableId, type) {
         const tableBody = document.getElementById(tableId);
         if (!tableBody) return;
@@ -614,7 +585,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         tableBody.appendChild(newRow);
         
-        // Scroll to the bottom of the table container to show the new row
         const tableContainer = tableBody.closest('.table-container-scroll');
         if (tableContainer) {
             tableContainer.scrollLeft = tableContainer.scrollWidth;
@@ -650,11 +620,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Process the form data and add to applicants array
         // ... existing code ... 
         
-        // Close modal and reset form
         document.getElementById('manualModal').style.display = 'none';
         document.getElementById('manualApplicantForm').reset();
         
-        // Update applicant list display
         displayApplicants();
     }
 
@@ -763,7 +731,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!elements.manualModal) return;
         elements.manualModal.style.display = 'none';
         
-        // Reset to add mode
         const modalHeader = elements.manualModal.querySelector('.modal-header h2');
         if (modalHeader) {
             modalHeader.textContent = 'Add New Applicant';
@@ -772,12 +739,10 @@ document.addEventListener('DOMContentLoaded', function () {
         
         elements.manualModal.classList.remove('manual-form-edit-mode');
         
-        // Always reset to add mode when closing
         setTimeout(() => {
             resetManualFormToAddMode();
         }, 100);
         
-        // Clear any temporary photo
         localStorage.removeItem('tempManualPhoto');
     }
 
@@ -789,13 +754,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 reader.onload = function(e) {
                     const photoData = e.target.result;
                     
-                    // Set the photo preview immediately
                     elements.manualPhotoPreview.src = photoData;
                     elements.manualPhotoPreview.style.display = 'block';
                     elements.manualPhotoPlaceholder.style.display = 'none';
                     elements.manualRemovePhotoBtn.style.display = 'block';
                     
-                    // Store temporarily for form submission
                     localStorage.setItem('tempManualPhoto', photoData);
                 };
                 reader.readAsDataURL(file);
@@ -805,7 +768,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Update the remove photo function
     if (elements.manualRemovePhotoBtn) {
         elements.manualRemovePhotoBtn.addEventListener('click', function() {
             elements.manualPhotoPreview.src = '';
@@ -814,7 +776,6 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.manualRemovePhotoBtn.style.display = 'none';
             elements.manualPhotoInput.value = '';
             
-            // Remove temporary photo
             localStorage.removeItem('tempManualPhoto');
         });
     }
@@ -825,7 +786,6 @@ document.addEventListener('DOMContentLoaded', function () {
             
             console.log('🔍 Duplicate check - Existing applicants:', savedApplicants.length);
             
-            // If no existing applicants, no duplicates possible
             if (savedApplicants.length === 0) {
                 console.log('✅ No existing applicants - no duplicates possible');
                 return {
@@ -838,7 +798,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const newName = (applicantData.NAME || '').toString().toLowerCase().trim();
             const newBdate = (applicantData.BDATE || '').toString().trim();
 
-            // Skip duplicate check if new applicant has no valid name
             if (!newName || newName === 'n/a' || newName === '' || newName === 'null') {
                 console.log('⚠️ New applicant has no valid name - skipping duplicate check');
                 return {
@@ -853,7 +812,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const existingName = (existingApp.NAME || '').toString().toLowerCase().trim();
                 const existingBdate = (existingApp.BDATE || '').toString().trim();
 
-                // Skip if existing applicant has no valid name
                 if (!existingName || existingName === 'n/a' || existingName === '' || existingName === 'null') {
                     continue;
                 }
@@ -865,7 +823,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     bdateMatch: newBdate === existingBdate
                 });
 
-                // STRICT duplicate: must have both name AND birthday match
                 const nameMatch = newName === existingName;
                 const bdateMatch = newBdate && existingBdate && 
                                 newBdate === existingBdate &&
@@ -874,7 +831,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 newBdate !== '' && 
                                 existingBdate !== '';
 
-                // Only consider it a duplicate if BOTH name AND birthday match exactly
                 if (nameMatch && bdateMatch) {
                     console.log('🔴 STRICT DUPLICATE FOUND:', {
                         newName,
@@ -890,7 +846,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         sameNameDifferentBday: false
                     });
                 }
-                // Log same name different birthday for debugging
                 else if (nameMatch && !bdateMatch) {
                     console.log('🟡 SAME NAME, DIFFERENT BIRTHDAY (Not a duplicate):', {
                         newName,
@@ -1036,13 +991,12 @@ document.addEventListener('DOMContentLoaded', function () {
         matches.forEach(match => {
             const rows = tbody.querySelectorAll('tr');
             rows.forEach(row => {
-                const nameCell = row.querySelector('td:nth-child(2)'); // Now column 2 (was 5)
-                const bdateCell = row.querySelector('td:nth-child(3)'); // Now column 3 (was 6)
+                const nameCell = row.querySelector('td:nth-child(2)'); 
+                const bdateCell = row.querySelector('td:nth-child(3)');
                 
                 if (nameCell && nameCell.textContent.trim().toLowerCase() === match.existingApplicant.NAME.toLowerCase()) {
                     row.classList.add('duplicate-highlight');
                     
-                    // Add special styling for same name different birthday cases
                     if (match.sameNameDifferentBday) {
                         row.classList.add('same-name-different-bday');
                     }
@@ -1085,16 +1039,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     data: applicantData
                 });
             } else {
-                // If online, sync immediately
                 syncManager.syncAddApplicant(applicantData);
             }
             
-            // Get individual name parts
             const lastName = document.getElementById('manual-surname')?.value.trim() || '';
             const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
             const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
             
-            // Combine into full name
             if (lastName && firstName) {
                 let fullName = `${lastName}, ${firstName}`;
                 if (middleName) {
@@ -1105,12 +1056,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['NAME'] = 'N/A';
             }
             
-            // Store individual name parts
             applicantData['LAST NAME'] = lastName || 'N/A';
             applicantData['FIRST NAME'] = firstName || 'N/A';
             applicantData['MIDDLE NAME'] = middleName || 'N/A';
             
-            // Process other form data
             formData.forEach((value, key) => {
                 if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
                     !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
@@ -1119,10 +1068,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             
-            // Generate unique ID
             applicantData['SRS ID'] = generateUniqueId();
             
-            // Process date field
             if (applicantData['BDATE']) {
                 try {
                     const date = new Date(applicantData['BDATE']);
@@ -1137,13 +1084,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['BDATE'] = 'N/A';
             }
             
-            // Add system fields
             applicantData['REG. DATE'] = new Date().toLocaleDateString();
             applicantData['DATE CREATED'] = new Date().toLocaleString();
             applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
             applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
             
-            // Address fields
             applicantData['STREET ADDRESS'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
             applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
             applicantData['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
@@ -1151,7 +1096,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.log('📝 New applicant data:', applicantData);
 
-            // Check for duplicates (with strict matching)
             const duplicateCheck = checkApplicantDuplicate(applicantData);
             
             if (duplicateCheck.hasMatches) {
@@ -1184,7 +1128,6 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             console.log('📝 Final applicant data before saving:', applicantData);
             
-            // Debug logging instead of function call
             console.log('🔍 Debug proceedWithAddingApplicant:', {
                 hasData: !!applicantData,
                 keys: applicantData ? Object.keys(applicantData) : 'no data',
@@ -1192,15 +1135,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 id: applicantData?.['SRS ID'] || 'no id'
             });
             
-            // Generate a unique ID for the new applicant
             applicantData['SRS ID'] = generateUniqueId();
-            
-            // Add timestamps
             applicantData['DATE CREATED'] = new Date().toLocaleString();
             applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
             applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
             
-            // Handle photo
             const tempPhoto = localStorage.getItem('tempManualPhoto');
             if (tempPhoto) {
                 const photoId = applicantData['SRS ID'];
@@ -1209,19 +1148,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['PHOTO'] = tempPhoto;
             }
             
-            // Save to main applicants
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             savedApplicants.push(applicantData);
             saveMainApplicants(savedApplicants);
             
-            // Update display
             displayMainApplicants(savedApplicants);
             removeHighlights();
             
-            // Debug: Check what we're about to sync
             console.log('🔄 About to sync applicant:', applicantData);
             
-            // Sync with server if online - ONLY after data is complete
             if (!syncManager.isOnline) {
                 syncManager.addPendingChange({
                     type: 'add_applicant',
@@ -1229,15 +1164,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 console.log('📱 Added to pending changes (offline)');
             } else {
-                // If online, sync immediately
                 console.log('🌐 Syncing immediately (online)');
                 syncManager.syncAddApplicant(applicantData);
             }
             
-            // Close modal and show success
             closeManualModal();
             
-            // Show appropriate program prompt
             showProgramSuccessPrompt(applicantData);
             
         } catch (error) {
@@ -1246,7 +1178,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Helper function to show success message
     function showProgramSuccessPrompt(applicantData) {
         const programCategory = applicantData['PROGRAM CATEGORY'] || '';
         const programLower = programCategory.toLowerCase();
@@ -1337,7 +1268,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Employment Assistance Program Prompt
     function showEmploymentProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1405,7 +1335,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Educational Assistance Program Prompt
     function showEducationProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1473,7 +1402,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Skills Training Program Prompt
     function showSkillsTrainingProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1541,7 +1469,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // OFW Reintegration Program Prompt
     function showOFWProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1609,7 +1536,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // PWD Assistance Program Prompt
     function showPWDProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1677,7 +1603,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 4Ps Monitoring Program Prompt
     function show4PsProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -2154,7 +2079,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const firstName = document.getElementById('edit-first-name').value.trim();
         const middleName = document.getElementById('edit-middle-name').value.trim();
         
-        // Combine into full name
         if (lastName && firstName) {
             let fullName = `${lastName}, ${firstName}`;
             if (middleName) {
@@ -2163,12 +2087,10 @@ document.addEventListener('DOMContentLoaded', function () {
             updatedApplicant['NAME'] = fullName;
         }
         
-        // Store individual name parts
         updatedApplicant['LAST NAME'] = lastName || 'N/A';
         updatedApplicant['FIRST NAME'] = firstName || 'N/A';
         updatedApplicant['MIDDLE NAME'] = middleName || 'N/A';
         
-        // Process other form data
         formData.forEach((value, key) => {
             if (!key.startsWith('edit-last-name') && !key.startsWith('edit-first-name') && 
                 !key.startsWith('edit-middle-name') && !key.startsWith('edit-name')) {
@@ -2192,14 +2114,12 @@ document.addEventListener('DOMContentLoaded', function () {
             
         updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
         
-        // Sync logic - MOVED to after updatedApplicant is fully populated
         if (!syncManager.isOnline) {
             syncManager.addPendingChange({
                 type: 'update_applicant',
                 data: updatedApplicant
             });
         } else {
-            // If online, sync immediately
             syncManager.syncUpdateApplicant(updatedApplicant);
         }
         
@@ -2224,9 +2144,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 }
         
-    // Replace the Excel Import section in initializeFileUploads function
     function initializeFileUploads() {
-        // 1. FILE UPLOAD FOR IMPORTED DATA TABLE (Excel Import section)
         if (elements.browsebtn && elements.fileInput) {
             elements.browsebtn.addEventListener('click', function() {
                 elements.fileInput.click();
@@ -2245,7 +2163,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Excel Import section - FIXED: Use proper duplicate validation
         if (elements.importBtn) {
             elements.importBtn.addEventListener('click', function() {
                 if (!elements.fileInput) return;
@@ -2274,11 +2191,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         const processedData = smartImportData(jsonData);
                         console.log('🔄 Processed data:', processedData);
                         
-                        // Use the same duplicate validation as the main flow
                         const validationResults = validateImportedDataDuplicates(processedData);
                         console.log('✅ Duplicate validation completed:', validationResults);
                         
-                        // Show validation modal for imported data
                         showEnhancedImportValidationModal(validationResults, processedData)
                             .then(result => {
                                 switch (result.action) {
@@ -2308,7 +2223,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // 2. FILE UPLOAD FOR ADDING TO MAIN APPLICANTS (Upload New Applicant section)
         if (elements.uploadBrowseBtn && elements.uploadFileInput) {
             elements.uploadBrowseBtn.addEventListener('click', function() {
                 elements.uploadFileInput.click();
@@ -2355,11 +2269,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         const processedData = smartImportData(jsonData);
                         console.log('🔄 Processed applicant data:', processedData);
                         
-                        // Run validation for MAIN APPLICANTS
                         const validationResults = validateImportedDataDuplicates(processedData);
                         console.log('✅ Validation completed:', validationResults);
                         
-                        // Show validation modal for main applicants - FIXED: Add proper promise handling
                         showEnhancedImportValidationModal(validationResults, processedData)
                             .then(result => {
                                 console.log('Modal result:', result);
@@ -2396,7 +2308,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Reset buttons (keep existing functionality)
         if (elements.resetDataBtn) {
             elements.resetDataBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear all imported data? This action cannot be undone.')) {
@@ -2422,23 +2333,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-    } // FIXED: Added missing closing brace for initializeFileUploads function
+    } 
 
-    // Add these two new functions to handle the different destinations:
 
     function proceedWithImportToImportedData(newApplicants) {
         try {
             const existingImportedData = JSON.parse(localStorage.getItem('importedData')) || [];
             const mergedData = [...existingImportedData, ...newApplicants];
             
-            // Save to imported data table
             localStorage.setItem('importedData', JSON.stringify(mergedData));
-            displayImportedData([]); // This will reload all imported data
+            displayImportedData([]); 
             
-            // Show success message
             showNotification(`Successfully imported ${newApplicants.length} applicant(s) to imported data table.`, 'success');
             
-            // Reset form
             if (elements.fileName) elements.fileName.value = '';
             if (elements.importBtn) elements.importBtn.disabled = true;
             if (elements.fileInput) elements.fileInput.value = '';
@@ -2454,14 +2361,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             const mergedData = [...savedApplicants, ...newApplicants];
             
-            // Save to main applicants
             saveMainApplicants(mergedData);
             displayMainApplicants(mergedData);
             
-            // Show success message
             showUploadNotification(`Successfully added ${newApplicants.length} applicant(s) to main applicant table.`, 'success');
             
-            // Reset form
             if (elements.uploadFileName) elements.uploadFileName.value = '';
             if (elements.addBtn) elements.addBtn.disabled = true;
             if (elements.uploadFileInput) elements.uploadFileInput.value = '';
@@ -2727,7 +2631,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
         
-        // Add event listener for PDF export
         document.getElementById('export-pdf-btn').addEventListener('click', generateComprehensivePDFReport);
         document.getElementById('export-summary-btn').addEventListener('click', exportSummaryReport);
         document.getElementById('export-full-btn').addEventListener('click', exportReportsToExcel);
@@ -3154,7 +3057,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const specificProgram = applicant['SPECIFIC PROGRAM'] || 'No Specific Program';
                 const education = applicant['EDUC LEVEL'] || 'Not Specified';
                 
-                // SAFE course extraction with null checks
                 let course = 'No Course Specified';
                 if (applicant) {
                     course = applicant['COURSE'] || applicant['Course'] || applicant['course'] || 
@@ -3162,15 +3064,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             applicant['DEGREE'] || 'No Course Specified';
                 }
                 
-                // Safe course categorization
                 const categorizedCourse = categorizeCourse(course);
                 stats.byCourse[categorizedCourse] = (stats.byCourse[categorizedCourse] || 0) + 1;
 
-                // Age processing with safety
                 const age = parseInt(applicant.AGE) || 0;
                 const gender = normalizeGender(applicant.SEX);
 
-                // Age group classification
                 if (age < 20) stats.byAgeGroup['Below 20']++;
                 else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
                 else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
@@ -3178,7 +3077,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
                 else if (age >= 60) stats.byAgeGroup['60 and above']++;
 
-                // Age pyramid with safety
                 let ageGroup;
                 if (age < 20) ageGroup = 'Below 20';
                 else if (age >= 20 && age <= 29) ageGroup = '20-29';
@@ -3195,7 +3093,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 
-                // Count categories
                 stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
                 stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
                 stats.bySpecificProgram[specificProgram] = (stats.bySpecificProgram[specificProgram] || 0) + 1;
@@ -3203,7 +3100,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 
             } catch (error) {
                 console.error(`Error processing applicant ${index}:`, error, applicant);
-                // Continue with next applicant instead of breaking
             }
         });
         
@@ -3239,15 +3135,12 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const gender = String(genderValue).trim().toLowerCase();
             
-            // Handle single letters
             if (gender === 'm' || gender === 'male') return 'male';
             if (gender === 'f' || gender === 'female') return 'female';
             
-            // Handle full words and variations
             if (gender.includes('male') && !gender.includes('female')) return 'male';
             if (gender.includes('female')) return 'female';
             
-            // Handle common abbreviations
             if (gender === 'm' || gender === 'm.') return 'male';
             if (gender === 'f' || gender === 'f.') return 'female';
             
@@ -3264,7 +3157,7 @@ document.addEventListener('DOMContentLoaded', function () {
             male: 0,
             female: 0,
             averageAge: 0,
-            unknown: 0 // track unknown genders
+            unknown: 0 
         };
         
         let totalAge = 0;
@@ -3727,7 +3620,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const actionButtons = document.createElement('div');
             actionButtons.className = 'action-buttons';
 
-            // Add View Button
             const viewBtn = document.createElement('button');
             viewBtn.className = 'view-btn';
             viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -3749,7 +3641,6 @@ document.addEventListener('DOMContentLoaded', function () {
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
             deleteBtn.title = 'Delete Applicant';
             deleteBtn.addEventListener('click', function() {
-                // Get the correct ID - FIXED: Ensure we're using the right identifier
                 const applicantId = applicant['SRS ID'] || applicant.ID;
                 console.log('🗑️ Delete button clicked for ID:', applicantId);
                 
@@ -3790,10 +3681,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function downloadApplicantData(applicant) {
         try {
-            // Create a clean copy with properly formatted names
             const exportApplicant = { ...applicant };
             
-            // Ensure full name is properly formatted
             if (!exportApplicant.NAME || exportApplicant.NAME === 'N/A') {
                 const lastName = exportApplicant['LAST NAME'] || '';
                 const firstName = exportApplicant['FIRST NAME'] || '';
@@ -3808,7 +3697,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Ensure individual name parts are included
             if (!exportApplicant['LAST NAME'] || exportApplicant['LAST NAME'] === 'N/A') {
                 exportApplicant['LAST NAME'] = extractLastName(exportApplicant.NAME);
             }
@@ -3840,7 +3728,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('📊 Before deletion - Total applicants:', savedApplicants.length);
         console.log('🔍 All applicant IDs:', savedApplicants.map(app => app['SRS ID'] || app.ID));
         
-        // Filter out the applicant to delete - FIXED: Proper ID matching
         const updatedApplicants = savedApplicants.filter(applicant => {
             const applicantId = applicant['SRS ID'] || applicant.ID;
             const shouldKeep = applicantId !== id;
@@ -3857,14 +3744,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        // Save the updated list
         saveMainApplicants(updatedApplicants);
         displayMainApplicants(updatedApplicants);
         
-        // Remove associated photo
         localStorage.removeItem(`photo_${id}`);
         
-        // Sync logic
         if (!syncManager.isOnline) {
             syncManager.addPendingChange({
                 type: 'delete_applicant',
@@ -3912,7 +3796,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function displayImportedData(newData) {
         if (!elements.importedTable) return;
         
-        // Load existing imported data and merge with new data
         const existingData = JSON.parse(localStorage.getItem('importedData')) || [];
         const mergedData = [...existingData, ...newData];
         
@@ -4013,7 +3896,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tbody.appendChild(row);
         });
         
-        // Save the merged data back to localStorage
         localStorage.setItem('importedData', JSON.stringify(mergedData));
     }
 
@@ -4068,7 +3950,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const exportData = savedApplicants.map(applicant => {
                 const exportApplicant = { ...applicant };
                 
-                // Ensure names are properly formatted for export
                 if (!exportApplicant.NAME || exportApplicant.NAME === 'N/A') {
                     const lastName = exportApplicant['LAST NAME'] || '';
                     const firstName = exportApplicant['FIRST NAME'] || '';
@@ -4122,7 +4003,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
         importedData.splice(index, 1);
         localStorage.setItem('importedData', JSON.stringify(importedData));
-        displayImportedData([]); // Pass empty array to trigger reload of existing data
+        displayImportedData([]);
         showNotification('Imported record deleted successfully!', 'success');
     }
 
@@ -4131,7 +4012,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('📊 Education levels:', stats.byEducation);
         console.log('📚 All courses:', stats.byCourse);
         
-        // More comprehensive college graduate detection
         const collegeGrads = calculateCollegeGraduates(stats.byEducation);
         
         console.log(`🎓 College graduates count: ${collegeGrads}`);
@@ -4140,7 +4020,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return '<p style="text-align: center; color: #666; margin: 10px 0;">No college graduates found in the data.</p>';
         }
         
-        // Get all courses with proper filtering
         const allCourses = Object.entries(stats.byCourse)
             .filter(([course, count]) => {
                 const isValidCourse = course && 
@@ -4202,11 +4081,9 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // Add this helper function to better detect college graduates
     function calculateCollegeGraduates(educationLevels) {
         let total = 0;
         
-        // Comprehensive list of education levels that indicate college graduation
         const collegeLevels = [
             'College Graduate', 'College', 'Bachelor', 'Bachelor\'s Degree',
             'BS', 'B.S.', 'AB', 'A.B.', 'B.A.', 'BA',
@@ -4218,13 +4095,11 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.entries(educationLevels).forEach(([level, count]) => {
             const lowerLevel = level.toLowerCase();
             
-            // Check if this education level indicates college
             const isCollegeLevel = collegeLevels.some(collegeLevel => 
                 lowerLevel.includes(collegeLevel.toLowerCase()) || 
                 collegeLevel.toLowerCase().includes(lowerLevel)
             );
             
-            // Also check for common patterns
             const hasCollegeKeywords = 
                 lowerLevel.includes('college') ||
                 lowerLevel.includes('bachelor') ||
@@ -4323,7 +4198,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function findMatchingValue(record, possibleLabels) {
         if (!record) return null;
         
-        // First: Exact case-insensitive match
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase() === label.toLowerCase()) {
@@ -4332,7 +4206,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Second: Partial match (contains)
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
@@ -4342,7 +4215,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Third: Remove spaces/special chars and match
         for (const label of possibleLabels) {
             const cleanLabel = label.toLowerCase().replace(/[\s_\-]/g, '');
             for (const recordKey in record) {
@@ -4353,7 +4225,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Fourth: Common field name variations
         const commonVariations = {
             'username': ['userid', 'login', 'emailaddress', 'e-mail'],
             'email': ['mail', 'electronicmail', 'contactinfo']
@@ -4537,7 +4408,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function checkImportedDuplicate(newApplicant, importedData) {
         const matches = [];
         
-        // Field mappings for imported data (since imported data might have different field names)
         const fieldMappings = {
             'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name'],
             'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB'],
@@ -4546,7 +4416,6 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         
         for (const existingApp of importedData) {
-            // Extract values using field mappings for both new and existing applicants
             const newName = extractFieldValue(newApplicant, fieldMappings['NAME'])?.toLowerCase() || '';
             const existingName = extractFieldValue(existingApp, fieldMappings['NAME'])?.toLowerCase() || '';
             
@@ -4559,7 +4428,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const newEmail = extractFieldValue(newApplicant, fieldMappings['EMAIL'])?.toLowerCase() || '';
             const existingEmail = extractFieldValue(existingApp, fieldMappings['EMAIL'])?.toLowerCase() || '';
             
-            // Check for matches with better logic
             const nameMatch = newName && existingName && newName === existingName;
             const bdateMatch = newBdate && existingBdate && newBdate === existingBdate;
             const phoneMatch = newPhone && existingPhone && newPhone === existingPhone;
@@ -4567,7 +4435,6 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const sameNameDifferentBday = nameMatch && !bdateMatch;
             
-            // Consider it a duplicate if we have strong matches
             if (nameMatch && (bdateMatch || phoneMatch || emailMatch)) {
                 const matchDetails = {
                     existingApplicant: existingApp,
@@ -4583,7 +4450,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (emailMatch) matchDetails.matchingFields.push('Email');
                 if (sameNameDifferentBday) matchDetails.matchingFields.push('Same Name, Different Birthday');
                 
-                // Compare other fields for differences
                 const fieldsToCompare = ['BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'];
                 
                 fieldsToCompare.forEach(field => {
@@ -4599,7 +4465,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
                 
-                // Add birthday difference for same name cases
                 if (sameNameDifferentBday) {
                     matchDetails.differences.push({
                         field: 'Birthday',
@@ -4618,18 +4483,15 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // Helper function to extract field values using mappings
     function extractFieldValue(record, possibleLabels) {
         if (!record) return null;
         
-        // First try exact matches
         for (const label of possibleLabels) {
             if (record[label] && record[label] !== 'N/A') {
                 return record[label];
             }
         }
         
-        // Then try case-insensitive matches
         for (const recordKey in record) {
             for (const label of possibleLabels) {
                 if (recordKey.toLowerCase() === label.toLowerCase()) {
@@ -4638,7 +4500,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Then try partial matches
         for (const recordKey in record) {
             for (const label of possibleLabels) {
                 if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
@@ -4672,7 +4533,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log(`\n🔍 Checking new applicant ${newIndex + 1}:`, newApp.NAME);
             let isDuplicate = false;
 
-            // Check against imported data (Name + Birthday only)
             importedData.forEach((importedApp, importedIndex) => {
                 if (isDuplicateByNameAndBirthday(newApp, importedApp)) {
                     console.log(`✅ Found duplicate in imported data: ${newApp.NAME} (${newApp.BDATE}) matches ${importedApp.NAME} (${importedApp.BDATE})`);
@@ -4685,7 +4545,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // Check against main applicants (Name + Birthday only)
             if (!isDuplicate) {
                 mainApplicants.forEach((mainApp, mainIndex) => {
                     if (isDuplicateByNameAndBirthday(newApp, mainApp)) {
@@ -4700,7 +4559,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            // If no duplicates found, add to unique
             if (!isDuplicate) {
                 console.log(`✅ No duplicates found for: ${newApp.NAME} (${newApp.BDATE})`);
                 duplicates.unique.push(newApp);
@@ -4714,11 +4572,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function isDuplicateByNameAndBirthday(app1, app2) {
         if (!app1 || !app2) return false;
 
-        // Get names - handle various field names
         const name1 = (app1.NAME || app1.name || app1['Full Name'] || '').toString().trim();
         const name2 = (app2.NAME || app2.name || app2['Full Name'] || '').toString().trim();
         
-        // Get birth dates
         const bdate1 = (app1.BDATE || app1.bdate || app1['Date of Birth'] || '').toString().trim();
         const bdate2 = (app2.BDATE || app2.bdate || app2['Date of Birth'] || '').toString().trim();
 
@@ -4727,18 +4583,15 @@ document.addEventListener('DOMContentLoaded', function () {
             bdate1, bdate2
         });
 
-        // Skip if either name is empty or "N/A"
         if (!name1 || name1 === 'N/A' || !name2 || name2 === 'N/A') {
             return false;
         }
 
-        // Rule 1: Exact name match + exact birthday match
         const nameMatch = name1.toLowerCase() === name2.toLowerCase();
         const bdateMatch = normalizeDate(bdate1) === normalizeDate(bdate2);
 
         console.log('🎯 Name match:', nameMatch, 'Birthday match:', bdateMatch);
 
-        // Only consider it a duplicate if BOTH name and birthday match
         if (nameMatch && bdateMatch) {
             console.log('🎯 Exact Name + Birthday match found');
             return true;
@@ -4752,7 +4605,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dateString || dateString === 'N/A') return '';
         
         try {
-            // Handle MM/DD/YYYY format (common in your system)
             if (dateString.includes('/')) {
                 const parts = dateString.split('/');
                 if (parts.length === 3) {
@@ -4763,7 +4615,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Handle YYYY-MM-DD format (from date inputs)
             if (dateString.includes('-')) {
                 const date = new Date(dateString);
                 if (!isNaN(date.getTime())) {
@@ -4771,7 +4622,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Return original if no specific format matched
             return dateString;
         } catch (error) {
             console.warn('Date normalization error:', error);
@@ -4782,15 +4632,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function areNamesSimilar(name1, name2) {
         if (name1 === name2) return true;
         
-        // Remove extra spaces and special characters
         const clean1 = name1.replace(/\s+/g, ' ').trim().toLowerCase();
         const clean2 = name2.replace(/\s+/g, ' ').trim().toLowerCase();
         
-        // Split into parts
         const parts1 = clean1.split(' ');
         const parts2 = clean2.split(' ');
         
-        // Check if they share significant name parts
         const significantParts1 = parts1.filter(part => part.length > 2);
         const significantParts2 = parts2.filter(part => part.length > 2);
         
@@ -4809,7 +4656,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dateString || dateString === 'N/A') return '';
         
         try {
-            // Handle MM/DD/YYYY format
             if (dateString.includes('/')) {
                 const parts = dateString.split('/');
                 if (parts.length === 3) {
@@ -4820,7 +4666,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Handle other date formats
             const date = new Date(dateString);
             if (!isNaN(date.getTime())) {
                 return date.toISOString().split('T')[0];
@@ -4835,7 +4680,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function normalizePhone(phone) {
         if (!phone || phone === 'N/A') return '';
         
-        // Remove all non-digit characters
         return phone.replace(/\D/g, '');
     }
 
@@ -4878,7 +4722,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>`;
 
-            // Imported Data Duplicates Section
             if (validationResults.inImported.length > 0) {
                 message += `
                     <div style="margin-bottom: 25px;">
@@ -4916,7 +4759,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += `</div></div>`;
             }
 
-            // Main Database Duplicates Section
             if (validationResults.inMain.length > 0) {
                 message += `
                     <div style="margin-bottom: 25px;">
@@ -4954,7 +4796,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += `</div></div>`;
             }
 
-            // Unique Records Section
             if (validationResults.unique.length > 0) {
                 message += `
                     <div style="margin-bottom: 25px;">
@@ -4985,7 +4826,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += `</div></div></div>`;
             }
 
-            // Action Section
             message += `
                     <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
                         <p><strong>Import Options:</strong></p>
@@ -5022,7 +4862,6 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.innerHTML = message;
             document.body.appendChild(modal);
 
-            // Event handlers
             document.getElementById('cancel-import').addEventListener('click', () => {
                 document.body.removeChild(modal);
                 resolve({ action: 'cancel' });
@@ -5050,7 +4889,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function createTestData() {
         console.log('🧪 Creating test data...');
         
-        // Create some test imported data
         const testImportedData = [
             {
                 'NAME': 'John Smith',
@@ -5070,11 +4908,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         ];
         
-        // Save to imported data
         localStorage.setItem('importedData', JSON.stringify(testImportedData));
         console.log('✅ Test imported data created');
         
-        // Create some test main applicants
         const testMainApplicants = [
             {
                 'NAME': 'Robert Johnson',
@@ -5086,7 +4922,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         ];
         
-        // Save to main applicants
         localStorage.setItem('mainApplicants', JSON.stringify(testMainApplicants));
         console.log('✅ Test main applicants created');
         
@@ -5096,65 +4931,49 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // Function to open manual form with existing applicant data
     function openManualFormWithData(applicant) {
         if (!elements.manualModal) return;
         
-        // Close view modal first
         elements.viewModal.style.display = 'none';
-        
-        // Open manual modal
         elements.manualModal.style.display = 'block';
         
-        // Update modal header for edit mode
         const modalHeader = elements.manualModal.querySelector('.modal-header h2');
         if (modalHeader) {
             modalHeader.textContent = 'Edit Applicant';
             modalHeader.style.color = '#ff9800';
         }
         
-        // Add edit mode class
         elements.manualModal.classList.add('manual-form-edit-mode');
         
-        // Store the applicant ID for updating
         currentEditId = applicant['SRS ID'] || applicant.ID;
-        
-        // Populate the manual form with applicant data
         populateManualForm(applicant);
     }
 
-    // Function to populate manual form with data
     function populateManualForm(applicant) {
         if (!applicant) return;
         
         console.log('Populating manual form with data:', applicant);
         
-        // Personal Information Section
         document.getElementById('manual-surname').value = applicant['LAST NAME'] || '';
         document.getElementById('manual-first-name').value = applicant['FIRST NAME'] || '';
         document.getElementById('manual-middle-name').value = applicant['MIDDLE NAME'] || '';
         
-        // Suffix (extract from name if needed)
         const suffix = extractSuffix(applicant.NAME);
         if (suffix && document.getElementById('manual-suffix')) {
             document.getElementById('manual-suffix').value = suffix;
         }
         
-        // Date of Birth - convert format if needed
         if (applicant.BDATE && applicant.BDATE !== 'N/A') {
             const bdate = formatDateForInput(applicant.BDATE);
             document.getElementById('manual-bdate').value = bdate;
         }
         
         document.getElementById('manual-place-birth').value = applicant['PLACE OF BIRTH'] || '';
-        
-        // Address Information
         document.getElementById('manual-house-street').value = applicant['STREET ADDRESS'] || '';
         document.getElementById('manual-barangay').value = applicant.BARANGAY || '';
         document.getElementById('manual-city-municipality').value = applicant['CITY/MUNICIPALITY'] || '';
         document.getElementById('manual-province').value = applicant.PROVINCE || '';
         
-        // Personal Details
         setSelectValue('manual-sex', applicant.SEX);
         setSelectValue('manual-civil-status', applicant['CIVIL STATUS']);
         
@@ -5167,7 +4986,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('manual-landline').value = applicant.TELEPHONE || '';
         document.getElementById('manual-cellphone').value = applicant.CELLPHONE || '';
         
-        // Disability
         if (applicant.DISABILITY && applicant.DISABILITY !== 'N/A') {
             const disabilities = applicant.DISABILITY.split(',').map(d => d.trim());
             disabilities.forEach(disability => {
@@ -5175,7 +4993,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (checkbox) checkbox.checked = true;
             });
             
-            // Handle "Others" disability
             if (applicant.DISABILITY.includes('Others') && applicant['DISABILITY SPECIFY']) {
                 document.getElementById('manual-disability-others').checked = true;
                 document.getElementById('manual-disability-specify').style.display = 'block';
@@ -5183,10 +5000,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Employment Status
         setSelectValue('manual-emp-status', applicant['EMP. STATUS']);
         
-        // 4Ps
         if (applicant['4Ps'] && applicant['4Ps'] !== 'N/A') {
             const fourPsValue = applicant['4Ps'].toLowerCase() === 'yes' ? 'Yes' : 'No';
             document.querySelector(`input[name="manual-4ps"][value="${fourPsValue}"]`).checked = true;
@@ -5197,30 +5012,23 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Job Preference Section
         document.getElementById('manual-pref-occupation1').value = applicant['PREFERRED POSITION'] || '';
         
-        // Expected Salary
         document.getElementById('manual-expected-salary').value = applicant['EXPECTED SALARY'] || '';
         
-        // Passport Information
         document.getElementById('manual-passport').value = applicant.PASSPORT || '';
         if (applicant['PASSPORT EXPIRY']) {
             document.getElementById('manual-passport-expiry').value = formatDateForInput(applicant['PASSPORT EXPIRY']);
         }
         
-        // Language Proficiency
         populateLanguageProficiency(applicant);
         
-        // Educational Background
         populateEducationalBackground(applicant);
         
-        // Program Information
         setSelectValue('manual-program-category', applicant['PROGRAM CATEGORY']);
         document.getElementById('manual-specific-program').value = applicant['SPECIFIC PROGRAM'] || '';
         setSelectValue('manual-program-status', applicant['PROGRAM STATUS']);
         
-        // Load photo if exists
         const photoId = applicant['SRS ID'] || applicant.ID;
         const savedPhoto = localStorage.getItem(`photo_${photoId}`);
         if (savedPhoto) {
@@ -5230,11 +5038,9 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.manualRemovePhotoBtn.style.display = 'block';
         }
         
-        // Update form submission to handle edit instead of add
         updateManualFormForEdit(applicant);
     }
 
-    // Helper function to set select values
     function setSelectValue(selectId, value) {
         const select = document.getElementById(selectId);
         if (select && value && value !== 'N/A') {
@@ -5247,7 +5053,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Extract suffix from full name
     function extractSuffix(fullName) {
         if (!fullName) return '';
         const suffixes = ['Jr.', 'Sr.', 'II', 'III', 'IV'];
@@ -5256,10 +5061,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return suffixes.includes(lastPart) ? lastPart : '';
     }
 
-    // Populate language proficiency
     function populateLanguageProficiency(applicant) {
-        // This would need to be customized based on how you store language data
-        // For now, setting basic English and Filipino if skills indicate
         if (applicant.SKILLS && applicant.SKILLS.toLowerCase().includes('english')) {
             document.getElementById('manual-lang-english-read').checked = true;
             document.getElementById('manual-lang-english-write').checked = true;
@@ -5275,9 +5077,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Populate educational background
     function populateEducationalBackground(applicant) {
-        // Populate based on EDUC LEVEL and COURSE
         const educLevel = applicant['EDUC LEVEL'] || '';
         const course = applicant.COURSE || '';
         
@@ -5292,10 +5092,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Update manual form to handle edits instead of new entries
-    // Replace the updateManualFormForEdit function with this improved version
     function updateManualFormForEdit(applicant) {
-        // Remove ALL existing submit event listeners by cloning the form
         const newForm = elements.manualApplicantForm.cloneNode(true);
         elements.manualApplicantForm.parentNode.replaceChild(newForm, elements.manualApplicantForm);
         elements.manualApplicantForm = newForm;
@@ -5306,20 +5103,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 data: updatedApplicant
             });
         } else {
-            // If online, sync immediately
             syncManager.syncUpdateApplicant(updatedApplicant);
         }
             
-        // Re-initialize photo controls for the new form
         initializeManualPhotoControls();
         
-        // Add submit handler for editing
         elements.manualApplicantForm.addEventListener('submit', function(event) {
             event.preventDefault();
             updateApplicantFromManualForm(applicant);
         });
         
-        // Update the submit button text
         const submitBtn = elements.manualApplicantForm.querySelector('.save-btn');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Applicant';
@@ -5329,13 +5122,10 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         }
         
-        // Remove required attributes temporarily to avoid validation issues
         removeTemporaryValidation();
     }
 
-    // Function to re-initialize photo controls after form clone
     function initializeManualPhotoControls() {
-        // Re-bind photo controls
         const manualUploadPhotoBtn = document.getElementById('manual-upload-photo-btn');
         const manualPhotoInput = document.getElementById('manual-photo-input');
         const manualRemovePhotoBtn = document.getElementById('manual-remove-photo-btn');
@@ -5374,7 +5164,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Remove temporary validation requirements
     function removeTemporaryValidation() {
         const requiredFields = elements.manualApplicantForm.querySelectorAll('[required]');
         requiredFields.forEach(field => {
@@ -5383,7 +5172,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Restore validation when going back to add mode
     function restoreValidation() {
         const fields = elements.manualApplicantForm.querySelectorAll('[data-was-required="true"]');
         fields.forEach(field => {
@@ -5392,22 +5180,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Function to update applicant from manual form
     function updateApplicantFromManualForm(originalApplicant) {
-        // Basic validation
-        if (!validateManualForm(true)) { // true for edit mode (less strict validation)
+        if (!validateManualForm(true)) { 
             return;
         }
         
         const formData = new FormData(elements.manualApplicantForm);
         const updatedApplicant = { ...originalApplicant };
-        
-        // Process all form data
         const lastName = document.getElementById('manual-surname').value.trim() || '';
         const firstName = document.getElementById('manual-first-name').value.trim() || '';
         const middleName = document.getElementById('manual-middle-name').value.trim() || '';
         
-        // Update name fields
         if (lastName && firstName) {
             let fullName = `${lastName}, ${firstName}`;
             if (middleName) {
@@ -5420,17 +5203,14 @@ document.addEventListener('DOMContentLoaded', function () {
         updatedApplicant['FIRST NAME'] = firstName || 'N/A';
         updatedApplicant['MIDDLE NAME'] = middleName || 'N/A';
         
-        // Process other form fields - FIXED: Include all fields
         formData.forEach((value, key) => {
             const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
             
-            // Skip name fields we already processed
             if (!fieldName.includes('SURNAME') && !fieldName.includes('FIRST NAME') && !fieldName.includes('MIDDLE NAME')) {
                 updatedApplicant[fieldName] = value || 'N/A';
             }
         });
         
-        // Process specific fields
         if (updatedApplicant['BDATE']) {
             try {
                 const date = new Date(updatedApplicant['BDATE']);
@@ -5445,16 +5225,12 @@ document.addEventListener('DOMContentLoaded', function () {
             updatedApplicant['BDATE'] = 'N/A';
         }
         
-        // Address fields - FIXED: Get values directly from form
         updatedApplicant['STREET ADDRESS'] = document.getElementById('manual-house-street').value.trim() || 'N/A';
         updatedApplicant['BARANGAY'] = document.getElementById('manual-barangay').value.trim() || 'N/A';
         updatedApplicant['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality').value.trim() || 'N/A';
         updatedApplicant['PROVINCE'] = document.getElementById('manual-province').value.trim() || 'N/A';
-        
-        // FIXED: Ensure email is properly captured
         updatedApplicant['EMAIL'] = document.getElementById('manual-email').value.trim() || 'N/A';
         
-        // Handle photo update
         const tempPhoto = localStorage.getItem('tempManualPhoto');
         if (tempPhoto) {
             const photoId = updatedApplicant['SRS ID'];
@@ -5463,13 +5239,11 @@ document.addEventListener('DOMContentLoaded', function () {
             updatedApplicant['PHOTO'] = tempPhoto;
         }
         
-        // Update timestamps
         updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
         updatedApplicant['LAST MODIFIED BY'] = localStorage.getItem('currentUser') || 'System';
         
         console.log('Updated applicant data:', updatedApplicant);
         
-        // Save updated applicant
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
         const updatedApplicants = savedApplicants.map(applicant => {
             if (applicant['SRS ID'] === updatedApplicant['SRS ID']) {
@@ -5481,15 +5255,12 @@ document.addEventListener('DOMContentLoaded', function () {
         saveMainApplicants(updatedApplicants);
         displayMainApplicants(updatedApplicants);
         
-        // Close modal and show success message
         elements.manualModal.style.display = 'none';
         showNotification('Applicant updated successfully!', 'success', elements.manualNotification);
         
-        // Reset form handler back to add mode
         resetManualFormToAddMode();
     }
 
-    // Add form validation function
     function validateManualForm(isEditMode = false) {
         const requiredFields = [
             'manual-surname',
@@ -5512,7 +5283,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     firstInvalidField = field;
                 }
                 
-                // Highlight missing field
                 field.style.borderColor = '#f44336';
                 setTimeout(() => {
                     if (field) field.style.borderColor = '';
@@ -5529,24 +5299,19 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
-    // Reset manual form back to add mode
     function resetManualFormToAddMode() {
-        // Restore validation requirements
         restoreValidation();
         
-        // Remove the form and replace with a fresh clone to clear all event listeners
         const newForm = elements.manualApplicantForm.cloneNode(true);
         elements.manualApplicantForm.parentNode.replaceChild(newForm, elements.manualApplicantForm);
         elements.manualApplicantForm = newForm;
         
-        // Re-initialize the form for add mode
         initializeManualFormControls();
         
-        // Update the submit button
         const submitBtn = elements.manualApplicantForm.querySelector('.save-btn');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Add Applicant';
-            submitBtn.type = 'submit'; // Change back to submit
+            submitBtn.type = 'submit'; 
         }
     }
 
@@ -5554,13 +5319,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             console.log('Initializing manual form controls...');
             
-            // Check if elements exist before using them
             if (!elements.manualApplicantForm) {
                 console.warn('Manual applicant form not found');
                 return;
             }
 
-            // Initialize photo controls only if elements exist
             if (elements.manualUploadPhotoBtn && elements.manualPhotoInput) {
                 elements.manualUploadPhotoBtn.addEventListener('click', function() {
                     elements.manualPhotoInput.click();
@@ -5596,13 +5359,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
             
-            // Initialize dynamic form elements
             initializeDynamicFormElements();
-            
-            // Initialize add entry buttons
             initializeAddEntryButtons();
             
-            // Add submit handler for adding new applicants
             elements.manualApplicantForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 console.log('Manual form submitted');
@@ -5618,14 +5377,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setDefaultManualFormValues() {
-        // Set default values for optional fields when in add mode
         const optionalFields = [
             'manual-street-address', 'manual-course', 'manual-disability',
             'manual-preferred-position', 'manual-skills', 'manual-work-experience',
             'manual-country', 'manual-latest-country', 'manual-remarks'
         ];
         
-        // Don't set defaults in edit mode, only when opening fresh for add
         if (!elements.manualModal.classList.contains('manual-form-edit-mode')) {
             optionalFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
@@ -5664,7 +5421,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const printWindow = window.open('', 'CPESO Comprehensive Program Report');
         const today = new Date().toLocaleDateString();
         
-        // Capture all visual elements
         const enhancedStats = generateEnhancedStatistics(programStats, employmentStats, demographicStats);
         const programPictograph = generateProgramPictograph(programStats);
         const educationTable = generateEducationTable(programStats);
@@ -6229,11 +5985,9 @@ document.addEventListener('DOMContentLoaded', function () {
         
         printWindow.document.close();
         
-        // Show notification
         showNotification('PDF report generated successfully! The print dialog will open shortly.', 'success');
     }
 
-    // Helper functions for PDF generation
     function generateCourseBreakdownHTML(stats) {
         const collegeGrads = (stats.byEducation['College Graduate'] || 0) + 
                             (stats.byEducation['College'] || 0) + 
@@ -6349,7 +6103,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'No Course Specified';
             }
             
-            // Ensure course is a string
             course = String(course).trim().toLowerCase();
             
             if (!course || course === 'no course specified' || course === 'n/a') {
@@ -6510,7 +6263,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Technical Vocational';
             }
             
-            // Return original course if no category matches (with proper capitalization)
             return course.charAt(0).toUpperCase() + course.slice(1);
             
         } catch (error) {
@@ -6525,11 +6277,9 @@ document.addEventListener('DOMContentLoaded', function () {
         
         savedApplicants.forEach((applicant, index) => {
             try {
-                // Test course categorization
                 const course = applicant['COURSE'] || applicant['Course'] || 'No Course';
                 categorizeCourse(course);
                 
-                // Test gender normalization
                 normalizeGender(applicant.SEX);
                 
             } catch (error) {
@@ -6541,7 +6291,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('✅ Debug complete');
     }
 
-    // Sync Manager Class
     class SyncManager {
         constructor() {
             this.isOnline = navigator.onLine;
@@ -6579,7 +6328,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const currentApplicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
                 const backupApplicants = JSON.parse(localStorage.getItem('backup_mainApplicants') || '[]');
                 
-                // If current data is empty but backup exists, restore
                 if (currentApplicants.length === 0 && backupApplicants.length > 0) {
                     console.warn('🔄 Restoring data from backup');
                     localStorage.setItem('mainApplicants', JSON.stringify(backupApplicants));
@@ -6719,7 +6467,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             console.log('🔄 Syncing new applicant:', applicant);
-            // Simulate API call - replace with actual fetch
             return new Promise(resolve => setTimeout(resolve, 500));
         }
 
@@ -6730,7 +6477,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             console.log('🔄 Syncing updated applicant:', applicant);
-            // Simulate API call - replace with actual fetch
             return new Promise(resolve => setTimeout(resolve, 500));
         }
 
@@ -6741,22 +6487,17 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             console.log('🔄 Syncing deleted applicant:', applicantId);
-            // Simulate API call - replace with actual fetch
             return new Promise(resolve => setTimeout(resolve, 500));
         }
     }
 
-    // Initialize sync manager
     const syncManager = new SyncManager();
 
-    // Enhanced data loading function
     async function loadApplicantsData() {
         try {
-            // First try to load from server if online
             if (syncManager.isOnline) {
                 await loadFromServer();
             } else {
-                // Load from local storage when offline
                 loadFromLocalStorage();
             }
         } catch (error) {
@@ -6767,21 +6508,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadFromServer() {
         try {
-            // Replace with your actual API endpoint
-            // const response = await fetch('/api/applicants');
-            // const serverData = await response.json();
-            
-            // For now, we'll simulate this
             const serverData = JSON.parse(localStorage.getItem('serverApplicants') || '[]');
             let dataToDisplay;
             
             if (serverData.length > 0) {
-                // Merge server data with local data
                 const localData = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
                 const mergedData = mergeData(serverData, localData);
                 
                 saveMainApplicants(mergedData);
-                // Also save to server storage for offline reference
                 localStorage.setItem('serverApplicants', JSON.stringify(mergedData));
                 dataToDisplay = mergedData;
             } else {
@@ -6802,7 +6536,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function mergeData(serverData, localData) {
-        // Simple merge - in production, you'd want more sophisticated conflict resolution
         const merged = [...serverData];
         
         localData.forEach(localItem => {
@@ -6815,7 +6548,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return merged;
     }
 
-    // Add this debugging function
     function debugApplicantData(applicantData, source) {
         console.log(`🔍 Debug ${source}:`, {
             hasData: !!applicantData,
@@ -6838,7 +6570,6 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             console.log('📝 Final applicant data before saving:', applicantData);
             
-            // Debug logging instead of function call
             console.log('🔍 Debug proceedWithAddingApplicant:', {
                 hasData: !!applicantData,
                 keys: applicantData ? Object.keys(applicantData) : 'no data',
@@ -6846,15 +6577,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 id: applicantData?.['SRS ID'] || 'no id'
             });
 
-            // Generate a unique ID for the new applicant
             applicantData['SRS ID'] = generateUniqueId();
             
-            // Add timestamps
             applicantData['DATE CREATED'] = new Date().toLocaleString();
             applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
             applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
             
-            // Handle photo
             const tempPhoto = localStorage.getItem('tempManualPhoto');
             if (tempPhoto) {
                 const photoId = applicantData['SRS ID'];
@@ -6863,19 +6591,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['PHOTO'] = tempPhoto;
             }
             
-            // Save to main applicants
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             savedApplicants.push(applicantData);
             saveMainApplicants(savedApplicants);
             
-            // Update display
             displayMainApplicants(savedApplicants);
             removeHighlights();
             
-            // Debug: Check what we're about to sync
             console.log('🔄 About to sync applicant:', applicantData);
             
-            // Sync with server if online - ONLY after data is complete
             if (!syncManager.isOnline) {
                 syncManager.addPendingChange({
                     type: 'add_applicant',
@@ -6883,15 +6607,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 console.log('📱 Added to pending changes (offline)');
             } else {
-                // If online, sync immediately
                 console.log('🌐 Syncing immediately (online)');
                 syncManager.syncAddApplicant(applicantData);
             }
             
-            // Close modal and show success
             closeManualModal();
-            
-            // Show appropriate program prompt
             showProgramSuccessPrompt(applicantData);
             
         } catch (error) {
@@ -6900,7 +6620,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     
-    // Add missing displayCurrentUser function
     function displayCurrentUser() {
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
@@ -6929,11 +6648,10 @@ document.addEventListener('DOMContentLoaded', function () {
             initializeApp();
         } catch (error) {
             console.error('Error in DOMContentLoaded:', error);
-            // Show user-friendly error message
             showNotification('Error initializing application. Please refresh the page.', 'error');
         }
     });
-    // Add this before the initializeApp function
+
     function debugApplicantData(applicantData, source) {
         console.log(`🔍 Debug ${source}:`, {
             hasData: !!applicantData,
@@ -6973,9 +6691,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Call this when you need to debug:
-    // debugDeleteIssue();
-
     function checkStorageSpace() {
         try {
             const testData = 'test'.repeat(1000); // 4KB test
@@ -6988,7 +6703,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Use it before saving
     function saveMainApplicants(applicants) {
         if (!checkStorageSpace()) {
             showNotification('Storage is full. Data cannot be saved.', 'error');
@@ -7009,7 +6723,6 @@ document.addEventListener('DOMContentLoaded', function () {
             throw new Error('Applicants data must be an array');
         }
         
-        // Limit data size
         const jsonString = JSON.stringify(applicants);
         if (jsonString.length > 4000000) { // ~4MB limit
             throw new Error('Data too large for storage');
@@ -7024,7 +6737,6 @@ document.addEventListener('DOMContentLoaded', function () {
             localStorage.setItem('mainApplicants', JSON.stringify(applicants));
             console.log('✅ Saved', applicants.length, 'applicants');
             
-            // Verify save worked
             const saved = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
             console.log('✅ Verified', saved.length, 'applicants in storage');
             
@@ -7035,7 +6747,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function monitorStorage() {
-        // Log storage changes
         const originalSetItem = localStorage.setItem;
         localStorage.setItem = function(key, value) {
             console.log('💾 Storage SET:', key, 'length:', value?.length);
@@ -7048,13 +6759,11 @@ document.addEventListener('DOMContentLoaded', function () {
             originalRemoveItem.apply(this, arguments);
         };
 
-        // Monitor storage events
         window.addEventListener('storage', function(e) {
             console.log('📦 Storage changed:', e.key, 'from', e.oldValue?.length, 'to', e.newValue?.length);
         });
     }
 
-    // Call this in initializeApp()
     monitorStorage();
 
     function emergencyExport() {
@@ -7083,7 +6792,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add this to your UI somewhere
     document.addEventListener('DOMContentLoaded', function() {
         const exportBtn = document.createElement('button');
         exportBtn.textContent = 'Emergency Export';
