@@ -1,5 +1,6 @@
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Elements definition
     const elements = {
         fileInput: document.getElementById('file-input'),
         fileName: document.getElementById('file-name'),
@@ -60,18 +61,12 @@ document.addEventListener('DOMContentLoaded', function () {
         closeView: document.querySelector('.close-view'),
     };
 
-    // Add this missing function that was likely causing the error
+    // Initialize manual form controls - SINGLE DEFINITION
     function initializeManualFormControls() {
-        // Initialize photo controls
         initializeManualPhotoControls();
-        
-        // Initialize dynamic form elements
         initializeDynamicFormElements();
-        
-        // Initialize add entry buttons
         initializeAddEntryButtons();
         
-        // Add submit handler for adding new applicants
         if (elements.manualApplicantForm) {
             elements.manualApplicantForm.addEventListener('submit', function(event) {
                 event.preventDefault();
@@ -81,7 +76,8 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
-    // Add this function to initialize the view modal
+
+    // Initialize view modal
     function initializeViewModal() {
         if (elements.viewModal) {
             const closeBtn = elements.viewModal.querySelector('.close-view');
@@ -99,11 +95,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add this function to open the view modal
+    // Open view modal
     function openViewModal(applicant) {
         if (!elements.viewModal) return;
         
-        // Populate the view modal with applicant data
         const fieldToIdMap = {
             'SRS ID': 'view-srs-id',
             'LAST NAME': 'view-last-name',
@@ -205,10 +200,9 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.viewModal.style.display = 'block';
     }
 
-    // Add this function to download as PDF
+    // Download as PDF function
     function downloadApplicantAsPDF(applicant) {
         try {
-            // Create a new window with the applicant data formatted for PDF
             const printWindow = window.open('', 'CPESO Comprehensive Program Report');
             const applicantName = applicant.NAME || 'applicant';
             const fileName = `applicant_${applicantName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
@@ -343,7 +337,6 @@ document.addEventListener('DOMContentLoaded', function () {
             `);
             
             printWindow.document.close();
-            
             showNotification('PDF document generated. Please use the print dialog to save as PDF.', 'success');
             
         } catch (error) {
@@ -366,38 +359,92 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = 'login.html';
                 return;
             }
+            
+            // Restore backup if main data is missing
+            if (syncManager.restoreBackupIfNeeded()) {
+                console.log('✅ Data restored from backup');
+            }
 
-            // Initialize sync manager first
-            window.syncManager = new SyncManager();
+            // Initialize components with error handling
+            const initSteps = [
+                { name: 'Manual Form', fn: initializeManualForm },
+                { name: 'Camera', fn: initializeCamera },
+                { name: 'Search', fn: initializeSearch },
+                { name: 'Edit Modal', fn: initializeEditModal },
+                { name: 'File Uploads', fn: initializeFileUploads },
+                { name: 'Advanced Filters', fn: initializeAdvancedFilters },
+                { name: 'Reporting', fn: initializeReporting },
+                { name: 'View Modal', fn: initializeViewModal }
+            ];
 
-            // Wait a bit for DOM to be fully ready
-            setTimeout(() => {
-                // Initialize all components
-                initializeManualForm();
-                initializeCamera();
-                initializeSearch();
-                initializeEditModal();
-                initializeFileUploads();
-                initializeAdvancedFilters();
-                initializeReporting();
-                initializeViewModal();
-                
-                // Load data (will handle online/offline automatically)
-                loadApplicantsData();
-                loadImportedData();
-                
-                // Initialize UI components
-                initializeDynamicFormElements();
-                initializeAddEntryButtons();
-                displayCurrentUser();
+            initSteps.forEach(step => {
+                try {
+                    step.fn();
+                    console.log(`✅ ${step.name} initialized`);
+                } catch (error) {
+                    console.error(`❌ Error initializing ${step.name}:`, error);
+                }
+            });
+            
+            // Load data
+            loadApplicantsData();
+            loadApplicantsDataWithRetry();
+            loadImportedData();
+            
+            // Initialize UI components
+            initializeDynamicFormElements();
+            initializeAddEntryButtons();
+            displayCurrentUser();
 
-                console.log('Application initialized successfully');
-            }, 100);
+            console.log('Application initialized successfully');
+            
+            // Show online status
+            if (syncManager) {
+                syncManager.updateOnlineStatus();
+            }
             
         } catch (error) {
-            console.error('Error during application initialization:', error);
+            console.error('Error during initialization:', error);
             showNotification('Error initializing application: ' + error.message, 'error');
         }
+    }
+
+    function loadApplicantsDataWithRetry() {
+        let retries = 3;
+        
+        function attemptLoad() {
+            try {
+                const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+                const importedData = JSON.parse(localStorage.getItem('importedData') || '[]');
+                
+                console.log('📊 Loaded data:', {
+                    applicants: savedApplicants.length,
+                    imported: importedData.length
+                });
+                
+                if (savedApplicants.length === 0 && retries > 0) {
+                    console.warn('No applicants found, attempting restore...');
+                    if (syncManager.restoreBackupIfNeeded()) {
+                        // Retry after restore
+                        setTimeout(attemptLoad, 100);
+                    }
+                } else {
+                    displayMainApplicants(savedApplicants);
+                    displayImportedData(importedData);
+                }
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                if (retries > 0) {
+                    retries--;
+                    setTimeout(attemptLoad, 500);
+                } else {
+                    showNotification('Failed to load data after multiple attempts', 'error');
+                }
+            }
+        }
+        
+        attemptLoad();
     }
 
     function initializeDynamicFormElements() {
@@ -1127,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 proceedWithAddingApplicant(applicantData);
             }
         } catch (error) {
-            console.error('❌ Error in addManualApplicant:', error);
+            console.error('Error in addManualApplicant:', error);
             showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
         
@@ -1135,6 +1182,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function proceedWithAddingApplicant(applicantData) {
         try {
+            console.log('📝 Final applicant data before saving:', applicantData);
+            
+            // Debug logging instead of function call
+            console.log('🔍 Debug proceedWithAddingApplicant:', {
+                hasData: !!applicantData,
+                keys: applicantData ? Object.keys(applicantData) : 'no data',
+                name: applicantData?.NAME || 'no name',
+                id: applicantData?.['SRS ID'] || 'no id'
+            });
+            
             // Generate a unique ID for the new applicant
             applicantData['SRS ID'] = generateUniqueId();
             
@@ -1161,6 +1218,22 @@ document.addEventListener('DOMContentLoaded', function () {
             displayMainApplicants(savedApplicants);
             removeHighlights();
             
+            // Debug: Check what we're about to sync
+            console.log('🔄 About to sync applicant:', applicantData);
+            
+            // Sync with server if online - ONLY after data is complete
+            if (!syncManager.isOnline) {
+                syncManager.addPendingChange({
+                    type: 'add_applicant',
+                    data: applicantData
+                });
+                console.log('📱 Added to pending changes (offline)');
+            } else {
+                // If online, sync immediately
+                console.log('🌐 Syncing immediately (online)');
+                syncManager.syncAddApplicant(applicantData);
+            }
+            
             // Close modal and show success
             closeManualModal();
             
@@ -1168,7 +1241,7 @@ document.addEventListener('DOMContentLoaded', function () {
             showProgramSuccessPrompt(applicantData);
             
         } catch (error) {
-            console.error('Error adding applicant:', error);
+            console.error('❌ Error adding applicant:', error);
             showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
     }
@@ -2068,19 +2141,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function updateApplicant(id) {
+    try {
         if (!id) {
             showNotification('Error: No applicant ID found for update', 'error');
             return;
-        }
-
-        if (!syncManager.isOnline) {
-            syncManager.addPendingChange({
-                type: 'update_applicant',
-                data: updatedApplicant
-            });
-        } else {
-            // If online, sync immediately
-            syncManager.syncUpdateApplicant(updatedApplicant);
         }
 
         const formData = new FormData(document.getElementById('editApplicantForm'));
@@ -2128,6 +2192,17 @@ document.addEventListener('DOMContentLoaded', function () {
             
         updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
         
+        // Sync logic - MOVED to after updatedApplicant is fully populated
+        if (!syncManager.isOnline) {
+            syncManager.addPendingChange({
+                type: 'update_applicant',
+                data: updatedApplicant
+            });
+        } else {
+            // If online, sync immediately
+            syncManager.syncUpdateApplicant(updatedApplicant);
+        }
+        
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
         const updatedApplicants = savedApplicants.map(applicant => {
             if (applicant['SRS ID'] === id || applicant.ID === id) {
@@ -2142,7 +2217,12 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.editModal.style.display = 'none';
         
         showNotification('Applicant updated successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Error updating applicant:', error);
+        showNotification('Error updating applicant: ' + error.message, 'error');
     }
+}
         
     // Replace the Excel Import section in initializeFileUploads function
     function initializeFileUploads() {
@@ -3419,9 +3499,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function showNotification(message, type, notificationElement = null) {
         const targetElement = notificationElement || elements.notification;
         if (!targetElement) {
-                console.warn('Notification element not found');
-                return;
-            }        
+            console.warn('Notification element not found');
+            return;
+        }
 
         targetElement.textContent = message;
         targetElement.className = 'notification';
@@ -3669,8 +3749,12 @@ document.addEventListener('DOMContentLoaded', function () {
             deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
             deleteBtn.title = 'Delete Applicant';
             deleteBtn.addEventListener('click', function() {
+                // Get the correct ID - FIXED: Ensure we're using the right identifier
+                const applicantId = applicant['SRS ID'] || applicant.ID;
+                console.log('🗑️ Delete button clicked for ID:', applicantId);
+                
                 if (confirm('Are you sure you want to delete this applicant?')) {
-                    deleteApplicant(applicant['SRS ID'] || applicant.ID);
+                    deleteApplicant(applicantId);
                 }
             });
             
@@ -3750,37 +3834,78 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function deleteApplicant(id) {
+        console.log('🔍 Attempting to delete applicant with ID:', id);
+        
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-        const updatedApplicants = savedApplicants.filter(applicant => 
-            applicant['SRS ID'] !== id && applicant.ID !== id
-        );
-
+        console.log('📊 Before deletion - Total applicants:', savedApplicants.length);
+        console.log('🔍 All applicant IDs:', savedApplicants.map(app => app['SRS ID'] || app.ID));
+        
+        // Filter out the applicant to delete - FIXED: Proper ID matching
+        const updatedApplicants = savedApplicants.filter(applicant => {
+            const applicantId = applicant['SRS ID'] || applicant.ID;
+            const shouldKeep = applicantId !== id;
+            
+            console.log(`🔍 Comparing: ${applicantId} vs ${id} - Keep: ${shouldKeep}`);
+            return shouldKeep;
+        });
+        
+        console.log('📊 After deletion - Total applicants:', updatedApplicants.length);
+        
+        if (updatedApplicants.length === savedApplicants.length) {
+            console.warn('⚠️ No applicant was deleted - ID not found:', id);
+            showNotification('Applicant not found. Delete operation cancelled.', 'error');
+            return;
+        }
+        
+        // Save the updated list
+        saveMainApplicants(updatedApplicants);
+        displayMainApplicants(updatedApplicants);
+        
+        // Remove associated photo
+        localStorage.removeItem(`photo_${id}`);
+        
+        // Sync logic
         if (!syncManager.isOnline) {
             syncManager.addPendingChange({
                 type: 'delete_applicant',
                 data: id
             });
         } else {
-            // If online, sync immediately
             syncManager.syncDeleteApplicant(id);
         }
-        
-        saveMainApplicants(updatedApplicants);
-        displayMainApplicants(updatedApplicants);
-        
-        localStorage.removeItem(`photo_${id}`);
         
         showNotification('Applicant deleted successfully!', 'success');
     }
 
     function saveMainApplicants(applicants) {
-        localStorage.setItem('mainApplicants', JSON.stringify(applicants));
+        try {
+            localStorage.setItem('mainApplicants', JSON.stringify(applicants));
+            console.log('Saved applicants:', applicants.length);
+        } catch (error) {
+            console.error('Error saving applicants:', error);
+            showNotification('Error saving applicant data', 'error');
+        }
+    }
+
+    function loadApplicantsData() {
+        try {
+            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            displayMainApplicants(savedApplicants);
+            console.log('Loaded applicants:', savedApplicants.length);
+        } catch (error) {
+            console.error('Error loading applicants:', error);
+            showNotification('Error loading applicant data', 'error');
+        }
     }
 
     function loadImportedData() {
-        const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
-        if (importedData.length > 0) {
-            displayImportedData(importedData);
+        try {
+            const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
+            if (importedData.length > 0) {
+                displayImportedData(importedData);
+            }
+        } catch (error) {
+            console.error('Error loading imported data:', error);
         }
     }
 
@@ -5174,7 +5299,17 @@ document.addEventListener('DOMContentLoaded', function () {
         const newForm = elements.manualApplicantForm.cloneNode(true);
         elements.manualApplicantForm.parentNode.replaceChild(newForm, elements.manualApplicantForm);
         elements.manualApplicantForm = newForm;
-        
+
+        if (!syncManager.isOnline) {
+            syncManager.addPendingChange({
+                type: 'update_applicant',
+                data: updatedApplicant
+            });
+        } else {
+            // If online, sync immediately
+            syncManager.syncUpdateApplicant(updatedApplicant);
+        }
+            
         // Re-initialize photo controls for the new form
         initializeManualPhotoControls();
         
@@ -6406,128 +6541,209 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('✅ Debug complete');
     }
 
-    // Online/Offline Detection and Sync
+    // Sync Manager Class
     class SyncManager {
-    constructor() {
-        this.isOnline = navigator.onLine;
-        this.pendingChanges = [];
-        this.init();
-    }
-
-    init() {
-        // Listen for online/offline events
-        window.addEventListener('online', () => this.handleOnline());
-        window.addEventListener('offline', () => this.handleOffline());
-        
-        // Check initial status
-        this.updateOnlineStatus();
-        
-        // Load pending changes
-        this.loadPendingChanges();
-    }
-
-    updateOnlineStatus() {
-        this.isOnline = navigator.onLine;
-        const statusElement = document.getElementById('connection-status');
-        
-        if (statusElement) {
-        if (this.isOnline) {
-            statusElement.innerHTML = '<i class="fas fa-wifi"></i> Online';
-            statusElement.style.color = '#4caf50';
-        } else {
-            statusElement.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline';
-            statusElement.style.color = '#f44336';
+        constructor() {
+            this.isOnline = navigator.onLine;
+            this.pendingChanges = [];
+            this.init();
         }
+
+        init() {
+            this.backupData();
+            window.addEventListener('online', () => this.handleOnline());
+            window.addEventListener('offline', () => this.handleOffline());
+            this.updateOnlineStatus();
+            this.loadPendingChanges();
         }
-    }
 
-    handleOnline() {
-        console.log('Connection restored - syncing data...');
-        this.updateOnlineStatus();
-        this.syncPendingChanges();
-        this.loadMainApplicants(); // Reload data that might have been updated online
-    }
+        backupData(){
+            try {
+                const applicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+                const imported = JSON.parse(localStorage.getItem('importedData') || '[]');
+                
+                localStorage.setItem('backup_mainApplicants', JSON.stringify(applicants));
+                localStorage.setItem('backup_importedData', JSON.stringify(imported));
+                
+                console.log('📦 Data backed up:', {
+                    applicants: applicants.length,
+                    imported: imported.length
+                });
+            } catch (error) {
+                console.error('Backup failed:', error);
+            }
+        }
 
-    handleOffline() {
-        console.log('Connection lost - working offline...');
-        this.updateOnlineStatus();
-        showNotification('Working offline. Changes will sync when connection is restored.', 'warning');
-    }
+        restoreBackupIfNeeded() {
+            try {
+                const currentApplicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+                const backupApplicants = JSON.parse(localStorage.getItem('backup_mainApplicants') || '[]');
+                
+                // If current data is empty but backup exists, restore
+                if (currentApplicants.length === 0 && backupApplicants.length > 0) {
+                    console.warn('🔄 Restoring data from backup');
+                    localStorage.setItem('mainApplicants', JSON.stringify(backupApplicants));
+                    showNotification('Data restored from backup', 'warning');
+                    return true;
+                }
+                
+                return false;
+            } catch (error) {
+                console.error('Restore failed:', error);
+                return false;
+            }
+        }
 
-    // Store pending changes when offline
-    addPendingChange(change) {
-        const pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
-        pendingChanges.push({
-        ...change,
-        timestamp: new Date().toISOString(),
-        id: Date.now() + Math.random()
-        });
-        localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
-        this.pendingChanges = pendingChanges;
-    }
+        updateOnlineStatus() {
+            this.isOnline = navigator.onLine;
+            const statusElement = document.getElementById('connection-status');
+            
+            if (statusElement) {
+                if (this.isOnline) {
+                    statusElement.innerHTML = '<i class="fas fa-wifi"></i> Online';
+                    statusElement.style.color = '#4caf50';
+                } else {
+                    statusElement.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline';
+                    statusElement.style.color = '#f44336';
+                }
+            }
+        }
 
-    loadPendingChanges() {
-        this.pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
-        return this.pendingChanges;
-    }
+        updateOnlineStatus() {
+            this.isOnline = navigator.onLine;
+            const statusElement = document.getElementById('connection-status');
+                
+            if (statusElement) {
+                if (this.isOnline) {
+                    statusElement.innerHTML = '<i class="fas fa-wifi"></i> Online';
+                    statusElement.style.color = '#4caf50';
+                } else {
+                    statusElement.innerHTML = '<i class="fas fa-wifi-slash"></i> Offline';
+                    statusElement.style.color = '#f44336';
+                }
+            }
+        }
 
-    // Sync pending changes when online
+        handleOnline() {
+            console.log('Connection restored - syncing data...');
+            this.updateOnlineStatus();
+            try {
+                this.syncPendingChanges();
+                loadApplicantsData();
+            } catch (error) {
+                console.error('Error during online sync:', error);
+            }
+        }
+
+        handleOffline() {
+            console.log('Connection lost - working offline...');
+            this.updateOnlineStatus();
+            showNotification('Working offline. Changes will sync when connection is restored.', 'warning');
+        }
+
+        addPendingChange(change) {
+            const pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+            pendingChanges.push({
+                ...change,
+                timestamp: new Date().toISOString(),
+                id: Date.now() + Math.random()
+            });
+            localStorage.setItem('pendingChanges', JSON.stringify(pendingChanges));
+            this.pendingChanges = pendingChanges;
+        }
+
+        loadPendingChanges() {
+            this.pendingChanges = JSON.parse(localStorage.getItem('pendingChanges') || '[]');
+            return this.pendingChanges;
+        }
+
     async syncPendingChanges() {
-        if (!this.isOnline || this.pendingChanges.length === 0) return;
+            if (!this.isOnline || this.pendingChanges.length === 0) {
+                console.log('📱 No pending changes to sync');
+                return;
+            }
 
-        const pendingChanges = [...this.pendingChanges];
-        
-        try {
-        for (const change of pendingChanges) {
-            await this.processChange(change);
+            const pendingChanges = [...this.pendingChanges];
+            let successfulSyncs = 0;
+            let failedSyncs = 0;
+            
+            console.log(`🔄 Syncing ${pendingChanges.length} pending changes...`);
+            
+            try {
+                for (const change of pendingChanges) {
+                    try {
+                        console.log(`🔄 Processing change:`, change);
+                        await this.processChange(change);
+                        successfulSyncs++;
+                    } catch (error) {
+                        console.error(`❌ Failed to sync change:`, error);
+                        failedSyncs++;
+                    }
+                }
+                
+                if (successfulSyncs > 0) {
+                    const remainingChanges = this.pendingChanges.slice(successfulSyncs);
+                    localStorage.setItem('pendingChanges', JSON.stringify(remainingChanges));
+                    this.pendingChanges = remainingChanges;
+                }
+                
+                if (failedSyncs === 0) {
+                    showNotification(`All ${successfulSyncs} offline changes have been synchronized.`, 'success');
+                } else {
+                    showNotification(`${successfulSyncs} changes synced, ${failedSyncs} failed. Failed changes will retry later.`, 'warning');
+                }
+                
+            } catch (error) {
+                console.error('❌ Sync process failed:', error);
+                showNotification('Sync process failed. Changes will retry later.', 'error');
+            }
         }
-        
-        // Clear pending changes after successful sync
-        localStorage.removeItem('pendingChanges');
-        this.pendingChanges = [];
-        
-        showNotification('All offline changes have been synchronized.', 'success');
-        
-        } catch (error) {
-        console.error('Sync failed:', error);
-        showNotification('Some changes failed to sync. They will retry later.', 'error');
+
+        async processChange(change) {
+            switch (change.type) {
+                case 'add_applicant':
+                    return await this.syncAddApplicant(change.data);
+                case 'update_applicant':
+                    return await this.syncUpdateApplicant(change.data);
+                case 'delete_applicant':
+                    return await this.syncDeleteApplicant(change.data);
+                default:
+                    console.warn('Unknown change type:', change.type);
+            }
         }
-    }
 
-    async processChange(change) {
-        // Here you would send the change to your server
-        // For now, we'll just simulate API calls
-        switch (change.type) {
-        case 'add_applicant':
-            return await this.syncAddApplicant(change.data);
-        case 'update_applicant':
-            return await this.syncUpdateApplicant(change.data);
-        case 'delete_applicant':
-            return await this.syncDeleteApplicant(change.data);
-        default:
-            console.warn('Unknown change type:', change.type);
+        async syncAddApplicant(applicant) {
+            if (!applicant || Object.keys(applicant).length === 0) {
+                console.error('❌ Cannot sync empty applicant data');
+                return Promise.reject('Empty applicant data');
+            }
+            
+            console.log('🔄 Syncing new applicant:', applicant);
+            // Simulate API call - replace with actual fetch
+            return new Promise(resolve => setTimeout(resolve, 500));
         }
-    }
 
-    // Simulated API methods - replace with your actual API endpoints
-    async syncAddApplicant(applicant) {
-        // Simulate API call
-        console.log('Syncing new applicant:', applicant);
-        // await fetch('/api/applicants', { method: 'POST', body: JSON.stringify(applicant) });
-        return new Promise(resolve => setTimeout(resolve, 500));
-    }
+        async syncUpdateApplicant(applicant) {
+            if (!applicant || Object.keys(applicant).length === 0) {
+                console.error('❌ Cannot sync empty applicant data');
+                return Promise.reject('Empty applicant data');
+            }
+            
+            console.log('🔄 Syncing updated applicant:', applicant);
+            // Simulate API call - replace with actual fetch
+            return new Promise(resolve => setTimeout(resolve, 500));
+        }
 
-    async syncUpdateApplicant(applicant) {
-        console.log('Syncing updated applicant:', applicant);
-        // await fetch(`/api/applicants/${applicant.id}`, { method: 'PUT', body: JSON.stringify(applicant) });
-        return new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    async syncDeleteApplicant(applicantId) {
-        console.log('Syncing deleted applicant:', applicantId);
-        // await fetch(`/api/applicants/${applicantId}`, { method: 'DELETE' });
-        return new Promise(resolve => setTimeout(resolve, 500));
-    }
+        async syncDeleteApplicant(applicantId) {
+            if (!applicantId) {
+                console.error('❌ Cannot sync delete without applicant ID');
+                return Promise.reject('No applicant ID provided');
+            }
+            
+            console.log('🔄 Syncing deleted applicant:', applicantId);
+            // Simulate API call - replace with actual fetch
+            return new Promise(resolve => setTimeout(resolve, 500));
+        }
     }
 
     // Initialize sync manager
@@ -6557,6 +6773,7 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // For now, we'll simulate this
             const serverData = JSON.parse(localStorage.getItem('serverApplicants') || '[]');
+            let dataToDisplay;
             
             if (serverData.length > 0) {
                 // Merge server data with local data
@@ -6566,9 +6783,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 saveMainApplicants(mergedData);
                 // Also save to server storage for offline reference
                 localStorage.setItem('serverApplicants', JSON.stringify(mergedData));
+                dataToDisplay = mergedData;
+            } else {
+                dataToDisplay = serverData;
             }
             
-            displayMainApplicants(mergedData || serverData);
+            displayMainApplicants(dataToDisplay);
             
         } catch (error) {
             console.error('Failed to load from server:', error);
@@ -6595,5 +6815,290 @@ document.addEventListener('DOMContentLoaded', function () {
         return merged;
     }
 
-    initializeApp();
+    // Add this debugging function
+    function debugApplicantData(applicantData, source) {
+        console.log(`🔍 Debug ${source}:`, {
+            hasData: !!applicantData,
+            keys: applicantData ? Object.keys(applicantData) : 'no data',
+            name: applicantData?.NAME || 'no name',
+            id: applicantData?.['SRS ID'] || 'no id'
+        });
+    }
+
+    function debugApplicantData(applicantData, source) {
+        console.log(`🔍 Debug ${source}:`, {
+            hasData: !!applicantData,
+            keys: applicantData ? Object.keys(applicantData) : 'no data',
+            name: applicantData?.NAME || 'no name',
+            id: applicantData?.['SRS ID'] || 'no id'
+        });
+    }
+
+    function proceedWithAddingApplicant(applicantData) {
+        try {
+            console.log('📝 Final applicant data before saving:', applicantData);
+            
+            // Debug logging instead of function call
+            console.log('🔍 Debug proceedWithAddingApplicant:', {
+                hasData: !!applicantData,
+                keys: applicantData ? Object.keys(applicantData) : 'no data',
+                name: applicantData?.NAME || 'no name',
+                id: applicantData?.['SRS ID'] || 'no id'
+            });
+
+            // Generate a unique ID for the new applicant
+            applicantData['SRS ID'] = generateUniqueId();
+            
+            // Add timestamps
+            applicantData['DATE CREATED'] = new Date().toLocaleString();
+            applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
+            applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
+            
+            // Handle photo
+            const tempPhoto = localStorage.getItem('tempManualPhoto');
+            if (tempPhoto) {
+                const photoId = applicantData['SRS ID'];
+                localStorage.setItem(`photo_${photoId}`, tempPhoto);
+                localStorage.removeItem('tempManualPhoto');
+                applicantData['PHOTO'] = tempPhoto;
+            }
+            
+            // Save to main applicants
+            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            savedApplicants.push(applicantData);
+            saveMainApplicants(savedApplicants);
+            
+            // Update display
+            displayMainApplicants(savedApplicants);
+            removeHighlights();
+            
+            // Debug: Check what we're about to sync
+            console.log('🔄 About to sync applicant:', applicantData);
+            
+            // Sync with server if online - ONLY after data is complete
+            if (!syncManager.isOnline) {
+                syncManager.addPendingChange({
+                    type: 'add_applicant',
+                    data: applicantData
+                });
+                console.log('📱 Added to pending changes (offline)');
+            } else {
+                // If online, sync immediately
+                console.log('🌐 Syncing immediately (online)');
+                syncManager.syncAddApplicant(applicantData);
+            }
+            
+            // Close modal and show success
+            closeManualModal();
+            
+            // Show appropriate program prompt
+            showProgramSuccessPrompt(applicantData);
+            
+        } catch (error) {
+            console.error('❌ Error adding applicant:', error);
+            showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
+        }
+    }
+    
+    // Add missing displayCurrentUser function
+    function displayCurrentUser() {
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            const header = document.querySelector('header .header-content');
+            if (header) {
+                const userInfo = document.createElement('div');
+                userInfo.className = 'user-info';
+                userInfo.innerHTML = `
+                    <span>Welcome, ${currentUser}</span>
+                    <button id="logout-btn" class="logout-btn">Logout</button>
+                `;
+                header.appendChild(userInfo);
+
+                document.getElementById('logout-btn').addEventListener('click', function() {
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('currentUser');
+                    window.location.href = 'login.html';
+                });
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            console.log('DOM loaded, initializing application...');
+            initializeApp();
+        } catch (error) {
+            console.error('Error in DOMContentLoaded:', error);
+            // Show user-friendly error message
+            showNotification('Error initializing application. Please refresh the page.', 'error');
+        }
+    });
+    // Add this before the initializeApp function
+    function debugApplicantData(applicantData, source) {
+        console.log(`🔍 Debug ${source}:`, {
+            hasData: !!applicantData,
+            keys: applicantData ? Object.keys(applicantData) : 'no data',
+            name: applicantData?.NAME || 'no name',
+            id: applicantData?.['SRS ID'] || 'no id'
+        });
+    }
+
+    function showUploadNotification(message, type) {
+        const targetElement = elements.uploadNotification;
+        if (!targetElement) {
+            console.warn('Upload notification element not found');
+            return;
+        }
+
+        targetElement.textContent = message;
+        targetElement.className = 'notification';
+        targetElement.classList.add(type);
+        targetElement.style.display = 'block';
+        
+        setTimeout(() => {
+            targetElement.style.display = 'none';
+        }, 5000);
+    }
+
+    function debugDeleteIssue() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        console.log('🔍 DEBUG - All applicants and their IDs:');
+        savedApplicants.forEach((applicant, index) => {
+            console.log(`Applicant ${index}:`, {
+                name: applicant.NAME,
+                id: applicant['SRS ID'],
+                hasSRSID: !!applicant['SRS ID'],
+                hasID: !!applicant.ID
+            });
+        });
+    }
+
+    // Call this when you need to debug:
+    // debugDeleteIssue();
+
+    function checkStorageSpace() {
+        try {
+            const testData = 'test'.repeat(1000); // 4KB test
+            localStorage.setItem('test', testData);
+            localStorage.removeItem('test');
+            return true;
+        } catch (e) {
+            console.error('Storage is full or unavailable:', e);
+            return false;
+        }
+    }
+
+    // Use it before saving
+    function saveMainApplicants(applicants) {
+        if (!checkStorageSpace()) {
+            showNotification('Storage is full. Data cannot be saved.', 'error');
+            return;
+        }
+        
+        try {
+            localStorage.setItem('mainApplicants', JSON.stringify(applicants));
+            console.log('Saved applicants:', applicants.length);
+        } catch (error) {
+            console.error('Error saving applicants:', error);
+            showNotification('Error saving applicant data', 'error');
+        }
+    }
+
+    function validateApplicantData(applicants) {
+        if (!Array.isArray(applicants)) {
+            throw new Error('Applicants data must be an array');
+        }
+        
+        // Limit data size
+        const jsonString = JSON.stringify(applicants);
+        if (jsonString.length > 4000000) { // ~4MB limit
+            throw new Error('Data too large for storage');
+        }
+        
+        return true;
+    }
+
+    function saveMainApplicants(applicants) {
+        try {
+            validateApplicantData(applicants);
+            localStorage.setItem('mainApplicants', JSON.stringify(applicants));
+            console.log('✅ Saved', applicants.length, 'applicants');
+            
+            // Verify save worked
+            const saved = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+            console.log('✅ Verified', saved.length, 'applicants in storage');
+            
+        } catch (error) {
+            console.error('❌ Error saving applicants:', error);
+            showNotification('Error saving data: ' + error.message, 'error');
+        }
+    }
+
+    function monitorStorage() {
+        // Log storage changes
+        const originalSetItem = localStorage.setItem;
+        localStorage.setItem = function(key, value) {
+            console.log('💾 Storage SET:', key, 'length:', value?.length);
+            originalSetItem.apply(this, arguments);
+        };
+
+        const originalRemoveItem = localStorage.removeItem;
+        localStorage.removeItem = function(key) {
+            console.log('🗑️ Storage REMOVE:', key);
+            originalRemoveItem.apply(this, arguments);
+        };
+
+        // Monitor storage events
+        window.addEventListener('storage', function(e) {
+            console.log('📦 Storage changed:', e.key, 'from', e.oldValue?.length, 'to', e.newValue?.length);
+        });
+    }
+
+    // Call this in initializeApp()
+    monitorStorage();
+
+    function emergencyExport() {
+        try {
+            const allData = {
+                mainApplicants: JSON.parse(localStorage.getItem('mainApplicants') || '[]'),
+                importedData: JSON.parse(localStorage.getItem('importedData') || '[]'),
+                pendingChanges: JSON.parse(localStorage.getItem('pendingChanges') || '[]'),
+                timestamp: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `cpeso_backup_${Date.now()}.json`;
+            link.click();
+            
+            console.log('✅ Emergency export completed');
+            showNotification('Data exported successfully', 'success');
+            
+        } catch (error) {
+            console.error('Export failed:', error);
+            showNotification('Export failed: ' + error.message, 'error');
+        }
+    }
+
+    // Add this to your UI somewhere
+    document.addEventListener('DOMContentLoaded', function() {
+        const exportBtn = document.createElement('button');
+        exportBtn.textContent = 'Emergency Export';
+        exportBtn.style.position = 'fixed';
+        exportBtn.style.bottom = '10px';
+        exportBtn.style.right = '10px';
+        exportBtn.style.zIndex = '9999';
+        exportBtn.style.background = 'red';
+        exportBtn.style.color = 'white';
+        exportBtn.style.padding = '10px';
+        exportBtn.style.border = 'none';
+        exportBtn.style.borderRadius = '5px';
+        exportBtn.addEventListener('click', emergencyExport);
+        document.body.appendChild(exportBtn);
+    });
+
+    initializeApp(); 
 });
