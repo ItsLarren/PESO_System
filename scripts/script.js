@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', function () {
     const elements = {
         fileInput: document.getElementById('file-input'),
@@ -28,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function () {
         uploadPhotoBtn: document.getElementById('upload-photo-btn'),
         removePhotoBtn: document.getElementById('remove-photo-btn'),
         takePhotoBtn: document.getElementById('take-photo-btn'),
-        
         cameraModal: document.getElementById('cameraModal'),
         closeCamera: document.querySelector('.close-camera'),
         cameraVideo: document.getElementById('camera-video'),
@@ -598,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         
         // Process the form data and add to applicants array
-        // ... existing code ...
+        // ... existing code ... 
         
         // Close modal and reset form
         document.getElementById('manualModal').style.display = 'none';
@@ -773,8 +773,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             
-            // If no existing applicants, no duplicates
+            console.log('🔍 Duplicate check - Existing applicants:', savedApplicants.length);
+            
+            // If no existing applicants, no duplicates possible
             if (savedApplicants.length === 0) {
+                console.log('✅ No existing applicants - no duplicates possible');
                 return {
                     hasMatches: false,
                     matches: []
@@ -785,34 +788,43 @@ document.addEventListener('DOMContentLoaded', function () {
             const newName = (applicantData.NAME || '').toString().toLowerCase().trim();
             const newBdate = (applicantData.BDATE || '').toString().trim();
 
-            // Skip if new applicant has no name
-            if (!newName || newName === 'n/a') {
+            // Skip duplicate check if new applicant has no valid name
+            if (!newName || newName === 'n/a' || newName === '' || newName === 'null') {
+                console.log('⚠️ New applicant has no valid name - skipping duplicate check');
                 return {
                     hasMatches: false,
                     matches: []
                 };
             }
 
+            console.log('🔍 Checking new applicant:', { name: newName, bdate: newBdate });
+
             for (const existingApp of savedApplicants) {
                 const existingName = (existingApp.NAME || '').toString().toLowerCase().trim();
                 const existingBdate = (existingApp.BDATE || '').toString().trim();
 
-                // Skip if existing applicant has no name
-                if (!existingName || existingName === 'n/a') {
+                // Skip if existing applicant has no valid name
+                if (!existingName || existingName === 'n/a' || existingName === '' || existingName === 'null') {
                     continue;
                 }
 
-                // Only consider it a duplicate if:
-                // 1. Names match EXACTLY (case insensitive)
-                // 2. AND birthdates match EXACTLY
-                // 3. AND both are not "N/A"
+                console.log('🔍 Comparing with existing:', { 
+                    existingName, 
+                    existingBdate,
+                    nameMatch: newName === existingName,
+                    bdateMatch: newBdate === existingBdate
+                });
+
+                // STRICT duplicate: must have both name AND birthday match
                 const nameMatch = newName === existingName;
                 const bdateMatch = newBdate && existingBdate && 
                                 newBdate === existingBdate &&
                                 newBdate !== 'N/A' && 
-                                existingBdate !== 'N/A';
+                                existingBdate !== 'N/A' &&
+                                newBdate !== '' && 
+                                existingBdate !== '';
 
-                // STRICT duplicate: must have both name AND birthday match
+                // Only consider it a duplicate if BOTH name AND birthday match exactly
                 if (nameMatch && bdateMatch) {
                     console.log('🔴 STRICT DUPLICATE FOUND:', {
                         newName,
@@ -828,9 +840,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         sameNameDifferentBday: false
                     });
                 }
-                // Only name match (different birthday) - just log for info
-                else if (nameMatch) {
-                    console.log('🟡 SAME NAME, DIFFERENT BIRTHDAY:', {
+                // Log same name different birthday for debugging
+                else if (nameMatch && !bdateMatch) {
+                    console.log('🟡 SAME NAME, DIFFERENT BIRTHDAY (Not a duplicate):', {
                         newName,
                         newBdate,
                         existingName,
@@ -839,7 +851,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            console.log('🔍 Duplicate check result:', {
+            console.log('📋 Duplicate check result:', {
                 totalApplicants: savedApplicants.length,
                 matchesFound: matches.length,
                 newApplicant: { name: newName, bdate: newBdate }
@@ -850,7 +862,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 matches: matches
             };
         } catch (error) {
-            console.error('Error in duplicate check:', error);
+            console.error('❌ Error in duplicate check:', error);
             return {
                 hasMatches: false,
                 matches: []
