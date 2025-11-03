@@ -21,3 +21,7 @@ Backend Options:
 - Node.js + MongoDB - JavaScript full-stack
 - Python (Django/Flask) + PostgreSQL - Robust and scalable
 - Firebase - Quick setup, real-time database
+
+
+
+- changed the th at the container table od the applicant table, everything at the edit profile(full form) those are the th. (from the personal information up to the program information everything there)

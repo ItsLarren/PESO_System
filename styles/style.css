@@ -2790,3 +2790,30 @@ input[type="date"]:after {
     text-align: center;
     color: #e65100;
 }
+
+.applicant-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 10px; /* Smaller font to fit more columns */
+    min-width: 2000px; /* Wider table to accommodate all columns */
+}
+
+.applicant-table th, .applicant-table td {
+    text-align: left;
+    padding: 6px;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    font-size: 9px;
+}
+
+.table-container {
+    overflow-x: auto;
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}

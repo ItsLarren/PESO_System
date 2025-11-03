@@ -1029,23 +1029,13 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const formData = new FormData(elements.manualApplicantForm);
             const applicantData = {};
-            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-            savedApplicants.push(applicantData);
-            saveMainApplicants(savedApplicants);
-
-            if (!syncManager.isOnline) {
-                syncManager.addPendingChange({
-                    type: 'add_applicant',
-                    data: applicantData
-                });
-            } else {
-                syncManager.syncAddApplicant(applicantData);
-            }
             
+            // Get basic name information
             const lastName = document.getElementById('manual-surname')?.value.trim() || '';
             const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
             const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
             
+            // Build full name
             if (lastName && firstName) {
                 let fullName = `${lastName}, ${firstName}`;
                 if (middleName) {
@@ -1060,39 +1050,125 @@ document.addEventListener('DOMContentLoaded', function () {
             applicantData['FIRST NAME'] = firstName || 'N/A';
             applicantData['MIDDLE NAME'] = middleName || 'N/A';
             
-            formData.forEach((value, key) => {
-                if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
-                    !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
-                    const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
-                    applicantData[fieldName] = value || 'N/A';
-                }
-            });
-            
+            // Process all form fields systematically
             applicantData['SRS ID'] = generateUniqueId();
             
-            if (applicantData['BDATE']) {
-                try {
-                    const date = new Date(applicantData['BDATE']);
-                    if (!isNaN(date.getTime())) {
-                        applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
-                    }
-                } catch (error) {
-                    console.warn('Date parsing error:', error);
-                    applicantData['BDATE'] = 'N/A';
-                }
-            } else {
-                applicantData['BDATE'] = 'N/A';
+            // Personal Information
+            applicantData['DATE OF BIRTH'] = document.getElementById('manual-bdate')?.value || 'N/A';
+            applicantData['PLACE OF BIRTH'] = document.getElementById('manual-place-birth')?.value.trim() || 'N/A';
+            applicantData['SEX'] = document.getElementById('manual-sex')?.value || 'N/A';
+            applicantData['CIVIL STATUS'] = document.getElementById('manual-civil-status')?.value || 'N/A';
+            applicantData['TIN'] = document.getElementById('manual-tin')?.value.trim() || 'N/A';
+            applicantData['GSIS/SSS NO.'] = document.getElementById('manual-gsis-sss')?.value.trim() || 'N/A';
+            applicantData['PAGIBIG NO.'] = document.getElementById('manual-pagibig')?.value.trim() || 'N/A';
+            applicantData['PHILHEALTH NO.'] = document.getElementById('manual-philhealth')?.value.trim() || 'N/A';
+            applicantData['HEIGHT'] = document.getElementById('manual-height')?.value || 'N/A';
+            
+            // Address Information
+            applicantData['HOUSE NO./STREET/VILLAGE'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
+            applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
+            applicantData['MUNICIPALITY/CITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
+            applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
+            
+            // Contact Information
+            applicantData['EMAIL ADDRESS'] = document.getElementById('manual-email')?.value.trim() || 'N/A';
+            applicantData['LANDLINE NUMBER'] = document.getElementById('manual-landline')?.value.trim() || 'N/A';
+            applicantData['CELLPHONE NUMBER'] = document.getElementById('manual-cellphone')?.value.trim() || 'N/A';
+            
+            // Disability Information
+            const disabilityCheckboxes = document.querySelectorAll('input[name="manual-disability"]:checked');
+            const disabilities = Array.from(disabilityCheckboxes).map(cb => cb.value);
+            applicantData['DISABILITY'] = disabilities.length > 0 ? disabilities.join(', ') : 'N/A';
+            
+            // Employment Information
+            applicantData['EMPLOYMENT STATUS/TYPE'] = document.getElementById('manual-emp-status')?.value || 'N/A';
+            
+            // Actively looking for work
+            const lookingWorkRadio = document.querySelector('input[name="manual-looking-work"]:checked');
+            applicantData['ARE YOU ACTIVELY LOOKING FOR WORK?'] = lookingWorkRadio?.value || 'N/A';
+            if (lookingWorkRadio?.value === 'Yes') {
+                applicantData['ARE YOU ACTIVELY LOOKING FOR WORK?'] += ` - ${document.getElementById('manual-looking-work-duration')?.value || ''}`;
             }
             
+            // Willing to work immediately
+            const workImmediatelyRadio = document.querySelector('input[name="manual-work-immediately"]:checked');
+            applicantData['WILLING TO WORK IMMEDIATELY?'] = workImmediatelyRadio?.value || 'N/A';
+            if (workImmediatelyRadio?.value === 'No') {
+                applicantData['WILLING TO WORK IMMEDIATELY?'] += ` - ${document.getElementById('manual-work-immediately-when')?.value || ''}`;
+            }
+            
+            // 4Ps Beneficiary
+            const fourPsRadio = document.querySelector('input[name="manual-4ps"]:checked');
+            applicantData['ARE YOU A 4PS BENEFICIARY?'] = fourPsRadio?.value || 'N/A';
+            if (fourPsRadio?.value === 'Yes') {
+                applicantData['ARE YOU A 4PS BENEFICIARY?'] += ` - ID: ${document.getElementById('manual-4ps-id')?.value || ''}`;
+            }
+            
+            // Job Preference
+            applicantData['PREFERRED OCCUPATION'] = document.getElementById('manual-pref-occupation1')?.value.trim() || 'N/A';
+            
+            // Preferred Work Location
+            const workLocationRadio = document.querySelector('input[name="manual-work-location"]:checked');
+            if (workLocationRadio?.value === 'Local') {
+                const locations = [
+                    document.getElementById('manual-work-location-local1')?.value,
+                    document.getElementById('manual-work-location-local2')?.value,
+                    document.getElementById('manual-work-location-local3')?.value
+                ].filter(loc => loc).join(', ');
+                applicantData['PREFERRED WORK LOCATION'] = locations || 'N/A';
+            } else if (workLocationRadio?.value === 'Overseas') {
+                const locations = [
+                    document.getElementById('manual-work-location-overseas1')?.value,
+                    document.getElementById('manual-work-location-overseas2')?.value,
+                    document.getElementById('manual-work-location-overseas3')?.value
+                ].filter(loc => loc).join(', ');
+                applicantData['PREFERRED WORK LOCATION'] = locations || 'N/A';
+            } else {
+                applicantData['PREFERRED WORK LOCATION'] = 'N/A';
+            }
+            
+            applicantData['EXPECTED SALARY'] = document.getElementById('manual-expected-salary')?.value.trim() || 'N/A';
+            applicantData['PASSPORT NO.'] = document.getElementById('manual-passport')?.value.trim() || 'N/A';
+            applicantData['PASSPORT EXPIRY DATE'] = document.getElementById('manual-passport-expiry')?.value || 'N/A';
+            
+            // Language Proficiency
+            const languages = [];
+            if (document.getElementById('manual-lang-english-read')?.checked) languages.push('English');
+            if (document.getElementById('manual-lang-filipino-read')?.checked) languages.push('Filipino');
+            const otherLang = document.getElementById('manual-lang-other-name')?.value;
+            if (otherLang) languages.push(otherLang);
+            applicantData['LANGUAGE'] = languages.length > 0 ? languages.join(', ') : 'N/A';
+            
+            // Educational Background
+            applicantData['ELEMENTARY'] = document.getElementById('manual-edu-elem-school')?.value.trim() || 'N/A';
+            applicantData['SECONDARY'] = document.getElementById('manual-edu-secondary-school')?.value.trim() || 'N/A';
+            applicantData['TERTIARY'] = document.getElementById('manual-edu-tertiary-school')?.value.trim() || 'N/A';
+            applicantData['GRADUATE STUDIES'] = document.getElementById('manual-edu-graduate-school')?.value.trim() || 'N/A';
+            
+            // Technical/Vocational Training
+            applicantData['TECHNICAL/VOCATIONAL AND OTHER TRAINING'] = document.getElementById('manual-training-course1')?.value.trim() || 'N/A';
+            
+            // Eligibility
+            applicantData['ELIGIBILITY'] = document.getElementById('manual-eligibility1')?.value.trim() || 'N/A';
+            
+            // Work Experience
+            applicantData['WORK EXPERIENCE'] = document.getElementById('manual-work-company1')?.value.trim() || 'N/A';
+            
+            // Other Skills
+            const skillCheckboxes = document.querySelectorAll('input[name="manual-skill"]:checked');
+            const skills = Array.from(skillCheckboxes).map(cb => cb.value);
+            applicantData['OTHER SKILLS'] = skills.length > 0 ? skills.join(', ') : 'N/A';
+            
+            // Program Information
+            applicantData['PROGRAM CATEGORY'] = document.getElementById('manual-program-category')?.value || 'N/A';
+            applicantData['SPECIFIC PROGRAM'] = document.getElementById('manual-specific-program')?.value.trim() || 'N/A';
+            applicantData['PROGRAM STATUS'] = document.getElementById('manual-program-status')?.value || 'N/A';
+            
+            // System Information
             applicantData['REG. DATE'] = new Date().toLocaleDateString();
             applicantData['DATE CREATED'] = new Date().toLocaleString();
             applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
             applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
-            
-            applicantData['STREET ADDRESS'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
-            applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
-            applicantData['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
-            applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
 
             console.log('📝 New applicant data:', applicantData);
 
@@ -1121,7 +1197,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error in addManualApplicant:', error);
             showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
-        
     }
 
     function proceedWithAddingApplicant(applicantData) {
@@ -3451,7 +3526,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 32; 
+            cell.colSpan = 43; // Updated column count
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
@@ -3462,158 +3537,226 @@ document.addEventListener('DOMContentLoaded', function () {
         applicants.forEach((applicant, index) => {
             const row = document.createElement('tr');
             
+            // SRS ID
             const idCell = document.createElement('td');
             idCell.textContent = applicant['SRS ID'] || `APP-${index + 1}`;
             idCell.style.fontFamily = 'monospace';
             idCell.style.fontSize = '10px';
             row.appendChild(idCell);
 
-            const fullNameCell = document.createElement('td');
-            fullNameCell.textContent = applicant.NAME || formatFullName(applicant) || 'N/A';
-            fullNameCell.className = 'compact-cell';
-            row.appendChild(fullNameCell);
+            // SURNAME
+            const surnameCell = document.createElement('td');
+            surnameCell.textContent = applicant['SURNAME'] || applicant['LAST NAME'] || 'N/A';
+            row.appendChild(surnameCell);
             
-            const bdateCell = document.createElement('td');
-            bdateCell.textContent = applicant.BDATE || 'N/A';
-            bdateCell.style.fontSize = '10px';
-            row.appendChild(bdateCell);
+            // FIRST NAME
+            const firstNameCell = document.createElement('td');
+            firstNameCell.textContent = applicant['FIRST NAME'] || 'N/A';
+            row.appendChild(firstNameCell);
             
-            const ageCell = document.createElement('td');
-            ageCell.textContent = applicant.AGE || 'N/A';
-            ageCell.style.textAlign = 'center';
-            row.appendChild(ageCell);
+            // MIDDLE NAME
+            const middleNameCell = document.createElement('td');
+            middleNameCell.textContent = applicant['MIDDLE NAME'] || 'N/A';
+            row.appendChild(middleNameCell);
             
+            // SUFFIX
+            const suffixCell = document.createElement('td');
+            suffixCell.textContent = applicant['SUFFIX'] || 'N/A';
+            row.appendChild(suffixCell);
+            
+            // DATE OF BIRTH
+            const dobCell = document.createElement('td');
+            dobCell.textContent = applicant['DATE OF BIRTH'] || applicant['BDATE'] || 'N/A';
+            dobCell.style.fontSize = '10px';
+            row.appendChild(dobCell);
+            
+            // PLACE OF BIRTH
+            const pobCell = document.createElement('td');
+            pobCell.textContent = applicant['PLACE OF BIRTH'] || 'N/A';
+            row.appendChild(pobCell);
+            
+            // HOUSE NO./STREET/VILLAGE
+            const addressCell = document.createElement('td');
+            addressCell.textContent = applicant['HOUSE NO./STREET/VILLAGE'] || applicant['STREET ADDRESS'] || 'N/A';
+            row.appendChild(addressCell);
+            
+            // BARANGAY
+            const barangayCell = document.createElement('td');
+            barangayCell.textContent = applicant['BARANGAY'] || 'N/A';
+            row.appendChild(barangayCell);
+            
+            // MUNICIPALITY/CITY
+            const cityCell = document.createElement('td');
+            cityCell.textContent = applicant['MUNICIPALITY/CITY'] || applicant['CITY/MUNICIPALITY'] || 'N/A';
+            row.appendChild(cityCell);
+            
+            // PROVINCE
+            const provinceCell = document.createElement('td');
+            provinceCell.textContent = applicant['PROVINCE'] || 'N/A';
+            row.appendChild(provinceCell);
+            
+            // SEX
             const sexCell = document.createElement('td');
-            sexCell.textContent = applicant.SEX || 'N/A';
+            sexCell.textContent = applicant['SEX'] || 'N/A';
             sexCell.style.textAlign = 'center';
             row.appendChild(sexCell);
             
+            // CIVIL STATUS
             const civilStatusCell = document.createElement('td');
             civilStatusCell.textContent = applicant['CIVIL STATUS'] || 'N/A';
             row.appendChild(civilStatusCell);
             
-            const streetCell = document.createElement('td');
-            streetCell.textContent = applicant['STREET ADDRESS'] || 'N/A';
-            streetCell.className = 'compact-cell';
-            row.appendChild(streetCell);
+            // TIN
+            const tinCell = document.createElement('td');
+            tinCell.textContent = applicant['TIN'] || 'N/A';
+            row.appendChild(tinCell);
             
-            const barangayCell = document.createElement('td');
-            barangayCell.textContent = applicant.BARANGAY || 'N/A';
-            row.appendChild(barangayCell);
+            // GSIS/SSS No.
+            const gsisCell = document.createElement('td');
+            gsisCell.textContent = applicant['GSIS/SSS NO.'] || 'N/A';
+            row.appendChild(gsisCell);
             
-            const cityCell = document.createElement('td');
-            cityCell.textContent = applicant['CITY/MUNICIPALITY'] || 'N/A';
-            row.appendChild(cityCell);
+            // PAGIBIG No.
+            const pagibigCell = document.createElement('td');
+            pagibigCell.textContent = applicant['PAGIBIG NO.'] || 'N/A';
+            row.appendChild(pagibigCell);
             
-            const provinceCell = document.createElement('td');
-            provinceCell.textContent = applicant.PROVINCE || 'N/A';
-            row.appendChild(provinceCell);
+            // PHILHEALTH No.
+            const philhealthCell = document.createElement('td');
+            philhealthCell.textContent = applicant['PHILHEALTH NO.'] || 'N/A';
+            row.appendChild(philhealthCell);
             
-            const regionCell = document.createElement('td');
-            regionCell.textContent = applicant.REGION || 'N/A';
-            row.appendChild(regionCell);
+            // HEIGHT
+            const heightCell = document.createElement('td');
+            heightCell.textContent = applicant['HEIGHT'] || 'N/A';
+            row.appendChild(heightCell);
             
+            // EMAIL ADDRESS
             const emailCell = document.createElement('td');
-            emailCell.textContent = applicant.EMAIL || 'N/A';
-            emailCell.className = 'compact-cell';
+            emailCell.textContent = applicant['EMAIL ADDRESS'] || applicant['EMAIL'] || 'N/A';
             row.appendChild(emailCell);
             
-            const telephoneCell = document.createElement('td');
-            telephoneCell.textContent = applicant.TELEPHONE || 'N/A';
-            row.appendChild(telephoneCell);
+            // LANDLINE NUMBER
+            const landlineCell = document.createElement('td');
+            landlineCell.textContent = applicant['LANDLINE NUMBER'] || applicant['TELEPHONE'] || 'N/A';
+            row.appendChild(landlineCell);
             
+            // CELLPHONE NUMBER
             const cellphoneCell = document.createElement('td');
-            cellphoneCell.textContent = applicant.CELLPHONE || 'N/A';
+            cellphoneCell.textContent = applicant['CELLPHONE NUMBER'] || applicant['CELLPHONE'] || 'N/A';
             row.appendChild(cellphoneCell);
             
-            const empStatusCell = document.createElement('td');
-            empStatusCell.textContent = applicant['EMP. STATUS'] || 'N/A';
-            row.appendChild(empStatusCell);
-            
-            const empTypeCell = document.createElement('td');
-            empTypeCell.textContent = applicant['EMP. TYPE'] || 'N/A';
-            row.appendChild(empTypeCell);
-            
-            const educCell = document.createElement('td');
-            educCell.textContent = applicant['EDUC LEVEL'] || 'N/A';
-            row.appendChild(educCell);
-            
-            const courseCell = document.createElement('td');
-            courseCell.textContent = applicant.COURSE || 'N/A';
-            row.appendChild(courseCell);
-            
-            const fourPsCell = document.createElement('td');
-            fourPsCell.textContent = applicant['4Ps'] || 'N/A';
-            fourPsCell.style.textAlign = 'center';
-            row.appendChild(fourPsCell);
-            
-            const pwdCell = document.createElement('td');
-            pwdCell.textContent = applicant.PWD || 'N/A';
-            pwdCell.style.textAlign = 'center';
-            row.appendChild(pwdCell);
-            
+            // DISABILITY
             const disabilityCell = document.createElement('td');
-            disabilityCell.textContent = applicant.DISABILITY || 'N/A';
+            disabilityCell.textContent = applicant['DISABILITY'] || 'N/A';
             row.appendChild(disabilityCell);
             
-            const preferredPositionCell = document.createElement('td');
-            preferredPositionCell.textContent = applicant['PREFERRED POSITION'] || 'N/A';
-            row.appendChild(preferredPositionCell);
+            // EMPLOYMENT STATUS/TYPE
+            const empStatusCell = document.createElement('td');
+            empStatusCell.textContent = applicant['EMPLOYMENT STATUS/TYPE'] || applicant['EMP. STATUS'] || 'N/A';
+            row.appendChild(empStatusCell);
             
-            const skillsCell = document.createElement('td');
-            skillsCell.textContent = applicant.SKILLS || 'N/A';
-            skillsCell.className = 'compact-cell';
-            row.appendChild(skillsCell);
+            // ARE YOU ACTIVELY LOOKING FOR WORK?
+            const lookingWorkCell = document.createElement('td');
+            lookingWorkCell.textContent = applicant['ARE YOU ACTIVELY LOOKING FOR WORK?'] || 'N/A';
+            row.appendChild(lookingWorkCell);
             
+            // WILLING TO WORK IMMEDIATELY?
+            const workImmediatelyCell = document.createElement('td');
+            workImmediatelyCell.textContent = applicant['WILLING TO WORK IMMEDIATELY?'] || 'N/A';
+            row.appendChild(workImmediatelyCell);
+            
+            // ARE YOU A 4PS BENEFICIARY?
+            const fourPsCell = document.createElement('td');
+            fourPsCell.textContent = applicant['ARE YOU A 4PS BENEFICIARY?'] || applicant['4Ps'] || 'N/A';
+            row.appendChild(fourPsCell);
+            
+            // PREFERRED OCCUPATION
+            const prefOccupationCell = document.createElement('td');
+            prefOccupationCell.textContent = applicant['PREFERRED OCCUPATION'] || applicant['PREFERRED POSITION'] || 'N/A';
+            row.appendChild(prefOccupationCell);
+            
+            // PREFERRED WORK LOCATION
+            const workLocationCell = document.createElement('td');
+            workLocationCell.textContent = applicant['PREFERRED WORK LOCATION'] || 'N/A';
+            row.appendChild(workLocationCell);
+            
+            // EXPECTED SALARY
+            const expectedSalaryCell = document.createElement('td');
+            expectedSalaryCell.textContent = applicant['EXPECTED SALARY'] || 'N/A';
+            row.appendChild(expectedSalaryCell);
+            
+            // PASSPORT NO.
+            const passportCell = document.createElement('td');
+            passportCell.textContent = applicant['PASSPORT NO.'] || 'N/A';
+            row.appendChild(passportCell);
+            
+            // PASSPORT EXPIRY DATE
+            const passportExpiryCell = document.createElement('td');
+            passportExpiryCell.textContent = applicant['PASSPORT EXPIRY DATE'] || 'N/A';
+            row.appendChild(passportExpiryCell);
+            
+            // LANGUAGE
+            const languageCell = document.createElement('td');
+            languageCell.textContent = applicant['LANGUAGE'] || 'N/A';
+            row.appendChild(languageCell);
+            
+            // ELEMENTARY
+            const elementaryCell = document.createElement('td');
+            elementaryCell.textContent = applicant['ELEMENTARY'] || 'N/A';
+            row.appendChild(elementaryCell);
+            
+            // SECONDARY
+            const secondaryCell = document.createElement('td');
+            secondaryCell.textContent = applicant['SECONDARY'] || 'N/A';
+            row.appendChild(secondaryCell);
+            
+            // TERTIARY
+            const tertiaryCell = document.createElement('td');
+            tertiaryCell.textContent = applicant['TERTIARY'] || 'N/A';
+            row.appendChild(tertiaryCell);
+            
+            // GRADUATE STUDIES
+            const graduateCell = document.createElement('td');
+            graduateCell.textContent = applicant['GRADUATE STUDIES'] || 'N/A';
+            row.appendChild(graduateCell);
+            
+            // TECHNICAL/VOCATIONAL AND OTHER TRAINING
+            const trainingCell = document.createElement('td');
+            trainingCell.textContent = applicant['TECHNICAL/VOCATIONAL AND OTHER TRAINING'] || 'N/A';
+            row.appendChild(trainingCell);
+            
+            // ELIGIBILITY
+            const eligibilityCell = document.createElement('td');
+            eligibilityCell.textContent = applicant['ELIGIBILITY'] || 'N/A';
+            row.appendChild(eligibilityCell);
+            
+            // WORK EXPERIENCE
             const workExpCell = document.createElement('td');
             workExpCell.textContent = applicant['WORK EXPERIENCE'] || 'N/A';
-            workExpCell.className = 'compact-cell';
             row.appendChild(workExpCell);
             
-            const ofwCell = document.createElement('td');
-            ofwCell.textContent = applicant.OFW || 'N/A';
-            ofwCell.style.textAlign = 'center';
-            row.appendChild(ofwCell);
+            // OTHER SKILLS
+            const otherSkillsCell = document.createElement('td');
+            otherSkillsCell.textContent = applicant['OTHER SKILLS'] || applicant['SKILLS'] || 'N/A';
+            row.appendChild(otherSkillsCell);
             
-            const countryCell = document.createElement('td');
-            countryCell.textContent = applicant.COUNTRY || 'N/A';
-            row.appendChild(countryCell);
+            // PROGRAM CATEGORY
+            const programCategoryCell = document.createElement('td');
+            programCategoryCell.textContent = applicant['PROGRAM CATEGORY'] || 'N/A';
+            row.appendChild(programCategoryCell);
             
-            const formerOfwCell = document.createElement('td');
-            formerOfwCell.textContent = applicant['FORMER OFW'] || 'N/A';
-            row.appendChild(formerOfwCell);
+            // SPECIFIC PROGRAM
+            const specificProgramCell = document.createElement('td');
+            specificProgramCell.textContent = applicant['SPECIFIC PROGRAM'] || 'N/A';
+            row.appendChild(specificProgramCell);
             
-            const latestCountryCell = document.createElement('td');
-            latestCountryCell.textContent = applicant['LATEST COUNTRY'] || 'N/A';
-            row.appendChild(latestCountryCell);
+            // PROGRAM STATUS
+            const programStatusCell = document.createElement('td');
+            programStatusCell.textContent = applicant['PROGRAM STATUS'] || 'N/A';
+            row.appendChild(programStatusCell);
             
-            const regDateCell = document.createElement('td');
-            regDateCell.textContent = applicant['REG. DATE'] || 'N/A';
-            regDateCell.style.fontSize = '10px';
-            row.appendChild(regDateCell);
-            
-            const remarksCell = document.createElement('td');
-            remarksCell.textContent = applicant.REMARKS || 'N/A';
-            row.appendChild(remarksCell);
-            
-            const createdByCell = document.createElement('td');
-            createdByCell.textContent = applicant['CREATED BY'] || 'System';
-            row.appendChild(createdByCell);
-            
-            const dateCreatedCell = document.createElement('td');
-            dateCreatedCell.textContent = applicant['DATE CREATED'] || 'N/A';
-            dateCreatedCell.style.fontSize = '10px';
-            row.appendChild(dateCreatedCell);
-            
-            const lastModifiedByCell = document.createElement('td');
-            lastModifiedByCell.textContent = applicant['LAST MODIFIED BY'] || 'System';
-            row.appendChild(lastModifiedByCell);
-            
-            const dateModifiedCell = document.createElement('td');
-            dateModifiedCell.textContent = applicant['DATE LAST MODIFIED'] || 'N/A';
-            dateModifiedCell.style.fontSize = '10px';
-            row.appendChild(dateModifiedCell);
-            
+            // Actions
             const actionsCell = document.createElement('td');
             actionsCell.className = 'actions-cell';
             
