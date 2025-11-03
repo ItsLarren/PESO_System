@@ -1,0 +1,211 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7f5, #e3f2fd);
+    min-height: 100vh;
+}
+
+.system-header {
+    width: 100%;
+    background: linear-gradient(135deg, #f86c6c, #a51f41);
+    padding: 30px 20px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.logos-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 2000px;
+    margin: 0 auto;
+    gap: 30px;
+}
+
+.logo-left, .logo-right {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+}
+
+.logo-img {
+    max-width: 150px;
+    height: auto;
+}
+
+.header-center {
+    flex: 10;
+    text-align: center;
+}
+
+.header-center h1 {
+    font-size: 60px;
+    font-weight: 650;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.subtitle {
+    font-size: 40px;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.welcome-section {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.welcome-section h2 {
+    color: #a51f41;
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.welcome-section p {
+    color: #666;
+    font-size: 18px;
+}
+
+.system-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    margin-bottom: 50px;
+}
+
+.system-card {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e0e0e0;
+}
+
+.system-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+#zero-unemployment-card {
+    border-top: 5px solid #2196f3;
+}
+
+#feis-card {
+    border-top: 5px solid #4caf50;
+}
+
+.card-icon {
+    font-size: 48px;
+    color: #a51f41;
+    margin-bottom: 20px;
+}
+
+.system-card h3 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.system-card p {
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
+
+.system-btn {
+    background: linear-gradient(135deg, #f86c6c, #a51f41);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.system-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(165, 31, 65, 0.3);
+}
+
+.logout-section {
+    text-align: center;
+}
+
+.logout-btn {
+    background: #666;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logout-btn:hover {
+    background: #555;
+}
+
+.back-btn {
+    background: #ff9800;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.back-btn:hover {
+    background: #f57c00;
+}
+
+@media (max-width: 768px) {
+    .system-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .system-header {
+        padding: 20px 15px;
+    }
+    
+    .header-center h1 {
+        font-size: 32px;
+    }
+    
+    .subtitle {
+        font-size: 18px;
+    }
+    
+    .system-card {
+        padding: 30px 20px;
+    }
+}

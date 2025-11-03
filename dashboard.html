@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPESO System Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/dashboard.css">
+</head>
+<body>
+    <div class="system-header">
+        <div class="logos-container">
+            <div class="logo-left">
+                <img src="assets/CSFP_logo.png" alt="Left Logo" class="logo-img">
+            </div>
+            <div class="header-center">
+                <h1>Fernandino Employment Information System</h1>
+                <p class="subtitle">City Public Employment Services Office</p>
+            </div>
+            <div class="logo-right">
+                <img src="assets/PESO_logo.png" alt="Right Logo" class="logo-img">
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-container">
+        <div class="welcome-section">
+            <h2>Welcome, <span id="current-user">User</span>!</h2>
+            <p>Select a system to continue:</p>
+        </div>
+
+        <div class="system-options">
+            <div class="system-card" id="zero-unemployment-card">
+                <div class="card-icon">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h3>Zero Unemployment Project</h3>
+                <p>Manage specialized unemployment reduction programs and initiatives</p>
+                <button class="system-btn" onclick="openZeroUnemployment()">
+                    <i class="fas fa-arrow-right"></i> Enter System
+                </button>
+            </div>
+
+            <div class="system-card" id="feis-card">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>FEIS</h3>
+                <p>Fernandino Employment Information System - Applicant Management</p>
+                <button class="system-btn" onclick="openFEIS()">
+                    <i class="fas fa-arrow-right"></i> Enter System
+                </button>
+            </div>
+        </div>
+
+        <div class="logout-section">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Display current user
+        const currentUser = localStorage.getItem('currentUser') || 'User';
+        document.getElementById('current-user').textContent = currentUser;
+
+        // System navigation functions
+        function openZeroUnemployment() {
+            window.location.href = 'zero-unemployment.html';
+        }
+
+        function openFEIS() {
+            window.location.href = 'index.html'; // Your existing system
+        }
+
+        // Logout function
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        });
+
+        // Check authentication
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

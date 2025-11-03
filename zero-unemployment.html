@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero Unemployment Project - CPESO</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">ZUP</div>
+                <h1>Zero Unemployment Project</h1>
+                <div class="user-info">
+                    <span>Welcome, <span id="current-user-zero">User</span></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <button class="back-btn" onclick="goToDashboard()">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+
+        <div class="card">
+            <h2>Zero Unemployment Project System</h2>
+            <p>This system is dedicated to specialized unemployment reduction programs and initiatives.</p>
+            
+            <div class="system-status">
+                <div class="status-item">
+                    <i class="fas fa-tools"></i>
+                    <span>System under development</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add your Zero Unemployment Project specific content here -->
+        <div class="card">
+            <h3>Coming Soon Features:</h3>
+            <ul>
+                <li>Special Employment Programs</li>
+                <li>Job Matching System</li>
+                <li>Employer Partnerships</li>
+                <li>Training Programs</li>
+                <li>Employment Analytics</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Display current user
+        const currentUser = localStorage.getItem('currentUser') || 'User';
+        document.getElementById('current-user-zero').textContent = currentUser;
+
+        // Navigation functions
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+
+        // Check authentication
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

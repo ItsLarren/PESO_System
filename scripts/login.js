@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        window.location.href = 'index.html';
+        window.location.href = 'dashboard.html';
     }
 
     loginForm.addEventListener('submit', function(e) {
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('currentUser', username);
             
-            window.location.href = 'index.html';
+            window.location.href = 'dashboard.html';
         } else {
             showError('Invalid username or password');
         }
