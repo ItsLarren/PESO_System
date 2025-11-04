@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', function () {
         viewModal: document.getElementById('viewModal'),
         closeView: document.querySelector('.close-view'),
         exportApplicantsBtn: document.getElementById('export-applicants-btn')
+        
     };
 
     // Global variables
@@ -3906,6 +3907,90 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log(`✅ DUPLICATE FOUND at index ${index}:`, mainApp.NAME);
                 }
             });
+        }
+    }
+
+    function openZeroUnemploymentPage() {
+        // Store current filter state
+        localStorage.setItem('currentProgramFilter', 'Zero Unemployment');
+        // Redirect to Zero Unemployment page
+        window.location.href = 'zero-unemployment.html';
+    }
+
+    // Modify the function that saves applicants
+    function saveApplicantBasedOnCategory(applicantData) {
+        const programCategory = applicantData['PROGRAM CATEGORY'];
+        
+        if (programCategory === 'Zero Unemployment') {
+            // Save to Zero Unemployment storage
+            const zeroApplicants = JSON.parse(localStorage.getItem('zeroUnemploymentApplicants')) || [];
+            zeroApplicants.push(applicantData);
+            localStorage.setItem('zeroUnemploymentApplicants', JSON.stringify(zeroApplicants));
+        } else {
+            // Save to main FEIS storage
+            const mainApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            mainApplicants.push(applicantData);
+            localStorage.setItem('mainApplicants', JSON.stringify(mainApplicants));
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const zeroUnemploymentTab = document.getElementById('zero-unemployment-tab');
+        
+        zeroUnemploymentTab.addEventListener('click', function() {
+            // You can also pass parameters if needed
+            const url = 'zero-unemployment.html';
+            
+            // Open in new tab
+            window.open(url, '_blank');
+            
+            // Or if you want to track the click
+            // trackAnalytics('zero_unemployment_click');
+        });
+        
+        // For other filter tabs (if they filter data on same page)
+        const filterTabs = document.querySelectorAll('.filter-tab[data-filter]');
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const filter = this.getAttribute('data-filter');
+                filterRecords(filter);
+            });
+        });
+    });
+
+    function filterRecords(filter) {
+        // Your existing filtering logic here
+        console.log('Filtering by:', filter);
+    }
+
+    // Fix the initializeApp function call - remove the duplicate:
+    function initializeApp() {
+        try {
+            console.log('🚀 Initializing CPESO Applicant Management System...');
+            
+            // Check authentication
+            if (localStorage.getItem('isLoggedIn') !== 'true') {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Restore backup if needed
+            if (syncManager.restoreBackupIfNeeded()) {
+                console.log('✅ Data restored from backup');
+            }
+
+            // Initialize all components - ADD ZERO UNEMPLOYMENT HERE
+            const initSteps = [
+                { name: 'Manual Form', fn: initializeManualForm },
+                { name: 'Camera', fn: initializeCamera },
+                { name: 'Search', fn: initializeSearch },
+                { name: 'Edit Modal', fn: initializeEditModal },
+                { name: 'File Uploads', fn: initializeFileUploads },
+                { name: 'Advanced Filters', fn: initializeAdvancedFilters },
+                { name: 'Reporting', fn: initializeReporting },
+                { name: 'View Modal', fn: initializeViewModal },
+                { name: 'Zero Unemployment', fn: initializeZeroUnemploymentNavigation } // ADD THIS LINE
+            ];
         }
     }
 

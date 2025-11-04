@@ -10,8 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
         { username: 'user', password: 'user123' }
     ];
 
+    // Auto-redirect check
     if (localStorage.getItem('isLoggedIn') === 'true') {
-        window.location.href = 'dashboard.html';
+        window.location.href = 'index.html'; // Changed from dashboard.html
     }
 
     loginForm.addEventListener('submit', function(e) {
@@ -28,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('currentUser', username);
             
-            window.location.href = 'dashboard.html';
+            window.location.href = 'index.html'; // Changed from dashboard.html
         } else {
             showError('Invalid username or password');
         }

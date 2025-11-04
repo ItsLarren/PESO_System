@@ -2817,3 +2817,27 @@ input[type="date"]:after {
     border: 1px solid #ddd;
     border-radius: 8px;
 }
+
+.filter-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.filter-tab {
+    padding: 10px 20px;
+    border: none;
+    background: #f0f0f0;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.filter-tab:hover {
+    background: #e0e0e0;
+}
+
+.filter-tab.active {
+    background: #007bff;
+    color: white;
+}
