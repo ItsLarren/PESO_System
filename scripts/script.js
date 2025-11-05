@@ -280,6 +280,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 window.location.href = 'login.html';
                 return;
             }
+
+            initializeZeroUnemploymentNavigation();
             
             // Restore backup if needed
             if (syncManager.restoreBackupIfNeeded()) {
@@ -602,12 +604,16 @@ document.addEventListener('DOMContentLoaded', function () {
             const lastName = document.getElementById('manual-surname')?.value.trim() || '';
             const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
             const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
+            const suffix = document.getElementById('manual-suffix')?.value.trim() || ''; // ADD THIS
             
             // Build full name
             if (lastName && firstName) {
                 let fullName = `${lastName}, ${firstName}`;
                 if (middleName) {
                     fullName += ` ${middleName}`;
+                }
+                if (suffix) { // ADD SUFFIX TO FULL NAME
+                    fullName += ` ${suffix}`;
                 }
                 applicantData['NAME'] = fullName;
             } else {
@@ -617,6 +623,7 @@ document.addEventListener('DOMContentLoaded', function () {
             applicantData['LAST NAME'] = lastName || 'N/A';
             applicantData['FIRST NAME'] = firstName || 'N/A';
             applicantData['MIDDLE NAME'] = middleName || 'N/A';
+            applicantData['SUFFIX'] = suffix || 'N/A'; // ADD THIS LINE
             
             // Process all form fields systematically
             applicantData['SRS ID'] = generateUniqueId();
@@ -1890,6 +1897,14 @@ document.addEventListener('DOMContentLoaded', function () {
         
         applicants.forEach((applicant, index) => {
             const row = document.createElement('tr');
+
+            // Debug: Check what suffix data we have
+            console.log('Applicant suffix data:', {
+                name: applicant.NAME,
+                suffix: applicant['SUFFIX'],
+                suffixRaw: applicant.SUFFIX,
+                allKeys: Object.keys(applicant)
+            });
             
             // Add cells for each column
             const columns = [
@@ -1897,7 +1912,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicant['LAST NAME'] || applicant['SURNAME'] || 'N/A',
                 applicant['FIRST NAME'] || 'N/A',
                 applicant['MIDDLE NAME'] || 'N/A',
-                applicant['SUFFIX'] || 'N/A',
+                getSuffixValue(applicant),
                 applicant['DATE OF BIRTH'] || applicant['BDATE'] || 'N/A',
                 applicant['PLACE OF BIRTH'] || 'N/A',
                 applicant['HOUSE NO./STREET/VILLAGE'] || applicant['STREET ADDRESS'] || 'N/A',
@@ -2012,6 +2027,17 @@ document.addEventListener('DOMContentLoaded', function () {
             
             tbody.appendChild(row);
         });
+    }
+
+    function getSuffixValue(applicant) {
+        // Check multiple possible field names for suffix
+        const suffix = applicant['SUFFIX'] || applicant.SUFFIX || applicant.suffix || '';
+        
+        if (suffix && suffix.toString().trim() !== '' && suffix !== 'N/A' && suffix !== 'null') {
+            return suffix.toString().trim();
+        }
+        
+        return 'N/A';
     }
 
     function displayImportedData(data) {
@@ -2657,42 +2683,43 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function getFormFieldMappings() {
         return {
-            'SRS ID': ['SRS ID', 'ID', 'Applicant ID', 'SRS_ID', 'srs id'],
-            'LAST NAME': ['LAST NAME', 'Last Name', 'LASTNAME', 'last name', 'Surname', 'Family Name'],
-            'FIRST NAME': ['FIRST NAME', 'First Name', 'FIRSTNAME', 'first name', 'Given Name'],
-            'MIDDLE NAME': ['MIDDLE NAME', 'Middle Name', 'MIDDLENAME', 'middle name', 'Middle Initial'],
-            'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name'],
-            'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB'],
-            'AGE': ['AGE', 'Age'],
+            'SRS ID': ['SRS ID', 'ID', 'Applicant ID', 'SRS_ID', 'srs id', 'id', 'applicant id', 'ApplicantID', 'SRSID'],
+            'LAST NAME': ['LAST NAME', 'Last Name', 'LASTNAME', 'last name', 'Surname', 'Family Name', 'surname', 'lastname', 'Last_Name', 'LAST_NAME'],
+            'FIRST NAME': ['FIRST NAME', 'First Name', 'FIRSTNAME', 'first name', 'Given Name', 'given name', 'firstname', 'First_Name', 'FIRST_NAME'],
+            'MIDDLE NAME': ['MIDDLE NAME', 'Middle Name', 'MIDDLENAME', 'middle name', 'Middle Initial', 'middle initial', 'middlename', 'Middle_Name', 'MIDDLE_NAME'],
+            'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name', 'applicant name', 'Full_Name', 'FULL_NAME'],
+            'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB', 'dob', 'birth date', 'Birthdate', 'BIRTHDATE'],
+            'AGE': ['AGE', 'Age', 'age'],
             'SEX': ['SEX', 'Gender', 'SEX/GENDER', 'gender', 'GENDER', 'Sex'],
-            'CIVIL STATUS': ['CIVIL STATUS', 'Civil Status', 'Status', 'Marital Status'],
-            'STREET ADDRESS': ['STREET ADDRESS', 'Street Address', 'Address', 'STREET', 'Street', 'House No', 'House Number', 'Village'],
-            'BARANGAY': ['BARANGAY', 'Barangay', 'BRGY', 'Brgy'],
-            'CITY/MUNICIPALITY': ['CITY/MUNICIPALITY', 'City/Municipality', 'City', 'Municipality', 'CITY', 'MUNICIPALITY'],
-            'PROVINCE': ['PROVINCE', 'Province'],
-            'EMAIL': ['EMAIL', 'Email', 'Email Address', 'email', 'Email Address', 'E-mail', 'e-mail'],
-            'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number', 'Cellphone Number'],
-            'EMP. STATUS': ['EMP. STATUS', 'Employment Status', 'EMP STATUS', 'Employment'],
-            'EDUC LEVEL': ['EDUC LEVEL', 'Educational Level', 'Education', 'Educational Attainment'],
-            'COURSE': ['COURSE', 'Course', 'Degree', 'College Course'],
-            '4Ps': ['4Ps', '4PS', '4Ps Member', 'Pantawid Pamilya'],
-            'PWD': ['PWD', 'Person with Disability', 'PWD Status'],
-            'DISABILITY': ['DISABILITY', 'Disability', 'Type of Disability'],
-            'PREFERRED POSITION': ['PREFERRED POSITION', 'Preferred Position', 'Desired Position', 'Job Preference'],
-            'SKILLS': ['SKILLS', 'Skills', 'Competencies'],
-            'WORK EXPERIENCE': ['WORK EXPERIENCE', 'Work Experience', 'Experience', 'Employment History'],
-            'OFW': ['OFW', 'Overseas Filipino Worker', 'OFW Status'],
-            'REG. DATE': ['REG. DATE', 'Registration Date', 'Date Registered', 'REG DATE'],
-            'REMARKS': ['REMARKS', 'Remarks', 'Notes', 'Comments'],
-            'PROGRAM CATEGORY': ['PROGRAM CATEGORY', 'Program Category', 'Category', 'Sector'],
-            'SPECIFIC PROGRAM': ['SPECIFIC PROGRAM', 'Specific Program', 'Program', 'Service'],
-            'PROGRAM STATUS': ['PROGRAM STATUS', 'Program Status', 'Status']
+            'CIVIL STATUS': ['CIVIL STATUS', 'Civil Status', 'Status', 'Marital Status', 'civil status', 'Civil_Status', 'CIVIL_STATUS'],
+            'STREET ADDRESS': ['STREET ADDRESS', 'Street Address', 'Address', 'STREET', 'Street', 'House No', 'House Number', 'Village', 'street address', 'Street_Address'],
+            'BARANGAY': ['BARANGAY', 'Barangay', 'BRGY', 'Brgy', 'barangay', 'brgy', 'Barangay_Name'],
+            'CITY/MUNICIPALITY': ['CITY/MUNICIPALITY', 'City/Municipality', 'City', 'Municipality', 'CITY', 'MUNICIPALITY', 'city', 'municipality', 'City_Municipality'],
+            'PROVINCE': ['PROVINCE', 'Province', 'province'],
+            'EMAIL': ['EMAIL', 'Email', 'Email Address', 'email', 'Email Address', 'E-mail', 'e-mail', 'email_address'],
+            'CELLPHONE': ['CELLPHONE', 'Cellphone', 'Mobile', 'Mobile No', 'Contact No', 'Contact Number', 'Cellphone Number', 'Phone', 'phone', 'Mobile_Number', 'Contact_Number'],
+            'EMP. STATUS': ['EMP. STATUS', 'Employment Status', 'EMP STATUS', 'Employment', 'employment status', 'Emp_Status', 'EMPLOYMENT_STATUS'],
+            'EDUC LEVEL': ['EDUC LEVEL', 'Educational Level', 'Education', 'Educational Attainment', 'educ level', 'Education_Level'],
+            'COURSE': ['COURSE', 'Course', 'Degree', 'College Course', 'course'],
+            '4Ps': ['4Ps', '4PS', '4Ps Member', 'Pantawid Pamilya', '4ps', 'Four Ps'],
+            'PWD': ['PWD', 'Person with Disability', 'PWD Status', 'pwd', 'Person_with_Disability'],
+            'DISABILITY': ['DISABILITY', 'Disability', 'Type of Disability', 'disability'],
+            'PREFERRED POSITION': ['PREFERRED POSITION', 'Preferred Position', 'Desired Position', 'Job Preference', 'preferred position', 'Preferred_Position'],
+            'SKILLS': ['SKILLS', 'Skills', 'Competencies', 'skills'],
+            'WORK EXPERIENCE': ['WORK EXPERIENCE', 'Work Experience', 'Experience', 'Employment History', 'work experience', 'Work_Experience'],
+            'OFW': ['OFW', 'Overseas Filipino Worker', 'OFW Status', 'ofw', 'Overseas_Filipino_Worker'],
+            'REG. DATE': ['REG. DATE', 'Registration Date', 'Date Registered', 'REG DATE', 'reg date', 'Registration_Date'],
+            'REMARKS': ['REMARKS', 'Remarks', 'Notes', 'Comments', 'remarks'],
+            'PROGRAM CATEGORY': ['PROGRAM CATEGORY', 'Program Category', 'Category', 'Sector', 'program category', 'Program_Category'],
+            'SPECIFIC PROGRAM': ['SPECIFIC PROGRAM', 'Specific Program', 'Program', 'Service', 'specific program', 'Specific_Program'],
+            'PROGRAM STATUS': ['PROGRAM STATUS', 'Program Status', 'Status', 'program status', 'Program_Status']
         };
     }
 
     function findMatchingValue(record, possibleLabels) {
         if (!record) return null;
         
+        // First pass: exact match
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase() === label.toLowerCase()) {
@@ -2701,10 +2728,29 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
+        // Second pass: contains match
         for (const label of possibleLabels) {
             for (const recordKey in record) {
-                if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
-                    label.toLowerCase().includes(recordKey.toLowerCase())) {
+                const cleanRecordKey = recordKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const cleanLabel = label.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                if (cleanRecordKey.includes(cleanLabel) || cleanLabel.includes(cleanRecordKey)) {
+                    return record[recordKey];
+                }
+            }
+        }
+        
+        // Third pass: fuzzy match for common variations
+        for (const label of possibleLabels) {
+            for (const recordKey in record) {
+                const keyWords = recordKey.toLowerCase().split(/[\s_]+/);
+                const labelWords = label.toLowerCase().split(/[\s_]+/);
+                
+                const matchCount = keyWords.filter(word => 
+                    labelWords.some(lword => lword.includes(word) || word.includes(lword))
+                ).length;
+                
+                if (matchCount >= Math.min(keyWords.length, labelWords.length)) {
                     return record[recordKey];
                 }
             }
@@ -2714,23 +2760,47 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function processFieldValue(fieldKey, value) {
-        if (!value) return value;
+        if (!value && value !== 0) return 'N/A';
         
         value = String(value).trim();
         
+        // Handle empty values
+        if (value === '' || value === 'null' || value === 'undefined' || value === 'NaN' || value === 'NULL') {
+            return 'N/A';
+        }
+        
+        // Handle date fields
         if (fieldKey === 'BDATE' || fieldKey === 'REG. DATE') {
             return formatDateValue(value);
         }
         
+        // Handle boolean fields
         const booleanFields = ['4Ps', 'PWD', 'OFW'];
         if (booleanFields.includes(fieldKey)) {
             return normalizeBooleanValue(value);
         }
         
-        if (value === '' || value === 'null' || value === 'undefined' || value === 'NaN') {
-            return 'N/A';
+        // Handle numeric fields
+        const numericFields = ['AGE'];
+        if (numericFields.includes(fieldKey) && !isNaN(value)) {
+            return parseInt(value);
         }
         
+        return value;
+    }
+
+    function normalizeBooleanValue(value) {
+        if (!value) return 'No';
+        
+        const trueValues = ['yes', 'true', '1', 'y', 'check', 'checked', 'x', '✓', '✔', 'on'];
+        const falseValues = ['no', 'false', '0', 'n', 'unchecked', '', 'off', 'null', 'undefined'];
+        
+        const lowerValue = value.toString().toLowerCase().trim();
+        
+        if (trueValues.includes(lowerValue)) return 'Yes';
+        if (falseValues.includes(lowerValue)) return 'No';
+        
+        // If it's not clearly true/false, return the original value
         return value;
     }
 
@@ -2766,33 +2836,29 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function normalizeBooleanValue(value) {
-        const trueValues = ['yes', 'true', '1', 'y', 'check', 'checked', 'x'];
-        const falseValues = ['no', 'false', '0', 'n', 'unchecked', ''];
-        
-        const lowerValue = value.toLowerCase().trim();
-        
-        if (trueValues.includes(lowerValue)) return 'Yes';
-        if (falseValues.includes(lowerValue)) return 'No';
-        
-        return value;
-    }
-
     function combineNameFromParts(record, processedRecord) {
+        // Try to find name from various field combinations
         let lastName = processedRecord['LAST NAME'];
         let firstName = processedRecord['FIRST NAME'];
         let middleName = processedRecord['MIDDLE NAME'];
         
-        if (lastName === 'N/A') {
-            lastName = findMatchingValue(record, ['LAST NAME', 'Last Name', 'LASTNAME', 'last name', 'Surname']);
-        }
-        if (firstName === 'N/A') {
-            firstName = findMatchingValue(record, ['FIRST NAME', 'First Name', 'FIRSTNAME', 'first name', 'Given Name']);
-        }
-        if (middleName === 'N/A') {
-            middleName = findMatchingValue(record, ['MIDDLE NAME', 'Middle Name', 'MIDDLENAME', 'middle name', 'Middle Initial']);
+        // If we have partial name info, try to extract from other fields
+        if ((lastName === 'N/A' || firstName === 'N/A') && processedRecord['NAME'] === 'N/A') {
+            // Look for name fields in the original record
+            for (const key in record) {
+                const lowerKey = key.toLowerCase();
+                if ((lowerKey.includes('name') || lowerKey.includes('full') || lowerKey.includes('complete')) && 
+                    record[key] && record[key] !== 'N/A') {
+                    
+                    const fullName = record[key].toString().trim();
+                    if (fullName && fullName !== 'N/A') {
+                        return fullName;
+                    }
+                }
+            }
         }
         
+        // Build from parts if we have them
         lastName = (lastName && lastName !== 'N/A') ? lastName.trim() : '';
         firstName = (firstName && firstName !== 'N/A') ? firstName.trim() : '';
         middleName = (middleName && middleName !== 'N/A') ? middleName.trim() : '';
@@ -2803,14 +2869,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 fullName += ` ${middleName}`;
             }
             return fullName;
-        }
-        
-        for (const key in record) {
-            const lowerKey = key.toLowerCase();
-            if ((lowerKey.includes('name') || lowerKey.includes('full') || lowerKey.includes('complete')) && 
-                record[key] && record[key] !== 'N/A') {
-                return record[key];
-            }
         }
         
         return 'N/A';
@@ -3204,6 +3262,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     'Last Name': applicant['LAST NAME'] || '',
                     'First Name': applicant['FIRST NAME'] || '',
                     'Middle Name': applicant['MIDDLE NAME'] || '',
+                    'Suffix': applicant['SUFFIX'] || '',
                     'Full Name': applicant.NAME || '',
                     'Birth Date': applicant.BDATE || '',
                     'Age': applicant.AGE || '',
@@ -3910,11 +3969,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Replace the current zero unemployment function with:
     function openZeroUnemploymentPage() {
-        // Store current filter state
+        // Store current state if needed
+        localStorage.setItem('lastPage', 'applicants');
         localStorage.setItem('currentProgramFilter', 'Zero Unemployment');
-        // Redirect to Zero Unemployment page
+        
+        // Redirect to dedicated page
         window.location.href = 'zero-unemployment.html';
+    }
+
+    // Update the event listener
+    if (elements.zeroUnemploymentTab) {
+        elements.zeroUnemploymentTab.addEventListener('click', function(e) {
+            e.preventDefault();
+            openZeroUnemploymentPage();
+        });
     }
 
     // Modify the function that saves applicants
@@ -3963,36 +4033,105 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Filtering by:', filter);
     }
 
-    // Fix the initializeApp function call - remove the duplicate:
-    function initializeApp() {
-        try {
-            console.log('🚀 Initializing CPESO Applicant Management System...');
-            
-            // Check authentication
-            if (localStorage.getItem('isLoggedIn') !== 'true') {
-                window.location.href = 'login.html';
-                return;
-            }
-            
-            // Restore backup if needed
-            if (syncManager.restoreBackupIfNeeded()) {
-                console.log('✅ Data restored from backup');
-            }
+    function initializeZeroUnemploymentNavigation() {
+        const zeroUnemploymentTab = document.getElementById('zero-unemployment-tab');
+        
+        if (zeroUnemploymentTab) {
+            zeroUnemploymentTab.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Zero Unemployment tab clicked');
+                // Store current filter state
+                localStorage.setItem('currentProgramFilter', 'Zero Unemployment');
+                // Redirect to Zero Unemployment page
+                window.location.href = 'zero-unemployment.html';
+            });
+        }
+        
+        // For other filter tabs (if they filter data on same page)
+        const filterTabs = document.querySelectorAll('.filter-tab[data-filter]');
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const filter = this.getAttribute('data-filter');
+                filterRecords(filter);
+            });
+        });
+    }
 
-            // Initialize all components - ADD ZERO UNEMPLOYMENT HERE
-            const initSteps = [
-                { name: 'Manual Form', fn: initializeManualForm },
-                { name: 'Camera', fn: initializeCamera },
-                { name: 'Search', fn: initializeSearch },
-                { name: 'Edit Modal', fn: initializeEditModal },
-                { name: 'File Uploads', fn: initializeFileUploads },
-                { name: 'Advanced Filters', fn: initializeAdvancedFilters },
-                { name: 'Reporting', fn: initializeReporting },
-                { name: 'View Modal', fn: initializeViewModal },
-                { name: 'Zero Unemployment', fn: initializeZeroUnemploymentNavigation } // ADD THIS LINE
-            ];
+    function debugSuffixData() {
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        console.log('=== DEBUG SUFFIX DATA ===');
+        savedApplicants.forEach((applicant, index) => {
+            console.log(`Applicant ${index + 1}:`, {
+                name: applicant.NAME,
+                suffix: applicant['SUFFIX'],
+                hasSuffix: applicant.hasOwnProperty('SUFFIX'),
+                allFields: Object.keys(applicant).filter(key => key.toLowerCase().includes('suffix'))
+            });
+        });
+    }
+
+    class DataManager {
+        constructor() {
+            this.backupKey = 'cpeso_backup';
+            this.maxBackups = 5;
+        }
+        
+        createBackup() {
+            const backup = {
+                timestamp: new Date().toISOString(),
+                applicants: JSON.parse(localStorage.getItem('mainApplicants') || '[]'),
+                imported: JSON.parse(localStorage.getItem('importedData') || '[]')
+            };
+            
+            const backups = JSON.parse(localStorage.getItem(this.backupKey) || '[]');
+            backups.unshift(backup);
+            
+            // Keep only recent backups
+            if (backups.length > this.maxBackups) {
+                backups.splice(this.maxBackups);
+            }
+            
+            localStorage.setItem(this.backupKey, JSON.stringify(backups));
+        }
+        
+        restoreBackup(backupIndex = 0) {
+            const backups = JSON.parse(localStorage.getItem(this.backupKey) || '[]');
+            if (backups[backupIndex]) {
+                localStorage.setItem('mainApplicants', JSON.stringify(backups[backupIndex].applicants));
+                localStorage.setItem('importedData', JSON.stringify(backups[backupIndex].imported));
+                return true;
+            }
+            return false;
         }
     }
+
+    function getSuffixValue(applicant) {
+        // Check multiple possible field names for suffix
+        const suffixKeys = ['SUFFIX', 'Suffix', 'suffix', 'NAME_SUFFIX'];
+        
+        for (const key of suffixKeys) {
+            if (applicant[key] && applicant[key].toString().trim() !== '' && 
+                applicant[key] !== 'N/A' && applicant[key] !== 'null') {
+                return applicant[key].toString().trim();
+            }
+        }
+        
+        return 'N/A';
+    }
+
+    // Ensure home dashboard initializes after DOM load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check authentication first
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // Then initialize the dashboard
+        initializeHomeDashboard();
+    });
+
+    
 
     // Initialize the application
     initializeApp();

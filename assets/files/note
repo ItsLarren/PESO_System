@@ -6,7 +6,7 @@ Current Limitations (uses LocalStorage only):
 limited storage capacity (5-10mb)
 - No server-side validation or sercurity
 - No backup or recovery options
--No multi-user support
+- No multi-user support
 
 Backend if needed:
 - Multiple users need to access same data
@@ -22,4 +22,129 @@ Backend Options:
 - Python (Django/Flask) + PostgreSQL - Robust and scalable
 - Firebase - Quick setup, real-time database
 
-when I click zero unemployment tab at the filter, and a new page will open
+
+So it will be like this
+login page 
+there will be a new page for home
+whats on home page?
+these were the tabs at above the container of the applicants
+Applicants
+Employers
+Vacancies
+prorams
+reports and statistics
+tools and utilities
+administrator panel
+
+there also displayed 
+LOCAL STATS: SAN FERNANDO (PAMPANGA)
+whats inside the LOCAL STATS: SAN FERNANDO (PAMPANGA)?
+Total applicants:
+Total employers:
+Active vacancies: 
+
+
+applicants tab  - was the existing database
+Employers tab - another database same format as the applicant table. at the table cosist of Created by,	Reg. date,	Employer Name,	TIN,	PJN Accredited,	Last modified by,	Date last modified,	Edit (button),	Delete (button),
+Vacancies tab- same database also of applicants database but whats here was the databae that was posted or kinad of like a hstpry of the posted job vacancies fromthe employers and what positions  and  here was at the table Posted by,	Date posted,	Valid until,	Employer,	Position,	Slots,	Referred,	Edit(button),	and Delete(button).
+Programs Tab - dont  put anything yet
+reports and statistics - contains of another tabs or can be a clickable icons [Executive dashboard, By location, by PESO ID, General Reports], The Executive dashboard when click it will open a new page that displays the (Total Applicants, By Gender), (Total Applicants, By Age Group), (Total Applicants, By Employment), (Total Applicants, By Educational AttainmentStatus), (Top 20 Occupations (By Work Experience)), and to see those reports the user need to input the report period from (this date) to (this date), then the reporst will show. it was like same to the generate report we did. The By location icon, there will be a tab that divide these by location (Full Summarry, By Region, By Province, By Municipality and By Brangay), each tabs contains of these 
+Applicants
+Number of applicants registered, by Gender
+Number of applicants registered, by Civil Status
+Number of applicants registered, by Age Group
+Number of applicants registered, Youth/Senior/PWD
+Number of applicants registered, by Employment Status
+Number of applicants registered, by Educational Attainment
+Number of applicants registered, by Occupation
+Number of applicants registered, by Work Experience
+Employers
+Number of employers registered, by Type
+Number of employers registered, by Size
+Number of employers registered, by Industry
+Vacancies
+Number of job vacancies posted, by Gender
+Number of job vacancies posted, by Civil Status
+Number of job vacancies posted, By Employer
+Transactions
+Report of applicant transactions
+Report of employer transactions when the user click one of that a modal will show and
+
+at the national summary modal when click one of those 
+Set report period
+date from - to
+okay adn close button
+when okay was clicked another modal will show that consisst of these infos PESO EMPLOYMENT INFORMATION SYSTEM
+Total Number of Applicants Registered, By Gender
+For the period 11/5/2025 to 11/5/2025
+GENDER               TOTAL
+TOTAL
+close button
+same qa to the other
+
+
+By region tab
+Select report period
+Region - Region - drop down menu of all the region in the ph
+REGION, CIVIL STATUS, MALE, FEMALE  TOTAL
+TOTAL
+
+By Province
+Select report period
+Region - drop down menu of all the region in the ph
+Province - drop down menu that contains the province that consists of that chose region
+Date from
+Date to
+PESO EMPLOYMENT INFORMATION SYSTEM
+Total Number of Applicants Registered, By Gender, Per Province
+For the period date date
+REGION PROVINCE MALE FEMALE TOTAL
+TOTAL
+
+By City Municipalty
+PESO EMPLOYMENT INFORMATION SYSTEM
+Total Number of Applicants Registered, By Gender, Per City/Municipality
+For the period date date
+REGION PROVINCE CITY/MUNICIPALITY MALE FEMALE TOTAL
+TOTAL
+Select report period (title fo the modal)
+Region - drop down menu of all the region in the ph
+Province - drop down menu that contains the province that consists of that chose region
+City/Municipality - dropdwon menu thta contains the City of the province that have chosen
+Barangay - dropdown menu that contains the barangay of the chose city.
+Date from and date to 
+and lastly the okay an close button
+PESO EMPLOYMENT INFORMATION SYSTEM
+Total Number of Applicants Registered, By Gender, Per City/Municipality
+For the period dat date
+REGION PROVINCE CITY/MUNICIPALITY MALE FEMALE TOTAL
+TOTAL
+
+By Barangay
+PESO EMPLOYMENT INFORMATION SYSTEM
+Total Number of Applicants Registered, By Gender, Per City/Municipality
+For the period date date
+REGION PROVINCE CITY/MUNICIPALITY MALE FEMALE TOTAL
+TOTAL
+Select report period (title fo the modal)
+Region - drop down menu of all the region in the ph
+Province - drop down menu that contains the province that consists of that chose region
+City/Municipality - dropdwon menu thta contains the City of the province that have chosen
+Barangay - dropdown menu that contains the barangay of the chose city.
+Date from and date to 
+and lastly the okay an close button
+Total Number of Applicants Registered, By Gender, Per City/Municipality
+For the period dat date
+REGION PROVINCE CITY/MUNICIPALITY MALE FEMALE TOTAL
+TOTAL
+
+Reports by PESO ID
+contains of these tabs (All Offices, DOLE Regional Office, DOLE Field Office, PESO, Provincial PESO, JPO)
+same as the by location tab. just different at the infos
+
+the general Reports
+NSRP Report Forms
+Form 1 - Jobseekers Employment Status Report - 
+Form 2 - Employers Vacancies Status Report - 
+Other Reports
+Summary of Applicants Registered and Vacancies Solicited

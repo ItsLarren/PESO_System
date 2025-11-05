@@ -6953,3 +6953,182 @@ document.addEventListener('DOMContentLoaded', function () {
 
     initializeApp(); 
 });
+
+
+
+
+function addManualApplicant() {
+    try {
+        console.log('Starting manual applicant addition...');
+        
+        const formData = new FormData(elements.manualApplicantForm);
+        const applicantData = {};
+        
+        // Get basic name information
+        const lastName = document.getElementById('manual-surname')?.value.trim() || '';
+        const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
+        const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
+        
+        // Build full name
+        if (lastName && firstName) {
+            let fullName = `${lastName}, ${firstName}`;
+            if (middleName) {
+                fullName += ` ${middleName}`;
+            }
+            applicantData['NAME'] = fullName;
+        } else {
+            applicantData['NAME'] = 'N/A';
+        }
+        
+        applicantData['LAST NAME'] = lastName || 'N/A';
+        applicantData['FIRST NAME'] = firstName || 'N/A';
+        applicantData['MIDDLE NAME'] = middleName || 'N/A';
+        
+        // Process all form fields systematically
+        applicantData['SRS ID'] = generateUniqueId();
+        
+        // Personal Information
+        applicantData['DATE OF BIRTH'] = document.getElementById('manual-bdate')?.value || 'N/A';
+        applicantData['PLACE OF BIRTH'] = document.getElementById('manual-place-birth')?.value.trim() || 'N/A';
+        applicantData['SEX'] = document.getElementById('manual-sex')?.value || 'N/A';
+        applicantData['CIVIL STATUS'] = document.getElementById('manual-civil-status')?.value || 'N/A';
+        applicantData['TIN'] = document.getElementById('manual-tin')?.value.trim() || 'N/A';
+        applicantData['GSIS/SSS NO.'] = document.getElementById('manual-gsis-sss')?.value.trim() || 'N/A';
+        applicantData['PAGIBIG NO.'] = document.getElementById('manual-pagibig')?.value.trim() || 'N/A';
+        applicantData['PHILHEALTH NO.'] = document.getElementById('manual-philhealth')?.value.trim() || 'N/A';
+        applicantData['HEIGHT'] = document.getElementById('manual-height')?.value || 'N/A';
+        
+        // Address Information
+        applicantData['HOUSE NO./STREET/VILLAGE'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
+        applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
+        applicantData['MUNICIPALITY/CITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
+        applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
+        
+        // Contact Information
+        applicantData['EMAIL ADDRESS'] = document.getElementById('manual-email')?.value.trim() || 'N/A';
+        applicantData['LANDLINE NUMBER'] = document.getElementById('manual-landline')?.value.trim() || 'N/A';
+        applicantData['CELLPHONE NUMBER'] = document.getElementById('manual-cellphone')?.value.trim() || 'N/A';
+        
+        // Disability Information
+        const disabilityCheckboxes = document.querySelectorAll('input[name="manual-disability"]:checked');
+        const disabilities = Array.from(disabilityCheckboxes).map(cb => cb.value);
+        applicantData['DISABILITY'] = disabilities.length > 0 ? disabilities.join(', ') : 'N/A';
+        
+        // Employment Information
+        applicantData['EMPLOYMENT STATUS/TYPE'] = document.getElementById('manual-emp-status')?.value || 'N/A';
+        
+        // Actively looking for work
+        const lookingWorkRadio = document.querySelector('input[name="manual-looking-work"]:checked');
+        applicantData['ARE YOU ACTIVELY LOOKING FOR WORK?'] = lookingWorkRadio?.value || 'N/A';
+        if (lookingWorkRadio?.value === 'Yes') {
+            applicantData['ARE YOU ACTIVELY LOOKING FOR WORK?'] += ` - ${document.getElementById('manual-looking-work-duration')?.value || ''}`;
+        }
+        
+        // Willing to work immediately
+        const workImmediatelyRadio = document.querySelector('input[name="manual-work-immediately"]:checked');
+        applicantData['WILLING TO WORK IMMEDIATELY?'] = workImmediatelyRadio?.value || 'N/A';
+        if (workImmediatelyRadio?.value === 'No') {
+            applicantData['WILLING TO WORK IMMEDIATELY?'] += ` - ${document.getElementById('manual-work-immediately-when')?.value || ''}`;
+        }
+        
+        // 4Ps Beneficiary
+        const fourPsRadio = document.querySelector('input[name="manual-4ps"]:checked');
+        applicantData['ARE YOU A 4PS BENEFICIARY?'] = fourPsRadio?.value || 'N/A';
+        if (fourPsRadio?.value === 'Yes') {
+            applicantData['ARE YOU A 4PS BENEFICIARY?'] += ` - ID: ${document.getElementById('manual-4ps-id')?.value || ''}`;
+        }
+        
+        // Job Preference
+        applicantData['PREFERRED OCCUPATION'] = document.getElementById('manual-pref-occupation1')?.value.trim() || 'N/A';
+        
+        // Preferred Work Location
+        const workLocationRadio = document.querySelector('input[name="manual-work-location"]:checked');
+        if (workLocationRadio?.value === 'Local') {
+            const locations = [
+                document.getElementById('manual-work-location-local1')?.value,
+                document.getElementById('manual-work-location-local2')?.value,
+                document.getElementById('manual-work-location-local3')?.value
+            ].filter(loc => loc).join(', ');
+            applicantData['PREFERRED WORK LOCATION'] = locations || 'N/A';
+        } else if (workLocationRadio?.value === 'Overseas') {
+            const locations = [
+                document.getElementById('manual-work-location-overseas1')?.value,
+                document.getElementById('manual-work-location-overseas2')?.value,
+                document.getElementById('manual-work-location-overseas3')?.value
+            ].filter(loc => loc).join(', ');
+            applicantData['PREFERRED WORK LOCATION'] = locations || 'N/A';
+        } else {
+            applicantData['PREFERRED WORK LOCATION'] = 'N/A';
+        }
+        
+        applicantData['EXPECTED SALARY'] = document.getElementById('manual-expected-salary')?.value.trim() || 'N/A';
+        applicantData['PASSPORT NO.'] = document.getElementById('manual-passport')?.value.trim() || 'N/A';
+        applicantData['PASSPORT EXPIRY DATE'] = document.getElementById('manual-passport-expiry')?.value || 'N/A';
+        
+        // Language Proficiency
+        const languages = [];
+        if (document.getElementById('manual-lang-english-read')?.checked) languages.push('English');
+        if (document.getElementById('manual-lang-filipino-read')?.checked) languages.push('Filipino');
+        const otherLang = document.getElementById('manual-lang-other-name')?.value;
+        if (otherLang) languages.push(otherLang);
+        applicantData['LANGUAGE'] = languages.length > 0 ? languages.join(', ') : 'N/A';
+        
+        // Educational Background
+        applicantData['ELEMENTARY'] = document.getElementById('manual-edu-elem-school')?.value.trim() || 'N/A';
+        applicantData['SECONDARY'] = document.getElementById('manual-edu-secondary-school')?.value.trim() || 'N/A';
+        applicantData['TERTIARY'] = document.getElementById('manual-edu-tertiary-school')?.value.trim() || 'N/A';
+        applicantData['GRADUATE STUDIES'] = document.getElementById('manual-edu-graduate-school')?.value.trim() || 'N/A';
+        
+        // Technical/Vocational Training
+        applicantData['TECHNICAL/VOCATIONAL AND OTHER TRAINING'] = document.getElementById('manual-training-course1')?.value.trim() || 'N/A';
+        
+        // Eligibility
+        applicantData['ELIGIBILITY'] = document.getElementById('manual-eligibility1')?.value.trim() || 'N/A';
+        
+        // Work Experience
+        applicantData['WORK EXPERIENCE'] = document.getElementById('manual-work-company1')?.value.trim() || 'N/A';
+        
+        // Other Skills
+        const skillCheckboxes = document.querySelectorAll('input[name="manual-skill"]:checked');
+        const skills = Array.from(skillCheckboxes).map(cb => cb.value);
+        applicantData['OTHER SKILLS'] = skills.length > 0 ? skills.join(', ') : 'N/A';
+        
+        // Program Information
+        applicantData['PROGRAM CATEGORY'] = document.getElementById('manual-program-category')?.value || 'N/A';
+        applicantData['SPECIFIC PROGRAM'] = document.getElementById('manual-specific-program')?.value.trim() || 'N/A';
+        applicantData['PROGRAM STATUS'] = document.getElementById('manual-program-status')?.value || 'N/A';
+        
+        // System Information
+        applicantData['REG. DATE'] = new Date().toLocaleDateString();
+        applicantData['DATE CREATED'] = new Date().toLocaleString();
+        applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
+        applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
+
+        console.log('📝 New applicant data:', applicantData);
+
+        const duplicateCheck = checkApplicantDuplicate(applicantData);
+        
+        if (duplicateCheck.hasMatches) {
+            console.log('🟡 Potential duplicate found, showing confirmation');
+            highlightMatchingApplicants(duplicateCheck.matches);
+            
+            showDuplicateConfirmation(applicantData, duplicateCheck.matches)
+                .then(shouldProceed => {
+                    if (!shouldProceed) {
+                        removeHighlights();
+                        console.log('❌ User cancelled duplicate addition');
+                        return;
+                    }
+                    
+                    console.log('✅ User confirmed to add anyway');
+                    proceedWithAddingApplicant(applicantData);
+                });
+        } else {
+            console.log('✅ No duplicates found, proceeding with addition');
+            proceedWithAddingApplicant(applicantData);
+        }
+    } catch (error) {
+        console.error('Error in addManualApplicant:', error);
+        showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
+    }
+}
