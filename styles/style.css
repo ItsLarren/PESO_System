@@ -34,8 +34,9 @@ header {
 }
 
 h1 {
-    font-size: 28px;
-    font-weight: 600;
+    font-size: 20px;
+    font-weight: 500;
+    justify-content: space-between;
 }
 
 .logo {
@@ -59,35 +60,6 @@ h2 {
     padding-bottom: 10px;
 }
 
-.applicant-table{
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 12px;
-}
-
-.applicant-table th, .applicant-table td {
-    text-align: left;
-    padding: 8px;
-    border-bottom: 1px solid #e0e0e0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 120px;
-}
-
-.applicant-table th {
-    background-color: #e3f2fd;
-    color: #000000;
-    font-weight: 600;
-    position: sticky;
-    top: 0;
-}
-
-.applicant-table tr:hover {
-    background-color: #f9f9f9;
-}
-
 .action-btn {
     background: #e51e1e;
     color: white;
@@ -107,64 +79,6 @@ h2 {
 
 .action-btn i {
     margin-right: 5px;
-}
-
-.download-btn {
-    background: #4caf50;
-    color: white;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.3s;
-    margin-right: 5px;
-}
-
-.download-btn:hover {
-    background: #388e3c;
-}
-
-.delete-btn {
-    background: #e57373;
-    color: white;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s;
-}
-
-.delete-btn:hover {
-    background: #c62828;
-}
-
-.edit-btn {
-    background: #ff9800;
-    color: white;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s;
-    margin-right: 5px;
-}
-
-.edit-btn:hover {
-    background: #f57c00;
 }
 
 .import-section {
@@ -337,8 +251,10 @@ h2 {
 
 .action-buttons {
     display: flex;
-    gap: 5px;
+    gap: 4px;
+    justify-content: center;
     align-items: center;
+    flex-wrap: nowrap;
 }
 
 .clear-all-btn {
@@ -835,10 +751,6 @@ input[type="date"]:after {
         gap: 10px;
     }
 
-    .applicant-table {
-        font-size: 10px;
-    }
-
     .file-input-container {
         flex-direction: column;
         align-items: stretch;
@@ -1074,50 +986,6 @@ input[type="date"]:after {
     position: relative;
 }
 
-.applicant-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-    min-width: 1200px; 
-}
-
-.applicant-table th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    font-weight: 600;
-    padding: 12px 8px;
-    text-align: left;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    border-right: 1px solid rgba(255,255,255,0.1);
-}
-
-.applicant-table th:last-child {
-    border-right: none;
-}
-
-.applicant-table td {
-    padding: 10px 8px;
-    border-bottom: 1px solid #e0e0e0;
-    vertical-align: middle;
-}
-
-.applicant-table tr:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-1px);
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.applicant-table tr:nth-child(even) {
-    background-color: #fafafa;
-}
-
-.applicant-table tr:nth-child(even):hover {
-    background-color: #f1f3f4;
-}
-
 .photo-cell {
     width: 60px;
     text-align: center;
@@ -1137,17 +1005,167 @@ input[type="date"]:after {
     font-style: italic;
 }
 
+/* ACTION CELL - FIXED POSITION */
 .actions-cell {
-    width: 120px;
-    text-align: center;
-    white-space: nowrap;
+    position: sticky !important;
+    right: 0 !important;
+    background: white !important;
+    z-index: 100 !important;
+    min-width: 180px !important;
+    width: 180px !important;
+    border-left: 3px solid #e0e0e0 !important;
+    box-shadow: -3px 0 10px rgba(0,0,0,0.2) !important;
 }
 
+/* Header action cell */
+.applicant-table thead .actions-cell {
+    position: sticky !important;
+    right: 0 !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    z-index: 101 !important;
+    color: white !important;
+    border-left: 3px solid rgba(255,255,255,0.3) !important;
+}
+
+/* SPECIFIC HEADER ROWS */
+.applicant-table thead tr:first-child .actions-cell {
+    top: 0 !important;
+    z-index: 102 !important;
+}
+
+.applicant-table thead tr:last-child .actions-cell {
+    top: 38px !important;
+    z-index: 101 !important;
+    background: #5d6d7e !important;
+}
+
+/* Ensure all action cells in header are sticky */
+.applicant-table thead th.actions-cell {
+    position: sticky !important;
+    right: 0 !important;
+    z-index: 102 !important;
+}
+
+/* Double sticky for two header rows */
+.applicant-table thead tr:first-child th.actions-cell {
+    top: 0 !important;
+    z-index: 103 !important;
+}
+
+.applicant-table thead tr:last-child {
+    top: 38px;
+    z-index: 200;
+}
+
+.applicant-table thead tr:last-child th.actions-cell {
+    top: 38px !important; /* Height of first header row */
+    z-index: 102 !important;
+}
+
+/* ACTION BUTTONS CONTAINER */
 .action-buttons {
+    display: flex !important;
+    gap: 4px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    padding: 2px 5px !important;
+    position: relative !important;
+    z-index: 110 !important;
+}
+
+/* BUTTON STYLES */
+.action-buttons button {
+    flex-shrink: 0;
+    min-width: 32px;
+    height: 32px;
     display: flex;
-    gap: 5px;
-    justify-content: center;
     align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.actions-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* FIXED ACTION COLUMN SOLUTION */
+.table-container-wrapper {
+    position: relative;
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    overflow: hidden;
+}
+
+.actions-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+    height: 38px;
+}
+
+.actions-table tbody tr {
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.actions-table td {
+    padding: 8px 5px;
+    text-align: center;
+    height: 44px; /* Match your main table row height */
+    background: white;
+}
+
+.table-scroll-container {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 500px;
+}
+
+.fixed-actions-column {
+    position: sticky;
+    right: 0;
+    background: white;
+    z-index: 1000;
+    border-left: 3px solid #e0e0e0;
+    box-shadow: -3px 0 10px rgba(0,0,0,0.2);
+    min-width: 180px;
+}
+
+.view-btn { background: #2196f3; color: white; }
+.edit-btn { background: #ff9800; color: white; }
+.download-btn { background: #4caf50; color: white; }
+.delete-btn { background: #f44336; color: white; }
+
+.view-btn:hover { background: #1976d2; transform: scale(1.05); }
+.edit-btn:hover { background: #f57c00; transform: scale(1.05); }
+.download-btn:hover { background: #388e3c; transform: scale(1.05); }
+.delete-btn:hover { background: #d32f2f; transform: scale(1.05); }
+
+/* Sync scrolling */
+.table-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
 }
 
 .edit-btn, .delete-btn, .download-btn {
@@ -1160,36 +1178,6 @@ input[type="date"]:after {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-}
-
-.edit-btn {
-    background: #ffa726;
-    color: white;
-}
-
-.edit-btn:hover {
-    background: #f57c00;
-    transform: translateY(-1px);
-}
-
-.delete-btn {
-    background: #ef5350;
-    color: white;
-}
-
-.delete-btn:hover {
-    background: #d32f2f;
-    transform: translateY(-1px);
-}
-
-.download-btn {
-    background: #66bb6a;
-    color: white;
-}
-
-.download-btn:hover {
-    background: #388e3c;
-    transform: translateY(-1px);
 }
 
 .compact-cell {
@@ -1258,9 +1246,13 @@ input[type="date"]:after {
     }
 }
 
-.table-container::-webkit-scrollbar {
-    height: 8px;
-    width: 8px;
+/* TABLE CONTAINER FIXES */
+.table-container {
+    position: relative;
+    overflow-x: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
 }
 
 .table-container::-webkit-scrollbar-track {
@@ -1298,6 +1290,27 @@ input[type="date"]:after {
     background: #388e3c !important;
 }
 
+.applicant-table {
+    margin-bottom: 0;
+    border-right: none;
+}
+
+.applicant-table th:last-child,
+.applicant-table td:last-child {
+    border-right: none;
+}
+
+.applicant-table th, .applicant-table td {
+    text-align: left;
+    padding: 6px;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+    font-size: 9px;
+}
+
 .applicant-table thead th {
     position: sticky;
     top: 0;
@@ -1307,42 +1320,15 @@ input[type="date"]:after {
     font-weight: 600;
 }
 
-.table-header-group {
-    background: #5d6d7e !important;
-    position: sticky;
-    top: 0;
-    z-index: 101;
-}
-
-.header-content h1 {
-    font-size: 32px;
-    font-weight: 700;
-    white-space: nowrap;
-    margin: 0;
-}
-
-.logo {
-    font-size: 36px;
-    font-weight: bold;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 20px;
-    flex-wrap: nowrap;
-}
-
-.filter-input:focus {
-    border-color: #1e88e5;
-    box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
-}
-
 .applicant-table thead {
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 200;
+}
+
+.applicant-table thead tr:first-child {
+    top: 0;
+    z-index: 201;
 }
 
 .applicant-table thead tr:first-child th {
@@ -1375,6 +1361,38 @@ input[type="date"]:after {
     text-overflow: ellipsis;
     max-width: 150px;
     font-size: 11px;
+}
+
+.table-header-group {
+    background: #5d6d7e !important;
+    position: sticky;
+    top: 0;
+    z-index: 101;
+}
+
+.header-content h1 {
+    font-size: 32px;
+    font-weight: 700;
+    white-space: nowrap;
+    margin: 0;
+}
+
+.logo {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    flex-wrap: nowrap;
+}
+
+.filter-input:focus {
+    border-color: #1e88e5;
+    box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
 }
 
 .table-container {
@@ -2454,26 +2472,6 @@ input[type="date"]:after {
     border-left: 4px solid #dc3545;
 }
 
-.view-btn {
-    background: #2196f3;
-    color: white;
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s;
-    margin-right: 5px;
-}
-
-.view-btn:hover {
-    background: #0d47a1;
-}
-
 .view-field {
     margin-bottom: 10px;
     padding: 8px;
@@ -2791,31 +2789,41 @@ input[type="date"]:after {
     color: #e65100;
 }
 
-.applicant-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 10px; /* Smaller font to fit more columns */
-    min-width: 2000px; /* Wider table to accommodate all columns */
-}
-
-.applicant-table th, .applicant-table td {
-    text-align: left;
-    padding: 6px;
-    border-bottom: 1px solid #e0e0e0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100px;
-    font-size: 9px;
-}
-
 .table-container {
+    position: relative;
     overflow-x: auto;
-    max-height: 500px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    background: white;
+}
+
+/* ENSURE PROPER STACKING */
+.applicant-table tbody tr {
+    position: relative;
+}
+
+.applicant-table tbody .actions-cell {
+    z-index: 99 !important;
+}
+
+/* HOVER EFFECTS */
+.applicant-table tbody tr:hover .actions-cell {
+    background: #f8f9fa !important;
+    z-index: 100 !important;
+}
+
+.applicant-table tbody tr:hover {
+    background-color: #f5f5f5 !important;
+}
+
+/* Header spacer row */
+.header-spacer {
+    height: 76px !important; /* Total header height */
+    visibility: hidden !important;
+}
+
+.header-spacer td {
+    padding: 0 !important;
+    border: none !important;
+    height: 76px !important;
 }
 
 .filter-tabs {

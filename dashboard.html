@@ -11,14 +11,15 @@
     <div class="system-header">
         <div class="logos-container">
             <div class="logo-left">
-                <img src="assets/CSFP_logo.png" alt="Left Logo" class="logo-img">
+                <img src="assets/CSFP_logo.png" alt="City of San Fernando Logo" class="logo-img">
             </div>
             <div class="header-center">
                 <h1>Fernandino Employment Information System</h1>
                 <p class="subtitle">City Public Employment Services Office</p>
+                <p class="location">City of San Fernando, Pampanga</p>
             </div>
             <div class="logo-right">
-                <img src="assets/PESO_logo.png" alt="Right Logo" class="logo-img">
+                <img src="assets/PESO_logo.png" alt="PESO Logo" class="logo-img">
             </div>
         </div>
     </div>
@@ -36,6 +37,16 @@
                 </div>
                 <h3>Zero Unemployment Project</h3>
                 <p>Manage specialized unemployment reduction programs and initiatives</p>
+                <div class="card-stats">
+                    <div class="stat">
+                        <span class="stat-number" id="zero-applicants">0</span>
+                        <span class="stat-label">Applicants</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="zero-active">0</span>
+                        <span class="stat-label">Active</span>
+                    </div>
+                </div>
                 <button class="system-btn" onclick="openZeroUnemployment()">
                     <i class="fas fa-arrow-right"></i> Enter System
                 </button>
@@ -45,19 +56,104 @@
                 <div class="card-icon">
                     <i class="fas fa-users"></i>
                 </div>
-                <h3>FEIS</h3>
-                <p>Fernandino Employment Information System - Applicant Management</p>
+                <h3>FEIS - Main System</h3>
+                <p>Fernandino Employment Information System - Comprehensive Applicant Management</p>
+                <div class="card-stats">
+                    <div class="stat">
+                        <span class="stat-number" id="feis-applicants">0</span>
+                        <span class="stat-label">Applicants</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number" id="feis-employers">0</span>
+                        <span class="stat-label">Employers</span>
+                    </div>
+                </div>
                 <button class="system-btn" onclick="openFEIS()">
                     <i class="fas fa-arrow-right"></i> Enter System
                 </button>
             </div>
         </div>
 
+        <div class="quick-stats">
+            <div class="stat-card">
+                <i class="fas fa-user-friends"></i>
+                <div class="stat-info">
+                    <span class="stat-number" id="total-applicants">0</span>
+                    <span class="stat-label">Total Applicants</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-briefcase"></i>
+                <div class="stat-info">
+                    <span class="stat-number" id="employed-count">0</span>
+                    <span class="stat-label">Employed</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-search"></i>
+                <div class="stat-info">
+                    <span class="stat-number" id="unemployed-count">0</span>
+                    <span class="stat-label">Seeking Work</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-chart-line"></i>
+                <div class="stat-info">
+                    <span class="stat-number" id="programs-count">0</span>
+                    <span class="stat-label">Active Programs</span>
+                </div>
+            </div>
+        </div>
 
+        <div class="logout-section">
+            <button id="logout-btn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <script src="scripts/utilities.js"></script>
     <script>
         // Display current user
         const currentUser = localStorage.getItem('currentUser') || 'User';
         document.getElementById('current-user').textContent = currentUser;
+
+        // Load dashboard statistics
+        function loadDashboardStats() {
+            try {
+                const applicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+                const zeroApplicants = JSON.parse(localStorage.getItem('zeroUnemploymentApplicants') || '[]');
+                
+                // Update counts
+                document.getElementById('total-applicants').textContent = applicants.length;
+                document.getElementById('feis-applicants').textContent = applicants.length;
+                document.getElementById('zero-applicants').textContent = zeroApplicants.length;
+                
+                // Calculate employment stats
+                const employed = applicants.filter(app => 
+                    (app['EMP. STATUS'] || '').toString().toLowerCase().includes('employ') && 
+                    !(app['EMP. STATUS'] || '').toString().toLowerCase().includes('unemploy')
+                ).length;
+                
+                const unemployed = applicants.filter(app => 
+                    (app['EMP. STATUS'] || '').toString().toLowerCase().includes('unemploy')
+                ).length;
+                
+                document.getElementById('employed-count').textContent = employed;
+                document.getElementById('unemployed-count').textContent = unemployed;
+                
+                // Count unique programs
+                const programs = new Set();
+                applicants.forEach(app => {
+                    const program = app['PROGRAM CATEGORY'];
+                    if (program && program !== 'N/A') programs.add(program);
+                });
+                document.getElementById('programs-count').textContent = programs.size;
+                
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+            }
+        }
 
         // System navigation functions
         function openZeroUnemployment() {
@@ -65,7 +161,7 @@
         }
 
         function openFEIS() {
-            window.location.href = 'index.html'; // Your existing system
+            window.location.href = 'index.html';
         }
 
         // Logout function
@@ -78,7 +174,13 @@
         // Check authentication
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'login.html';
+        } else {
+            // Load statistics when page loads
+            loadDashboardStats();
         }
+
+        // Auto-refresh stats every 30 seconds
+        setInterval(loadDashboardStats, 30000);
     </script>
 </body>
 </html>

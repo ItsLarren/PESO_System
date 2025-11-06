@@ -12,8 +12,7 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <div class="logo">CPESO</div>
-                <h1>Employment Services Office - San Fernando, Pampanga</h1>
+                <div class="logo">Fernandino Employment Information System</div>
                 <div class="connection-status" id="connection-status">
                     <i class="fas fa-wifi"></i> Online
                 </div>
@@ -349,60 +348,76 @@
                     <span id="active-filters-count" style="font-size: 12px; color: #666;"></span>
                 </div>
                 
-                <div class="table-container">
-                    <table class="applicant-table" id="main-applicant-table">
-                        <thead>
-                            <tr>
-                                <th>SRS ID</th>
-                                <th>SURNAME</th>
-                                <th>FIRST NAME</th>
-                                <th>MIDDLE NAME</th>
-                                <th>SUFFIX</th>
-                                <th>DATE OF BIRTH</th>
-                                <th>PLACE OF BIRTH</th>
-                                <th>HOUSE NO./STREET/VILLAGE</th>
-                                <th>BARANGAY</th>
-                                <th>MUNICIPALITY/CITY</th>
-                                <th>PROVINCE</th>
-                                <th>SEX</th>
-                                <th>CIVIL STATUS</th>
-                                <th>TIN</th>
-                                <th>GSIS/SSS No.</th>
-                                <th>PAGIBIG No.</th>
-                                <th>PHILHEALTH No.</th>
-                                <th>HEIGHT</th>
-                                <th>EMAIL ADDRESS</th>
-                                <th>LANDLINE NUMBER</th>
-                                <th>CELLPHONE NUMBER</th>
-                                <th>DISABILITY</th>
-                                <th>EMPLOYMENT STATUS/TYPE</th>
-                                <th>ARE YOU ACTIVELY LOOKING FOR WORK?</th>
-                                <th>WILLING TO WORK IMMEDIATELY?</th>
-                                <th>ARE YOU A 4PS BENEFICIARY?</th>
-                                <th>PREFERRED OCCUPATION</th>
-                                <th>PREFERRED WORK LOCATION</th>
-                                <th>EXPECTED SALARY</th>
-                                <th>PASSPORT NO.</th>
-                                <th>PASSPORT EXPIRY DATE</th>
-                                <th>LANGUAGE</th>
-                                <th>ELEMENTARY</th>
-                                <th>SECONDARY</th>
-                                <th>TERTIARY</th>
-                                <th>GRADUATE STUDIES</th>
-                                <th>TECHNICAL/VOCATIONAL AND OTHER TRAINING</th>
-                                <th>ELIGIBILITY</th>
-                                <th>WORK EXPERIENCE</th>
-                                <th>OTHER SKILLS</th>
-                                <th>PROGRAM CATEGORY</th>
-                                <th>SPECIFIC PROGRAM</th>
-                                <th>PROGRAM STATUS</th>
-                                <th class="actions-cell">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded here -->
-                        </tbody>
-                    </table>
+                <div class="table-container-wrapper">
+                    <div class="table-scroll-container">
+                        <table class="applicant-table" id="main-applicant-table">
+                            <thead>
+                                <tr>
+                                    <th>SRS ID</th>
+                                    <th>SURNAME</th>
+                                    <th>FIRST NAME</th>
+                                    <th>MIDDLE NAME</th>
+                                    <th>SUFFIX</th>
+                                    <th>DATE OF BIRTH</th>
+                                    <th>PLACE OF BIRTH</th>
+                                    <th>HOUSE NO./STREET/VILLAGE</th>
+                                    <th>BARANGAY</th>
+                                    <th>MUNICIPALITY/CITY</th>
+                                    <th>PROVINCE</th>
+                                    <th>SEX</th>
+                                    <th>CIVIL STATUS</th>
+                                    <th>TIN</th>
+                                    <th>GSIS/SSS No.</th>
+                                    <th>PAGIBIG No.</th>
+                                    <th>PHILHEALTH No.</th>
+                                    <th>HEIGHT</th>
+                                    <th>EMAIL ADDRESS</th>
+                                    <th>LANDLINE NUMBER</th>
+                                    <th>CELLPHONE NUMBER</th>
+                                    <th>DISABILITY</th>
+                                    <th>EMPLOYMENT STATUS/TYPE</th>
+                                    <th>ARE YOU ACTIVELY LOOKING FOR WORK?</th>
+                                    <th>WILLING TO WORK IMMEDIATELY?</th>
+                                    <th>ARE YOU A 4PS BENEFICIARY?</th>
+                                    <th>PREFERRED OCCUPATION</th>
+                                    <th>PREFERRED WORK LOCATION</th>
+                                    <th>EXPECTED SALARY</th>
+                                    <th>PASSPORT NO.</th>
+                                    <th>PASSPORT EXPIRY DATE</th>
+                                    <th>LANGUAGE</th>
+                                    <th>ELEMENTARY</th>
+                                    <th>SECONDARY</th>
+                                    <th>TERTIARY</th>
+                                    <th>GRADUATE STUDIES</th>
+                                    <th>TECHNICAL/VOCATIONAL AND OTHER TRAINING</th>
+                                    <th>ELIGIBILITY</th>
+                                    <th>WORK EXPERIENCE</th>
+                                    <th>OTHER SKILLS</th>
+                                    <th>PROGRAM CATEGORY</th>
+                                    <th>SPECIFIC PROGRAM</th>
+                                    <th>PROGRAM STATUS</th>
+                                    <!-- REMOVE ACTIONS HEADER FROM MAIN TABLE -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- FIXED ACTION COLUMN -->
+                    <div class="fixed-actions-column">
+                        <table class="actions-table">
+                            <thead>
+                                <tr>
+                                    <th class="actions-header">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="actions-tbody">
+                                <!-- Action buttons will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">

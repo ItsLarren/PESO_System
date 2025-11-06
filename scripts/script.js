@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('✅ Data restored from backup');
             }
 
-            // Initialize all components
+            // Initialize all components with better error handling
             const initSteps = [
                 { name: 'Manual Form', fn: initializeManualForm },
                 { name: 'Camera', fn: initializeCamera },
@@ -305,13 +305,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     step.fn();
                     console.log(`✅ ${step.name} initialized`);
                 } catch (error) {
-                    console.error(`❌ Error initializing ${step.name}:`, error);
+                    console.log(`⚠️ ${step.name} not available on this page:`, error.message);
                 }
             });
             
             // Load data
             loadApplicantsDataWithRetry();
-            loadImportedData();
             displayCurrentUser();
 
             console.log('🎉 Application initialized successfully');
@@ -855,6 +854,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Camera Functions
     function initializeCamera() {
+        // Add null checks for all camera elements
+        if (!elements.takePhotoBtn || !elements.cameraModal) {
+            console.log('Camera elements not found - probably not on applicants page');
+            return;
+        }
+
         if (elements.takePhotoBtn) {
             elements.takePhotoBtn.addEventListener('click', openCamera);
         }
@@ -863,11 +868,13 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.closeCamera.addEventListener('click', closeCamera);
         }
 
-        elements.cameraModal.addEventListener('click', function(event) {
-            if (event.target === elements.cameraModal) {
-                closeCamera();
-            }
-        });
+        if (elements.cameraModal) {
+            elements.cameraModal.addEventListener('click', function(event) {
+                if (event.target === elements.cameraModal) {
+                    closeCamera();
+                }
+            });
+        }
 
         if (elements.captureBtn) {
             elements.captureBtn.addEventListener('click', capturePhoto);
@@ -1858,8 +1865,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         setTimeout(attemptLoad, 100);
                     }
                 } else {
-                    displayMainApplicants(savedApplicants);
-                    displayImportedData(importedData);
+                    // Only call display functions if elements exist
+                    if (elements.mainApplicantTable) {
+                        displayMainApplicants(savedApplicants);
+                    }
+                    if (elements.importedTable) {
+                        displayImportedData(importedData);
+                    }
                 }
                 
             } catch (error) {
@@ -1880,33 +1892,36 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!elements.mainApplicantTable) return;
         
         const tbody = elements.mainApplicantTable.querySelector('tbody');
-        if (!tbody) return;
+        const actionsTbody = document.getElementById('actions-tbody');
         
+        if (!tbody || !actionsTbody) return;
+        
+        // Clear both tables
         tbody.innerHTML = '';
+        actionsTbody.innerHTML = '';
         
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 43;
+            cell.colSpan = 42; // Now 42 columns since actions are separate
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
             tbody.appendChild(row);
+            
+            // Also add empty action row
+            const actionRow = document.createElement('tr');
+            const actionCell = document.createElement('td');
+            actionCell.textContent = '';
+            actionRow.appendChild(actionCell);
+            actionsTbody.appendChild(actionRow);
             return;
         }
         
         applicants.forEach((applicant, index) => {
+            // MAIN TABLE ROW (42 columns now)
             const row = document.createElement('tr');
 
-            // Debug: Check what suffix data we have
-            console.log('Applicant suffix data:', {
-                name: applicant.NAME,
-                suffix: applicant['SUFFIX'],
-                suffixRaw: applicant.SUFFIX,
-                allKeys: Object.keys(applicant)
-            });
-            
-            // Add cells for each column
             const columns = [
                 applicant['SRS ID'] || `APP-${index + 1}`,
                 applicant['LAST NAME'] || applicant['SURNAME'] || 'N/A',
@@ -1969,16 +1984,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     cell.style.textAlign = 'center';
                 }
                 
+                // Add compact styling
+                cell.className = 'compact-cell';
+                cell.style.maxWidth = '150px';
+                cell.style.overflow = 'hidden';
+                cell.style.textOverflow = 'ellipsis';
+                cell.style.whiteSpace = 'nowrap';
+                cell.style.padding = '6px 4px';
+                cell.style.fontSize = '11px';
+                
                 row.appendChild(cell);
             });
             
-            // Actions cell
-            const actionsCell = document.createElement('td');
-            actionsCell.className = 'actions-cell';
+            tbody.appendChild(row);
+            
+            // ACTION COLUMN ROW (Separate table)
+            const actionRow = document.createElement('tr');
+            const actionCell = document.createElement('td');
             
             const actionButtons = document.createElement('div');
             actionButtons.className = 'action-buttons';
-
+            
             // View button
             const viewBtn = document.createElement('button');
             viewBtn.className = 'view-btn';
@@ -2022,123 +2048,15 @@ document.addEventListener('DOMContentLoaded', function () {
             actionButtons.appendChild(editBtn);
             actionButtons.appendChild(downloadBtn);
             actionButtons.appendChild(deleteBtn);
-            actionsCell.appendChild(actionButtons);
-            row.appendChild(actionsCell);
-            
-            tbody.appendChild(row);
+            actionCell.appendChild(actionButtons);
+            actionRow.appendChild(actionCell);
+            actionsTbody.appendChild(actionRow);
         });
-    }
-
-    function getSuffixValue(applicant) {
-        // Check multiple possible field names for suffix
-        const suffix = applicant['SUFFIX'] || applicant.SUFFIX || applicant.suffix || '';
         
-        if (suffix && suffix.toString().trim() !== '' && suffix !== 'N/A' && suffix !== 'null') {
-            return suffix.toString().trim();
-        }
-        
-        return 'N/A';
-    }
-
-    function displayImportedData(data) {
-        if (!elements.importedTable) return;
-        
-        const tbody = elements.importedTable.querySelector('tbody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        if (data.length === 0) {
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = elements.importedTable.querySelectorAll('th').length;
-            cell.className = 'no-results';
-            cell.textContent = 'No imported data';
-            row.appendChild(cell);
-            tbody.appendChild(row);
-            return;
-        }
-        
-        data.forEach((record, index) => {
-            const row = document.createElement('tr');
-            
-            // Add basic information cells
-            const basicInfo = [
-                record['SRS ID'] || `IMP-${index + 1}`,
-                record['LAST NAME'] || 'N/A',
-                record['FIRST NAME'] || 'N/A',
-                record['MIDDLE NAME'] || 'N/A',
-                record['NAME'] || 'N/A',
-                record['DATE OF BIRTH'] || record['BDATE'] || 'N/A',
-                record['AGE'] || 'N/A',
-                record['SEX'] || 'N/A',
-                record['CIVIL STATUS'] || 'N/A',
-                record['STREET ADDRESS'] || 'N/A',
-                record['BARANGAY'] || 'N/A',
-                record['CITY/MUNICIPALITY'] || 'N/A',
-                record['PROVINCE'] || 'N/A',
-                record['CELLPHONE'] || 'N/A'
-            ];
-            
-            basicInfo.forEach(value => {
-                const cell = document.createElement('td');
-                cell.textContent = value;
-                cell.className = 'compact-cell';
-                row.appendChild(cell);
-            });
-            
-            // Add remaining cells...
-            const remainingInfo = [
-                record['EMP. STATUS'] || 'N/A',
-                record['If Employed/Self Employment'] || 'N/A',
-                record['EDUC LEVEL'] || 'N/A',
-                record['COURSE'] || 'N/A',
-                record['SKILLS'] || 'N/A',
-                record['WORK EXPERIENCE'] || 'N/A',
-                record['SECTOR'] || 'N/A',
-                record['SPECIFIC PROGRAM'] || 'N/A',
-                record['REMARKS'] || 'N/A',
-                record['REG. DATE'] || 'N/A'
-            ];
-            
-            remainingInfo.forEach(value => {
-                const cell = document.createElement('td');
-                cell.textContent = value;
-                cell.className = 'compact-cell';
-                row.appendChild(cell);
-            });
-            
-            // Actions cell
-            const actionsCell = document.createElement('td');
-            actionsCell.className = 'actions-cell';
-            actionsCell.innerHTML = `
-                <div class="action-buttons">
-                    <button class="download-btn" title="Download">
-                        <i class="fas fa-download"></i>
-                    </button>
-                    <button class="delete-btn" title="Delete">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-            
-            // Add event listeners to action buttons
-            const downloadBtn = actionsCell.querySelector('.download-btn');
-            const deleteBtn = actionsCell.querySelector('.delete-btn');
-            
-            downloadBtn.addEventListener('click', function() {
-                downloadApplicantData(record);
-            });
-            
-            deleteBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete this imported record?')) {
-                    deleteImportedRecord(index);
-                }
-            });
-            
-            row.appendChild(actionsCell);
-            tbody.appendChild(row);
-        });
+        // Sync row heights
+        setTimeout(() => {
+            syncRowHeights();
+        }, 100);
     }
 
     function saveMainApplicants(applicants) {
@@ -2193,6 +2111,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentUser) {
             const header = document.querySelector('header .header-content');
             if (header) {
+                // Remove existing user-info if it exists
+                const existingUserInfo = header.querySelector('.user-info');
+                if (existingUserInfo) {
+                    existingUserInfo.remove();
+                }
+                
+                // Create new user info
                 const userInfo = document.createElement('div');
                 userInfo.className = 'user-info';
                 userInfo.innerHTML = `
@@ -2201,6 +2126,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 `;
                 header.appendChild(userInfo);
 
+                // Add event listener to the logout button
                 document.getElementById('logout-btn').addEventListener('click', function() {
                     localStorage.removeItem('isLoggedIn');
                     localStorage.removeItem('currentUser');
@@ -2241,7 +2167,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showNotification('Applicant deleted successfully!', 'success');
     }
 
-        function deleteImportedRecord(index) {
+    function deleteImportedRecord(index) {
         const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
         importedData.splice(index, 1);
         localStorage.setItem('importedData', JSON.stringify(importedData));
@@ -4131,7 +4057,303 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeHomeDashboard();
     });
 
-    
+    function initializeStickyActionColumn() {
+        const tableContainer = document.querySelector('.table-container');
+        const actionCells = document.querySelectorAll('.actions-cell');
+        
+        if (!tableContainer) return;
+        
+        // Function to update sticky positioning
+        function updateStickyPosition() {
+            const scrollLeft = tableContainer.scrollLeft;
+            
+            actionCells.forEach(cell => {
+                cell.style.transform = `translateX(${scrollLeft}px)`;
+            });
+        }
+        
+        // Add scroll event listener
+        tableContainer.addEventListener('scroll', updateStickyPosition);
+        
+        // Initial positioning
+        updateStickyPosition();
+        
+        // Re-initialize on window resize
+        window.addEventListener('resize', updateStickyPosition);
+    }
+
+    function refreshStickyColumns() {
+        initializeStickyActionColumn();
+    }
+
+    function fixTableHeaders() {
+        const table = document.querySelector('.applicant-table');
+        if (!table) return;
+        
+        // Ensure header action cells are sticky
+        const headerActionCells = table.querySelectorAll('thead .actions-cell');
+        headerActionCells.forEach(cell => {
+            cell.style.position = 'sticky';
+            cell.style.right = '0';
+            cell.style.zIndex = '102';
+            cell.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        });
+        
+        // First row header
+        const firstRowHeaders = table.querySelectorAll('thead tr:first-child .actions-cell');
+        firstRowHeaders.forEach(cell => {
+            cell.style.top = '0';
+            cell.style.zIndex = '103';
+        });
+        
+        // Second row header  
+        const secondRowHeaders = table.querySelectorAll('thead tr:last-child .actions-cell');
+        secondRowHeaders.forEach(cell => {
+            cell.style.top = '38px';
+            cell.style.zIndex = '102';
+        });
+    }
+
+    // Call this after your table loads
+    setTimeout(fixTableHeaders, 100);
+
+    function addHeaderSpacer() {
+        const tbody = document.querySelector('.applicant-table tbody');
+        if (!tbody) return;
+        
+        // Remove existing spacer if any
+        const existingSpacer = tbody.querySelector('.header-spacer');
+        if (existingSpacer) {
+            existingSpacer.remove();
+        }
+        
+        // Add new spacer row
+        const spacerRow = document.createElement('tr');
+        spacerRow.className = 'header-spacer';
+        
+        const spacerCell = document.createElement('td');
+        spacerCell.colSpan = 43; // Match your total column count
+        spacerCell.textContent = ''; // Empty content
+        
+        spacerRow.appendChild(spacerCell);
+        
+        // Insert spacer as first row
+        if (tbody.firstChild) {
+            tbody.insertBefore(spacerRow, tbody.firstChild);
+        } else {
+            tbody.appendChild(spacerRow);
+        }
+    }
+
+    function displayImportedData(data) {
+        if (!elements.importedTable) {
+            console.log('Imported table not found - probably not on applicants page');
+            return;
+        }
+        
+        const tbody = elements.importedTable.querySelector('tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (data.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = elements.importedTable.querySelectorAll('th').length;
+            cell.className = 'no-results';
+            cell.textContent = 'No imported data';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            return;
+        }
+        
+        data.forEach((record, index) => {
+            const row = document.createElement('tr');
+            
+            // Add basic information cells
+            const basicInfo = [
+                record['SRS ID'] || `IMP-${index + 1}`,
+                record['LAST NAME'] || 'N/A',
+                record['FIRST NAME'] || 'N/A',
+                record['MIDDLE NAME'] || 'N/A',
+                record['NAME'] || 'N/A',
+                record['DATE OF BIRTH'] || record['BDATE'] || 'N/A',
+                record['AGE'] || 'N/A',
+                record['SEX'] || 'N/A',
+                record['CIVIL STATUS'] || 'N/A',
+                record['STREET ADDRESS'] || 'N/A',
+                record['BARANGAY'] || 'N/A',
+                record['CITY/MUNICIPALITY'] || 'N/A',
+                record['PROVINCE'] || 'N/A',
+                record['CELLPHONE'] || 'N/A'
+            ];
+            
+            basicInfo.forEach(value => {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                cell.className = 'compact-cell';
+                row.appendChild(cell);
+            });
+            
+            // Add remaining cells...
+            const remainingInfo = [
+                record['EMP. STATUS'] || 'N/A',
+                record['If Employed/Self Employment'] || 'N/A',
+                record['EDUC LEVEL'] || 'N/A',
+                record['COURSE'] || 'N/A',
+                record['SKILLS'] || 'N/A',
+                record['WORK EXPERIENCE'] || 'N/A',
+                record['SECTOR'] || 'N/A',
+                record['SPECIFIC PROGRAM'] || 'N/A',
+                record['REMARKS'] || 'N/A',
+                record['REG. DATE'] || 'N/A'
+            ];
+            
+            remainingInfo.forEach(value => {
+                const cell = document.createElement('td');
+                cell.textContent = value;
+                cell.className = 'compact-cell';
+                row.appendChild(cell);
+            });
+            
+            // Actions cell
+            const actionsCell = document.createElement('td');
+            actionsCell.className = 'actions-cell';
+            actionsCell.innerHTML = `
+                <div class="action-buttons">
+                    <button class="download-btn" title="Download">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="delete-btn" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listeners to action buttons
+            const downloadBtn = actionsCell.querySelector('.download-btn');
+            const deleteBtn = actionsCell.querySelector('.delete-btn');
+            
+            downloadBtn.addEventListener('click', function() {
+                downloadApplicantData(record);
+            });
+            
+            deleteBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to delete this imported record?')) {
+                    deleteImportedRecord(index);
+                }
+            });
+            
+            row.appendChild(actionsCell);
+            tbody.appendChild(row);
+        });
+    }
+
+    function forceStickyActionColumn() {
+        console.log('Forcing sticky action column behavior...');
+        
+        const table = document.querySelector('.applicant-table');
+        if (!table) return;
+        
+        // Get all action cells
+        const actionCells = table.querySelectorAll('.actions-cell');
+        const headerActionCells = table.querySelectorAll('thead .actions-cell');
+        
+        // Apply forced styles to ALL action cells
+        actionCells.forEach(cell => {
+            cell.style.position = 'sticky';
+            cell.style.right = '0';
+            cell.style.background = 'white';
+            cell.style.zIndex = '100';
+            cell.style.minWidth = '180px';
+            cell.style.width = '180px';
+            cell.style.borderLeft = '3px solid #e0e0e0';
+            cell.style.boxShadow = '-3px 0 10px rgba(0,0,0,0.2)';
+        });
+        
+        // Apply forced styles to header action cells
+        headerActionCells.forEach(cell => {
+            cell.style.position = 'sticky';
+            cell.style.right = '0';
+            cell.style.zIndex = '101';
+            cell.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            cell.style.color = 'white';
+            cell.style.borderLeft = '3px solid rgba(255,255,255,0.3)';
+        });
+        
+        // Specific header row positioning
+        const firstHeaderRow = table.querySelector('thead tr:first-child .actions-cell');
+        const secondHeaderRow = table.querySelector('thead tr:last-child .actions-cell');
+        
+        if (firstHeaderRow) {
+            firstHeaderRow.style.top = '0';
+            firstHeaderRow.style.zIndex = '102';
+        }
+        
+        if (secondHeaderRow) {
+            secondHeaderRow.style.top = '38px';
+            secondHeaderRow.style.zIndex = '101';
+            secondHeaderRow.style.background = '#5d6d7e';
+        }
+        
+        console.log(`Applied sticky styles to ${actionCells.length} action cells`);
+    }
+
+    function testStickyActionColumn() {
+        console.log('=== TESTING STICKY ACTION COLUMN ===');
+        
+        const actionCells = document.querySelectorAll('.actions-cell');
+        console.log(`Found ${actionCells.length} action cells`);
+        
+        actionCells.forEach((cell, index) => {
+            const style = window.getComputedStyle(cell);
+            console.log(`Cell ${index}:`, {
+                position: style.position,
+                right: style.right,
+                zIndex: style.zIndex,
+                background: style.backgroundColor
+            });
+        });
+        
+        // Test scrolling
+        const tableContainer = document.querySelector('.table-container');
+        if (tableContainer) {
+            tableContainer.scrollLeft = 100;
+            setTimeout(() => {
+                console.log('Scrolled - action cells should stay fixed');
+            }, 500);
+        }
+    }
+
+    function syncRowHeights() {
+        const mainRows = document.querySelectorAll('.applicant-table tbody tr');
+        const actionRows = document.querySelectorAll('.actions-table tbody tr');
+        
+        mainRows.forEach((row, index) => {
+            if (actionRows[index]) {
+                const mainHeight = row.offsetHeight;
+                actionRows[index].style.height = mainHeight + 'px';
+                actionRows[index].querySelector('td').style.height = mainHeight + 'px';
+            }
+        });
+    }
+
+    function initializeScrollSync() {
+        const scrollContainer = document.querySelector('.table-scroll-container');
+        const actionsContainer = document.querySelector('.fixed-actions-column');
+        
+        if (scrollContainer && actionsContainer) {
+            scrollContainer.addEventListener('scroll', function() {
+                actionsContainer.scrollTop = this.scrollTop;
+            });
+        }
+    }
+
+    // Call this after your table loads
+    setTimeout(initializeScrollSync, 150);
+
+    // Call this after table loads
+    setTimeout(testStickyActionColumn, 500);
 
     // Initialize the application
     initializeApp();

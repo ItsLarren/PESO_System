@@ -1,4 +1,4 @@
-// Home Dashboard Functionality
+// Home Dashboard Functionality - FIXED VERSION
 class HomeDashboard {
     constructor() {
         this.isInitialized = false;
@@ -9,18 +9,25 @@ class HomeDashboard {
         if (this.isInitialized) return;
         
         console.log('Initializing Home Dashboard...');
-        this.initializeNavigation();
-        this.loadDashboardData();
-        this.setupEventListeners();
-        this.loadRecentActivities();
-        this.displayCurrentUser();
         
-        // Initialize applicants page if it's active
-        if (document.getElementById('applicants-content')?.classList.contains('active')) {
-            this.initializeApplicantsPage();
+        try {
+            this.initializeNavigation();
+            this.loadDashboardData();
+            this.setupEventListeners();
+            this.loadRecentActivities();
+            this.displayCurrentUser();
+            
+            // Initialize applicants page if it's active
+            if (document.getElementById('applicants-content')?.classList.contains('active')) {
+                this.initializeApplicantsPage();
+            }
+            
+            this.isInitialized = true;
+            console.log('Home Dashboard initialized successfully');
+        } catch (error) {
+            console.error('Error initializing Home Dashboard:', error);
+            this.showFallbackNotification('Dashboard initialization failed, but core features should work');
         }
-        
-        this.isInitialized = true;
     }
 
     initializeNavigation() {
@@ -31,7 +38,9 @@ class HomeDashboard {
         navTabs.forEach(tab => {
             // Remove any existing event listeners by cloning
             const newTab = tab.cloneNode(true);
-            tab.parentNode.replaceChild(newTab, tab);
+            if (tab.parentNode) {
+                tab.parentNode.replaceChild(newTab, tab);
+            }
             
             // Add new event listener to the cloned tab
             newTab.addEventListener('click', () => {
@@ -44,7 +53,14 @@ class HomeDashboard {
         // Logout button
         const logoutBtn = document.getElementById('logout-btn');
         if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => this.logout());
+            // Remove existing listeners
+            const newLogoutBtn = logoutBtn.cloneNode(true);
+            if (logoutBtn.parentNode) {
+                logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+            }
+            
+            // Add new listener
+            document.getElementById('logout-btn').addEventListener('click', () => this.logout());
         }
         
         console.log('Navigation initialized');
@@ -53,61 +69,111 @@ class HomeDashboard {
     switchPage(page) {
         console.log('Switching to page:', page);
         
-        // Remove active class from all tabs and pages
-        document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.page-content').forEach(content => content.classList.remove('active'));
+        if (!page) {
+            console.error('No page specified for navigation');
+            return;
+        }
+        
+        try {
+            // Remove active class from all tabs and pages
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                if (tab.classList.contains('active')) {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            document.querySelectorAll('.page-content').forEach(content => {
+                if (content.classList.contains('active')) {
+                    content.classList.remove('active');
+                }
+            });
 
-        // Add active class to selected tab and page
-        const selectedTab = document.querySelector(`[data-page="${page}"]`);
-        const selectedPage = document.getElementById(`${page}-content`);
+            // Add active class to selected tab and page
+            const selectedTab = document.querySelector(`[data-page="${page}"]`);
+            const selectedPage = document.getElementById(`${page}-content`);
 
-        if (selectedTab && selectedPage) {
-            selectedTab.classList.add('active');
-            selectedPage.classList.add('active');
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            } else {
+                console.warn(`Tab for page ${page} not found`);
+            }
 
-            // Load page-specific data
-            this.loadPageData(page);
+            if (selectedPage) {
+                selectedPage.classList.add('active');
+                // Load page-specific data
+                this.loadPageData(page);
+            } else {
+                console.warn(`Content for page ${page} not found`);
+                // Fallback to dashboard if page not found
+                this.fallbackToDashboard();
+            }
+        } catch (error) {
+            console.error('Error switching page:', error);
+            this.fallbackToDashboard();
+        }
+    }
+
+    fallbackToDashboard() {
+        // Fallback to dashboard if there's an error
+        const dashboardTab = document.querySelector('[data-page="dashboard"]');
+        const dashboardContent = document.getElementById('dashboard-content');
+        
+        if (dashboardTab && dashboardContent) {
+            dashboardTab.classList.add('active');
+            dashboardContent.classList.add('active');
         }
     }
 
     loadPageData(page) {
         console.log('Loading data for page:', page);
-        switch(page) {
-            case 'applicants':
-                this.initializeApplicantsPage();
-                break;
-            case 'employers':
-                console.log('Employers page - coming soon');
-                break;
-            case 'vacancies':
-                console.log('Vacancies page - coming soon');
-                break;
-            case 'programs':
-                console.log('Programs page - coming soon');
-                break;
-            case 'reports':
-                console.log('Reports page - coming soon');
-                break;
-            case 'tools':
-                console.log('Tools page - coming soon');
-                break;
-            case 'admin':
-                console.log('Admin page - coming soon');
-                break;
+        try {
+            switch(page) {
+                case 'applicants':
+                    this.initializeApplicantsPage();
+                    break;
+                case 'employers':
+                    console.log('Employers page - coming soon');
+                    break;
+                case 'vacancies':
+                    console.log('Vacancies page - coming soon');
+                    break;
+                case 'programs':
+                    console.log('Programs page - coming soon');
+                    break;
+                case 'reports':
+                    console.log('Reports page - coming soon');
+                    break;
+                case 'tools':
+                    console.log('Tools page - coming soon');
+                    break;
+                case 'admin':
+                    console.log('Admin page - coming soon');
+                    break;
+                case 'dashboard':
+                    // Refresh dashboard data
+                    this.loadDashboardData();
+                    break;
+            }
+        } catch (error) {
+            console.error(`Error loading page data for ${page}:`, error);
         }
     }
 
     initializeApplicantsPage() {
         console.log('Initializing applicants page...');
         
-        // Initialize Zero Unemployment tab
-        this.initializeZeroUnemploymentTab();
-        
-        // Load applicants data
-        this.loadApplicantsData();
-        
-        // Initialize other applicants functionality
-        this.initializeApplicantsFunctionality();
+        try {
+            // Initialize Zero Unemployment tab
+            this.initializeZeroUnemploymentTab();
+            
+            // Load applicants data
+            this.loadApplicantsData();
+            
+            // Initialize other applicants functionality
+            this.initializeApplicantsFunctionality();
+        } catch (error) {
+            console.error('Error initializing applicants page:', error);
+        }
     }
 
     initializeZeroUnemploymentTab() {
@@ -116,40 +182,57 @@ class HomeDashboard {
         if (zeroUnemploymentTab) {
             console.log('Initializing Zero Unemployment tab...');
             
-            // Clone to remove existing listeners
-            const newTab = zeroUnemploymentTab.cloneNode(true);
-            zeroUnemploymentTab.parentNode.replaceChild(newTab, zeroUnemploymentTab);
-            
-            // Get current reference
-            const currentTab = document.getElementById('zero-unemployment-tab');
-            
-            currentTab.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('Zero Unemployment tab clicked');
+            try {
+                // Clone to remove existing listeners
+                const newTab = zeroUnemploymentTab.cloneNode(true);
+                if (zeroUnemploymentTab.parentNode) {
+                    zeroUnemploymentTab.parentNode.replaceChild(newTab, zeroUnemploymentTab);
+                }
                 
-                // Filter applicants for Zero Unemployment
-                this.filterApplicantsByProgram('Zero Unemployment');
+                // Get current reference
+                const currentTab = document.getElementById('zero-unemployment-tab');
                 
-                // Update active tab styling
-                document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
-                currentTab.classList.add('active');
-                
-                showNotification('Showing Zero Unemployment applicants', 'success');
-            });
+                if (currentTab) {
+                    currentTab.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        console.log('Zero Unemployment tab clicked');
+                        
+                        // Filter applicants for Zero Unemployment
+                        this.filterApplicantsByProgram('Zero Unemployment');
+                        
+                        // Update active tab styling
+                        document.querySelectorAll('.filter-tab').forEach(tab => {
+                            if (tab.classList.contains('active')) {
+                                tab.classList.remove('active');
+                            }
+                        });
+                        currentTab.classList.add('active');
+                        
+                        this.showNotification('Showing Zero Unemployment applicants', 'success');
+                    });
+                }
+            } catch (error) {
+                console.error('Error initializing Zero Unemployment tab:', error);
+            }
         }
     }
 
     filterApplicantsByProgram(program) {
         console.log(`Filtering by program: ${program}`);
         
-        const applicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
-        const filteredApplicants = applicants.filter(applicant => {
-            const programCategory = applicant['PROGRAM CATEGORY'] || applicant['PROGRAM_CATEGORY'] || '';
-            return programCategory === program;
-        });
-        
-        console.log(`Found ${filteredApplicants.length} ${program} applicants`);
-        this.safeDisplayMainApplicants(filteredApplicants);
+        try {
+            const applicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+            const filteredApplicants = applicants.filter(applicant => {
+                const programCategory = applicant['PROGRAM CATEGORY'] || applicant['PROGRAM_CATEGORY'] || '';
+                return programCategory === program;
+            });
+            
+            console.log(`Found ${filteredApplicants.length} ${program} applicants`);
+            this.safeDisplayMainApplicants(filteredApplicants);
+        } catch (error) {
+            console.error('Error filtering applicants by program:', error);
+            this.showNotification('Error filtering applicants', 'error');
+        }
     }
 
     loadApplicantsData() {
@@ -280,14 +363,18 @@ class HomeDashboard {
     initializeApplicantsFunctionality() {
         console.log('Initializing applicants functionality...');
         
-        // Initialize filter tabs
-        this.initializeFilterTabs();
-        
-        // Initialize search
-        this.initializeSearch();
-        
-        // Initialize other functionality
-        this.initializeOtherFunctionality();
+        try {
+            // Initialize filter tabs
+            this.initializeFilterTabs();
+            
+            // Initialize search
+            this.initializeSearch();
+            
+            // Initialize other functionality
+            this.initializeOtherFunctionality();
+        } catch (error) {
+            console.error('Error initializing applicants functionality:', error);
+        }
     }
 
     initializeFilterTabs() {
@@ -295,21 +382,33 @@ class HomeDashboard {
         
         const filterTabs = document.querySelectorAll('.filter-tab[data-filter]');
         filterTabs.forEach(tab => {
-            // Clone to remove existing listeners
-            const newTab = tab.cloneNode(true);
-            tab.parentNode.replaceChild(newTab, tab);
-            
-            newTab.addEventListener('click', () => {
-                const filter = newTab.getAttribute('data-filter');
-                console.log('Filter tab clicked:', filter);
+            try {
+                // Clone to remove existing listeners
+                const newTab = tab.cloneNode(true);
+                if (tab.parentNode) {
+                    tab.parentNode.replaceChild(newTab, tab);
+                }
                 
-                // Update active tab styling
-                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-                newTab.classList.add('active');
-                
-                // Apply filter
-                this.safeFilterRecords(filter);
-            });
+                if (newTab) {
+                    newTab.addEventListener('click', () => {
+                        const filter = newTab.getAttribute('data-filter');
+                        console.log('Filter tab clicked:', filter);
+                        
+                        // Update active tab styling
+                        document.querySelectorAll('.filter-tab').forEach(t => {
+                            if (t.classList.contains('active')) {
+                                t.classList.remove('active');
+                            }
+                        });
+                        newTab.classList.add('active');
+                        
+                        // Apply filter
+                        this.safeFilterRecords(filter);
+                    });
+                }
+            } catch (error) {
+                console.error('Error initializing filter tab:', error);
+            }
         });
     }
 
@@ -343,11 +442,11 @@ class HomeDashboard {
             
             console.log(`Found ${filteredApplicants.length} ${filter} applicants`);
             this.safeDisplayMainApplicants(filteredApplicants);
-            showNotification(`Showing ${filteredApplicants.length} ${filter} applicants`, 'success');
+            this.showNotification(`Showing ${filteredApplicants.length} ${filter} applicants`, 'success');
             
         } catch (error) {
             console.error('Error filtering records:', error);
-            showNotification('Error filtering applicants', 'error');
+            this.showNotification('Error filtering applicants', 'error');
         }
     }
 
@@ -416,11 +515,11 @@ class HomeDashboard {
                 }
             });
             
-            showNotification(`Found ${foundCount} matching applicant(s)`, 'success');
+            this.showNotification(`Found ${foundCount} matching applicant(s)`, 'success');
             
         } catch (error) {
             console.error('Error searching applicants:', error);
-            showNotification('Error searching applicants', 'error');
+            this.showNotification('Error searching applicants', 'error');
         }
     }
 
@@ -446,30 +545,38 @@ class HomeDashboard {
     }
 
     initializeOtherFunctionality() {
-        // Initialize advanced filters button
-        const advancedFiltersBtn = document.getElementById('advanced-filters-btn');
-        if (advancedFiltersBtn) {
-            advancedFiltersBtn.addEventListener('click', () => {
-                const filtersPanel = document.getElementById('advanced-filters-panel');
-                if (filtersPanel) {
-                    filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
-                }
-            });
-        }
-        
-        // Initialize manual add button
-        const addManualBtn = document.getElementById('add-manual-btn');
-        if (addManualBtn) {
-            addManualBtn.addEventListener('click', () => {
-                console.log('Add manual button clicked');
-                // Your manual add functionality here
-            });
+        try {
+            // Initialize advanced filters button
+            const advancedFiltersBtn = document.getElementById('advanced-filters-btn');
+            if (advancedFiltersBtn) {
+                advancedFiltersBtn.addEventListener('click', () => {
+                    const filtersPanel = document.getElementById('advanced-filters-panel');
+                    if (filtersPanel) {
+                        filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+                    }
+                });
+            }
+            
+            // Initialize manual add button
+            const addManualBtn = document.getElementById('add-manual-btn');
+            if (addManualBtn) {
+                addManualBtn.addEventListener('click', () => {
+                    console.log('Add manual button clicked');
+                    // Your manual add functionality here
+                });
+            }
+        } catch (error) {
+            console.error('Error initializing other functionality:', error);
         }
     }
 
     loadDashboardData() {
-        this.updateLocalStats();
-        this.updateQuickStats();
+        try {
+            this.updateLocalStats();
+            this.updateQuickStats();
+        } catch (error) {
+            console.error('Error loading dashboard data:', error);
+        }
     }
 
     updateLocalStats() {
@@ -512,28 +619,36 @@ class HomeDashboard {
     }
 
     loadRecentActivities() {
-        const activitiesContainer = document.getElementById('recent-activities');
-        if (activitiesContainer) {
-            activitiesContainer.innerHTML = `
-                <div class="activity-item">
-                    <div class="activity-icon applicant">
-                        <i class="fas fa-user-plus"></i>
+        try {
+            const activitiesContainer = document.getElementById('recent-activities');
+            if (activitiesContainer) {
+                activitiesContainer.innerHTML = `
+                    <div class="activity-item">
+                        <div class="activity-icon applicant">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-title">System Ready</div>
+                            <div class="activity-description">CPESO System initialized successfully</div>
+                            <div class="activity-time">Just now</div>
+                        </div>
                     </div>
-                    <div class="activity-content">
-                        <div class="activity-title">System Ready</div>
-                        <div class="activity-description">CPESO System initialized successfully</div>
-                        <div class="activity-time">Just now</div>
-                    </div>
-                </div>
-            `;
+                `;
+            }
+        } catch (error) {
+            console.error('Error loading recent activities:', error);
         }
     }
 
     displayCurrentUser() {
-        const currentUser = localStorage.getItem('currentUser') || 'Admin User';
-        const userElement = document.getElementById('current-user');
-        if (userElement) {
-            userElement.textContent = currentUser;
+        try {
+            const currentUser = localStorage.getItem('currentUser') || 'Admin User';
+            const userElement = document.getElementById('current-user');
+            if (userElement) {
+                userElement.textContent = currentUser;
+            }
+        } catch (error) {
+            console.error('Error displaying current user:', error);
         }
     }
 
@@ -542,160 +657,174 @@ class HomeDashboard {
     }
 
     logout() {
-        localStorage.removeItem('isLoggedIn');
-        localStorage.removeItem('currentUser');
-        window.location.href = 'login.html';
+        try {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        } catch (error) {
+            console.error('Error during logout:', error);
+            // Fallback: redirect anyway
+            window.location.href = 'login.html';
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        try {
+            if (typeof showNotification === 'function') {
+                showNotification(message, type);
+            } else {
+                this.showFallbackNotification(message, type);
+            }
+        } catch (error) {
+            console.error('Error showing notification:', error);
+            this.showFallbackNotification(message);
+        }
+    }
+
+    showFallbackNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : '#2196F3'};
+            color: white;
+            border-radius: 4px;
+            z-index: 10000;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
     }
 }
 
 // Global navigation function
 function navigateToPage(page) {
-    if (window.homeDashboard) {
+    if (window.homeDashboard && typeof window.homeDashboard.switchPage === 'function') {
         window.homeDashboard.switchPage(page);
+    } else {
+        console.error('Home dashboard not available');
+        // Fallback navigation
+        const targetPage = document.getElementById(`${page}-content`);
+        if (targetPage) {
+            document.querySelectorAll('.page-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            targetPage.classList.add('active');
+            const tab = document.querySelector(`[data-page="${page}"]`);
+            if (tab) tab.classList.add('active');
+        }
     }
 }
 
 // Global function to add test data
 function addTestData() {
-    const testApplicants = [
-        {
-            'SRS ID': 'TEST001',
-            'LAST NAME': 'Dela Cruz',
-            'FIRST NAME': 'Juan',
-            'MIDDLE NAME': 'Santos',
-            'SUFFIX': 'Jr.',
-            'DATE OF BIRTH': '1990-05-15',
-            'AGE': '33',
-            'SEX': 'Male',
-            'EMP. STATUS': 'Employed',
-            'PROGRAM CATEGORY': 'Employment Assistance'
-        },
-        {
-            'SRS ID': 'TEST002',
-            'LAST NAME': 'Reyes',
-            'FIRST NAME': 'Maria',
-            'MIDDLE NAME': 'Garcia',
-            'SUFFIX': '',
-            'DATE OF BIRTH': '1985-08-20',
-            'AGE': '38',
-            'SEX': 'Female',
-            'EMP. STATUS': 'Unemployed',
-            'PROGRAM CATEGORY': 'Zero Unemployment'
-        },
-        {
-            'SRS ID': 'TEST003',
-            'LAST NAME': 'Santos',
-            'FIRST NAME': 'Pedro',
-            'MIDDLE NAME': 'Lopez',
-            'SUFFIX': '',
-            'DATE OF BIRTH': '1995-12-10',
-            'AGE': '28',
-            'SEX': 'Male',
-            'EMP. STATUS': 'Self-Employed',
-            'PROGRAM CATEGORY': 'Livelihood Program'
+    try {
+        const testApplicants = [
+            {
+                'SRS ID': 'TEST001',
+                'LAST NAME': 'Dela Cruz',
+                'FIRST NAME': 'Juan',
+                'MIDDLE NAME': 'Santos',
+                'SUFFIX': 'Jr.',
+                'DATE OF BIRTH': '1990-05-15',
+                'AGE': '33',
+                'SEX': 'Male',
+                'EMP. STATUS': 'Employed',
+                'PROGRAM CATEGORY': 'Employment Assistance'
+            },
+            {
+                'SRS ID': 'TEST002',
+                'LAST NAME': 'Reyes',
+                'FIRST NAME': 'Maria',
+                'MIDDLE NAME': 'Garcia',
+                'SUFFIX': '',
+                'DATE OF BIRTH': '1985-08-20',
+                'AGE': '38',
+                'SEX': 'Female',
+                'EMP. STATUS': 'Unemployed',
+                'PROGRAM CATEGORY': 'Zero Unemployment'
+            }
+        ];
+        
+        const existingApplicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
+        const newApplicants = [...existingApplicants, ...testApplicants];
+        localStorage.setItem('mainApplicants', JSON.stringify(newApplicants));
+        
+        console.log('Test data added');
+        
+        // Use available notification system
+        if (window.homeDashboard && typeof window.homeDashboard.showNotification === 'function') {
+            window.homeDashboard.showNotification('Test data added successfully', 'success');
+        } else if (typeof showNotification === 'function') {
+            showNotification('Test data added successfully', 'success');
         }
-    ];
-    
-    const existingApplicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
-    const newApplicants = [...existingApplicants, ...testApplicants];
-    localStorage.setItem('mainApplicants', JSON.stringify(newApplicants));
-    
-    console.log('Test data added');
-    showNotification('Test data added successfully', 'success');
-    
-    // Refresh display if on applicants page
-    if (window.homeDashboard && document.getElementById('applicants-content')?.classList.contains('active')) {
-        window.homeDashboard.loadApplicantsData();
-        window.homeDashboard.updateLocalStats();
+        
+        // Refresh display if on applicants page
+        if (window.homeDashboard && document.getElementById('applicants-content')?.classList.contains('active')) {
+            window.homeDashboard.loadApplicantsData();
+            window.homeDashboard.updateLocalStats();
+        }
+    } catch (error) {
+        console.error('Error adding test data:', error);
     }
 }
 
-// Initialize dashboard
+// Initialize dashboard with error handling
 let homeDashboardInitialized = false;
 
 function initializeHomeDashboard() {
     if (!homeDashboardInitialized) {
-        window.homeDashboard = new HomeDashboard();
-        homeDashboardInitialized = true;
+        try {
+            window.homeDashboard = new HomeDashboard();
+            homeDashboardInitialized = true;
+            console.log('Home Dashboard initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize Home Dashboard:', error);
+            // Set a flag to prevent repeated initialization attempts
+            homeDashboardInitialized = true;
+        }
     }
     return window.homeDashboard;
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing dashboard');
-    initializeHomeDashboard();
-});
-
-// Utility function for notifications
-function showNotification(message, type = 'info') {
-    // Create a simple notification
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
-        background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#2196F3'};
-        color: white;
-        border-radius: 4px;
-        z-index: 10000;
-        font-family: Arial, sans-serif;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    `;
-    notification.textContent = message;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-        }
-    }, 3000);
-}
-
-function lazyLoadTableData(applicants, chunkSize = 50) {
-    let currentIndex = 0;
-    
-    function loadNextChunk() {
-        const chunk = applicants.slice(currentIndex, currentIndex + chunkSize);
-        displayApplicantsChunk(chunk);
-        currentIndex += chunkSize;
+// Safe DOM ready initialization
+function safeInitialize() {
+    try {
+        console.log('DOM loaded - initializing dashboard');
         
-        if (currentIndex < applicants.length) {
-            setTimeout(loadNextChunk, 100);
+        // Check authentication first
+        if (localStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'login.html';
+            return;
         }
+        
+        initializeHomeDashboard();
+    } catch (error) {
+        console.error('Error during safe initialization:', error);
     }
-    
-    loadNextChunk();
 }
 
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
+// Multiple initialization strategies
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', safeInitialize);
+} else {
+    safeInitialize();
 }
 
-// Usage
-elements.searchInput.addEventListener('input', debounce(searchApplicants, 300));
-
-function withErrorHandling(fn, errorMessage) {
-    return function(...args) {
-        try {
-            return fn.apply(this, args);
-        } catch (error) {
-            console.error(`${errorMessage}:`, error);
-            showNotification(errorMessage, 'error');
-            return null;
-        }
-    };
+// Export for module systems if needed
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { HomeDashboard, initializeHomeDashboard, navigateToPage };
 }
-
-// Usage
-const safeAddApplicant = withErrorHandling(addManualApplicant, 'Failed to add applicant');
