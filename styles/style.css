@@ -241,36 +241,49 @@ h2 {
     cursor: not-allowed;
 }
 
+/* Ensure table container has proper stacking context */
 .table-container {
+    position: relative;
     overflow-x: auto;
-    max-height: 500px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    background: white;
 }
 
+.actions-cell {
+    min-width: 180px !important;
+    width: 180px !important;
+    text-align: center !important;
+    position: sticky;
+    right: 0;
+    background: white;
+    z-index: 100;
+    border-left: 3px solid #e0e0e0;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+}
+
+/* Action buttons container */
 .action-buttons {
     display: flex;
-    gap: 4px;
+    gap: 5px;
     justify-content: center;
     align-items: center;
-    flex-wrap: nowrap;
+    padding: 2px;
+    height: 100%;
+    min-height: 40px; /* Match your row height */
 }
 
 .clear-all-btn {
-    background-color: #ff5722;
+    background: #dc3545;
     color: white;
     border: none;
-    padding: 12px 20px;
-    border-radius: 4px;
+    padding: 10px 20px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    margin-top: 20px;
-    margin-left: 10px;
+    font-size: 14px;
+    transition: background 0.3s ease;
 }
 
 .clear-all-btn:hover {
-    background-color: #d84315;
+    background: #c82333;
 }
 
 .modal {
@@ -1005,88 +1018,33 @@ input[type="date"]:after {
     font-style: italic;
 }
 
-/* ACTION CELL - FIXED POSITION */
-.actions-cell {
-    position: sticky !important;
-    right: 0 !important;
-    background: white !important;
-    z-index: 100 !important;
-    min-width: 180px !important;
-    width: 180px !important;
-    border-left: 3px solid #e0e0e0 !important;
-    box-shadow: -3px 0 10px rgba(0,0,0,0.2) !important;
-}
-
-/* Header action cell */
-.applicant-table thead .actions-cell {
-    position: sticky !important;
-    right: 0 !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-    z-index: 101 !important;
-    color: white !important;
-    border-left: 3px solid rgba(255,255,255,0.3) !important;
-}
-
-/* SPECIFIC HEADER ROWS */
-.applicant-table thead tr:first-child .actions-cell {
-    top: 0 !important;
-    z-index: 102 !important;
-}
-
-.applicant-table thead tr:last-child .actions-cell {
-    top: 38px !important;
-    z-index: 101 !important;
-    background: #5d6d7e !important;
-}
-
-/* Ensure all action cells in header are sticky */
-.applicant-table thead th.actions-cell {
-    position: sticky !important;
-    right: 0 !important;
-    z-index: 102 !important;
-}
-
-/* Double sticky for two header rows */
-.applicant-table thead tr:first-child th.actions-cell {
-    top: 0 !important;
-    z-index: 103 !important;
-}
-
 .applicant-table thead tr:last-child {
     top: 38px;
     z-index: 200;
 }
 
-.applicant-table thead tr:last-child th.actions-cell {
-    top: 38px !important; /* Height of first header row */
-    z-index: 102 !important;
-}
-
-/* ACTION BUTTONS CONTAINER */
+/* Action buttons styling */
 .action-buttons {
-    display: flex !important;
-    gap: 4px !important;
-    justify-content: center !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-    padding: 2px 5px !important;
-    position: relative !important;
-    z-index: 110 !important;
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
 }
 
-/* BUTTON STYLES */
+/* Ensure buttons are properly sized */
 .action-buttons button {
-    flex-shrink: 0;
-    min-width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    padding: 6px 8px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    min-width: 32px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .actions-table {
@@ -1094,13 +1052,10 @@ input[type="date"]:after {
     border-collapse: collapse;
 }
 
-/* FIXED ACTION COLUMN SOLUTION */
+/* Table Container Styles */
 .table-container-wrapper {
     position: relative;
-    display: flex;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: white;
+    width: 100%;
     overflow: hidden;
 }
 
@@ -1128,10 +1083,9 @@ input[type="date"]:after {
 }
 
 .table-scroll-container {
-    flex: 1;
+    width: 100%;
     overflow-x: auto;
-    overflow-y: auto;
-    max-height: 500px;
+    position: relative;
 }
 
 .fixed-actions-column {
@@ -1144,15 +1098,42 @@ input[type="date"]:after {
     min-width: 180px;
 }
 
-.view-btn { background: #2196f3; color: white; }
-.edit-btn { background: #ff9800; color: white; }
-.download-btn { background: #4caf50; color: white; }
-.delete-btn { background: #f44336; color: white; }
+.view-btn { 
+    background: #2196f3; 
+    color: white; 
+}
+.edit-btn { 
+    background: #ff9800; 
+    color: white; 
+}
+.download-btn { 
+    background: #4caf50; 
+    color: white; 
+}
+.delete-btn { 
+    background: #f44336; 
+    color: white; 
+}
 
 .view-btn:hover { background: #1976d2; transform: scale(1.05); }
 .edit-btn:hover { background: #f57c00; transform: scale(1.05); }
 .download-btn:hover { background: #388e3c; transform: scale(1.05); }
 .delete-btn:hover { background: #d32f2f; transform: scale(1.05); }
+
+.action-buttons button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.table-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
 
 /* Sync scrolling */
 .table-scroll-container::-webkit-scrollbar {
@@ -1180,11 +1161,14 @@ input[type="date"]:after {
     gap: 4px;
 }
 
+/* Compact cell styling */
 .compact-cell {
     max-width: 150px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding: 6px 4px;
+    font-size: 11px;
 }
 
 .long-text-cell {
@@ -1246,13 +1230,18 @@ input[type="date"]:after {
     }
 }
 
-/* TABLE CONTAINER FIXES */
+/* Table container styling */
 .table-container {
     position: relative;
     overflow-x: auto;
     background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+}
+
+
+/* Scrollbar styling */
+.table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
 }
 
 .table-container::-webkit-scrollbar-track {
@@ -1270,54 +1259,145 @@ input[type="date"]:after {
 }
 
 .export-applicants-btn {
-    background: #4caf50 !important;
+    background: #28a745;
     color: white;
     border: none;
-    padding: 12px 20px !important;
-    border-radius: 4px;
+    padding: 10px 20px;
+    border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    margin-top: 20px;
-    margin-left: 10px;
-    height: auto !important;
-    min-height: 44px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    font-size: 14px;
+    transition: background 0.3s ease;
 }
 
 .export-applicants-btn:hover {
-    background: #388e3c !important;
+    background: #218838;
+}
+
+.clear-all-btn i,
+.export-applicants-btn i {
+    margin-right: 8px;
 }
 
 .applicant-table {
-    margin-bottom: 0;
-    border-right: none;
+    position: relative;
 }
 
+/* Ensure proper sticky behavior for action column */
 .applicant-table th:last-child,
 .applicant-table td:last-child {
-    border-right: none;
+    position: sticky !important;
+    right: 0 !important;
+    background: white !important;
+    z-index: 100 !important;
+    border-left: 3px solid #e0e0e0 !important;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1) !important;
 }
 
-.applicant-table th, .applicant-table td {
+/* Header action cells */
+.applicant-table thead th:last-child {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    z-index: 102 !important;
+    border-left: 3px solid rgba(255,255,255,0.3) !important;
+}
+
+/* First header row positioning */
+.applicant-table thead tr:first-child th:last-child {
+    top: 0 !important;
+    z-index: 103 !important;
+}
+
+/* Second header row positioning */
+.applicant-table thead tr:last-child th:last-child {
+    top: 38px !important;
+    z-index: 102 !important;
+    background: #5d6d7e !important;
+}
+
+/* Body cells */
+.applicant-table tbody td:last-child {
+    z-index: 99 !important;
+    background: white !important;
+}
+
+/* Hover effects */
+.applicant-table tbody tr:hover td:last-child {
+    background: #f8f9fa !important;
+    z-index: 100 !important;
+}
+
+/* Ensure table container creates stacking context */
+.table-container {
+    position: relative;
+    overflow: auto;
+    background: white;
+    transform: translateZ(0); /* Force hardware acceleration */
+}
+
+.applicant-table th,
+.applicant-table td {
+    padding: 8px 6px !important;
+    border: 1px solid #e0e0e0 !important;
     text-align: left;
-    padding: 6px;
-    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100px;
-    font-size: 9px;
+    max-width: 150px;
+    font-size: 11px;
+    line-height: 1.2;
 }
 
+.applicant-table .actions-cell {
+    min-width: 180px !important;
+    width: 180px !important;
+    text-align: center !important;
+    position: sticky !important;
+    right: 0 !important;
+    background: white !important;
+    z-index: 100 !important;
+    border-left: 3px solid #e0e0e0 !important;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.1) !important;
+}
+
+/* Header actions cell alignment */
+.applicant-table thead .actions-cell {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    z-index: 102 !important;
+    border-left: 3px solid rgba(255,255,255,0.3) !important;
+}
+
+/* First header row */
+.applicant-table thead tr:first-child .actions-cell {
+    top: 0 !important;
+    z-index: 103 !important;
+}
+
+/* Second header row */
+.applicant-table thead tr:last-child .actions-cell {
+    top: 38px !important;
+    z-index: 102 !important;
+    background: #5d6d7e !important;
+}
+
+/* Body actions cells */
+.applicant-table tbody .actions-cell {
+    z-index: 99 !important;
+    background: white !important;
+}
+
+/* Hover effect */
+.applicant-table tbody tr:hover .actions-cell {
+    background: #f8f9fa !important;
+    z-index: 100 !important;
+}
+
+/* Ensure proper stacking */
 .applicant-table thead th {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: linear-gradient(135deg, #b4b4b4 0%, #1f1d1d 100%) !important;
-    color: white;
-    font-weight: 600;
 }
 
 .applicant-table thead {
@@ -1395,13 +1475,11 @@ input[type="date"]:after {
     box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
 }
 
+/* Ensure table container has proper overflow */
 .table-container {
+    position: relative;
     overflow-x: auto;
-    max-height: 600px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    margin: 15px 0;
+    background: white;
 }
 
 .filter-input:focus {
@@ -3400,4 +3478,143 @@ input[type="date"]:after {
     gap: 10px;
     margin: 15px 0;
     flex-wrap: wrap;
+}
+
+/* APPLICANT TABLE - Match Imported Table Structure */
+#main-applicant-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+#main-applicant-table th,
+#main-applicant-table td {
+    padding: 8px 6px;
+    border: 1px solid #e0e0e0;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+#main-applicant-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+#main-applicant-table thead tr:first-child th {
+    position: sticky;
+    top: 0;
+    z-index: 101;
+}
+
+#main-applicant-table thead tr:last-child th {
+    background: #5d6d7e;
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 38px;
+    z-index: 100;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+#main-applicant-table th:last-child {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    z-index: 101 !important;
+}
+
+#main-applicant-table td:last-child,
+#main-applicant-table th:last-child {
+    position: sticky !important;
+    right: 0 !important;
+    background: white !important;
+    z-index: 100 !important;
+    border-left: 3px solid #e0e0e0 !important;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1) !important;
+}
+
+#main-applicant-table thead tr:first-child th:last-child {
+    top: 0 !important;
+    z-index: 102 !important;
+}
+
+#main-applicant-table thead tr:last-child th:last-child {
+    top: 38px !important;
+    z-index: 101 !important;
+    background: #5d6d7e !important;
+}
+
+/* ===== BULLETPROOF ACTION COLUMN FIX ===== */
+/* Reset any conflicting styles first */
+#main-applicant-table th,
+#main-applicant-table td {
+    position: static !important;
+}
+
+/* Force the LAST column to be sticky */
+#main-applicant-table th:nth-last-child(1),
+#main-applicant-table td:nth-last-child(1) {
+    position: sticky !important;
+    right: 0 !important;
+    background: white !important;
+    z-index: 100 !important;
+    border-left: 3px solid #e0e0e0 !important;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1) !important;
+    min-width: 180px !important;
+    width: 180px !important;
+}
+
+/* Header action cells */
+#main-applicant-table thead th:nth-last-child(1) {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    z-index: 102 !important;
+    border-left: 3px solid rgba(255,255,255,0.3) !important;
+}
+
+/* First header row positioning */
+#main-applicant-table thead tr:first-child th:nth-last-child(1) {
+    top: 0 !important;
+    z-index: 103 !important;
+}
+
+/* Second header row positioning */
+#main-applicant-table thead tr:last-child th:nth-last-child(1) {
+    top: 38px !important;
+    z-index: 102 !important;
+    background: #5d6d7e !important;
+}
+
+/* Body cells - ensure they stick */
+#main-applicant-table tbody td:nth-last-child(1) {
+    z-index: 99 !important;
+    background: white !important;
+}
+
+/* Hover effects */
+#main-applicant-table tbody tr:hover td:nth-last-child(1) {
+    background: #f8f9fa !important;
+    z-index: 100 !important;
+}
+
+/* Critical: Ensure table container creates stacking context */
+.table-container {
+    position: relative;
+    overflow: auto;
+    background: white;
+    transform: translateZ(0); /* Force hardware acceleration */
+}
+
+/* Remove any transforms that might break sticky */
+#main-applicant-table th:nth-last-child(1),
+#main-applicant-table td:nth-last-child(1) {
+    transform: none !important;
 }

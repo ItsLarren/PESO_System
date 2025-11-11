@@ -155,3 +155,7 @@ prpoblems
 the action column
 not working actions and the add manual applicant button and also check the other button
 the delete button at the action column intead of delecting sche onlyl, it deletes all
+
+browse at the imported data - the file document folder will oen twice , why is that?
+
+ngayon gusto ko nga yung pagkaka ayos ng table ng bith sa iported datae at sa applicant table, so wag na galawin yung structure ng table, yung sa column nalnag talaga ng action, dahil hindi talaga nag sstay yung mga buttons sa action column, before scroll ang scroll bar nasa actions ang buttons pero kapag mmove na yung scrll bar pa right side, pimupumnta sa programs status yung mga buttons na dapat ay nag sstay lang sa action column. wag na palitan yung ib, yung sa part lang na action column

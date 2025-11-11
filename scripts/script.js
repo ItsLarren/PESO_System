@@ -282,6 +282,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             initializeZeroUnemploymentNavigation();
+
+            initializeFileUploads();
             
             // Restore backup if needed
             if (syncManager.restoreBackupIfNeeded()) {
@@ -1372,6 +1374,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+
         // Export applicants
         if (elements.exportApplicantsBtn) {
             elements.exportApplicantsBtn.addEventListener('click', exportApplicantsToExcel);
@@ -1892,36 +1895,26 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!elements.mainApplicantTable) return;
         
         const tbody = elements.mainApplicantTable.querySelector('tbody');
-        const actionsTbody = document.getElementById('actions-tbody');
+        if (!tbody) return;
         
-        if (!tbody || !actionsTbody) return;
-        
-        // Clear both tables
+        // Clear table
         tbody.innerHTML = '';
-        actionsTbody.innerHTML = '';
         
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 42; // Now 42 columns since actions are separate
+            cell.colSpan = 45; // Increase by 1 for the new actions column
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
             tbody.appendChild(row);
-            
-            // Also add empty action row
-            const actionRow = document.createElement('tr');
-            const actionCell = document.createElement('td');
-            actionCell.textContent = '';
-            actionRow.appendChild(actionCell);
-            actionsTbody.appendChild(actionRow);
             return;
         }
         
         applicants.forEach((applicant, index) => {
-            // MAIN TABLE ROW (42 columns now)
             const row = document.createElement('tr');
 
+            // Data columns (first 43 columns - your existing data)
             const columns = [
                 applicant['SRS ID'] || `APP-${index + 1}`,
                 applicant['LAST NAME'] || applicant['SURNAME'] || 'N/A',
@@ -1965,43 +1958,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicant['OTHER SKILLS'] || applicant['SKILLS'] || 'N/A',
                 applicant['PROGRAM CATEGORY'] || 'N/A',
                 applicant['SPECIFIC PROGRAM'] || 'N/A',
-                applicant['PROGRAM STATUS'] || 'N/A'
+                applicant['PROGRAM STATUS'] || 'N/A'  // This is column 43
             ];
             
+            // Add data cells with compact styling
             columns.forEach((value, colIndex) => {
                 const cell = document.createElement('td');
                 cell.textContent = value;
-                
-                // Style specific columns
-                if (colIndex === 0) {
-                    cell.style.fontFamily = 'monospace';
-                    cell.style.fontSize = '10px';
-                }
-                if (colIndex === 5) {
-                    cell.style.fontSize = '10px';
-                }
-                if (colIndex === 11) {
-                    cell.style.textAlign = 'center';
-                }
-                
-                // Add compact styling
                 cell.className = 'compact-cell';
-                cell.style.maxWidth = '150px';
-                cell.style.overflow = 'hidden';
-                cell.style.textOverflow = 'ellipsis';
-                cell.style.whiteSpace = 'nowrap';
-                cell.style.padding = '6px 4px';
-                cell.style.fontSize = '11px';
-                
                 row.appendChild(cell);
             });
             
-            tbody.appendChild(row);
-            
-            // ACTION COLUMN ROW (Separate table)
-            const actionRow = document.createElement('tr');
-            const actionCell = document.createElement('td');
-            
+            // NOW ADD THE ACTIONS COLUMN AS A NEW COLUMN (column 44)
+            const actionsCell = document.createElement('td');
+            actionsCell.className = 'actions-cell';
+
             const actionButtons = document.createElement('div');
             actionButtons.className = 'action-buttons';
             
@@ -2013,7 +1984,7 @@ document.addEventListener('DOMContentLoaded', function () {
             viewBtn.addEventListener('click', function() {
                 openViewModal(applicant);
             });
-            
+
             // Edit button
             const editBtn = document.createElement('button');
             editBtn.className = 'edit-btn';
@@ -2022,7 +1993,16 @@ document.addEventListener('DOMContentLoaded', function () {
             editBtn.addEventListener('click', function() {
                 openEditModal(applicant);
             });
-            
+
+            // Download button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.className = 'download-btn';
+            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+            downloadBtn.title = 'Download Data';
+            downloadBtn.addEventListener('click', function() {
+                downloadApplicantData(applicant);
+            });
+
             // Delete button
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
@@ -2034,30 +2014,75 @@ document.addEventListener('DOMContentLoaded', function () {
                     deleteApplicant(applicantId);
                 }
             });
-            
-            // Download button
-            const downloadBtn = document.createElement('button');
-            downloadBtn.className = 'download-btn';
-            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
-            downloadBtn.title = 'Download Data';
-            downloadBtn.addEventListener('click', function() {
-                downloadApplicantData(applicant);
-            });
-            
+
             actionButtons.appendChild(viewBtn);
             actionButtons.appendChild(editBtn);
             actionButtons.appendChild(downloadBtn);
             actionButtons.appendChild(deleteBtn);
-            actionCell.appendChild(actionButtons);
-            actionRow.appendChild(actionCell);
-            actionsTbody.appendChild(actionRow);
+            actionsCell.appendChild(actionButtons);
+            row.appendChild(actionsCell); // This adds as the 44th column
+                            
+            tbody.appendChild(row);
         });
         
-        // Sync row heights
-        setTimeout(() => {
-            syncRowHeights();
-        }, 100);
+        // Apply sticky styling after table loads
+        setTimeout(forceFixActionColumn, 200);
     }
+
+    function forceStickyActionColumn() {
+        console.log('Applying sticky action column...');
+        
+        const actionCells = document.querySelectorAll('#main-applicant-table td:last-child');
+        const headerActionCells = document.querySelectorAll('#main-applicant-table th:last-child');
+        
+        // Apply sticky styles manually
+        actionCells.forEach(cell => {
+            cell.style.position = 'sticky';
+            cell.style.right = '0';
+            cell.style.background = 'white';
+            cell.style.zIndex = '100';
+        });
+        
+        headerActionCells.forEach(cell => {
+            cell.style.position = 'sticky';
+            cell.style.right = '0';
+            cell.style.zIndex = '101';
+        });
+        
+        console.log('Sticky action column applied to', actionCells.length, 'cells');
+    }
+
+    function testStickyBehavior() {
+        console.log('=== TESTING STICKY ACTION COLUMN ===');
+        
+        const actionCells = document.querySelectorAll('#main-applicant-table td:last-child');
+        const headerActionCells = document.querySelectorAll('#main-applicant-table th:last-child');
+        
+        console.log(`Action cells: ${actionCells.length}, Header action cells: ${headerActionCells.length}`);
+        
+        actionCells.forEach((cell, index) => {
+            const style = window.getComputedStyle(cell);
+            console.log(`Action cell ${index}:`, {
+                position: style.position,
+                right: style.right,
+                zIndex: style.zIndex,
+                background: style.backgroundColor
+            });
+        });
+        
+        // Test scrolling
+        const tableContainer = document.querySelector('.table-container');
+        if (tableContainer) {
+            console.log('Testing scroll behavior...');
+            tableContainer.scrollLeft = 200;
+            setTimeout(() => {
+                console.log('Scrolled - action cells should stay fixed on right');
+            }, 500);
+        }
+    }
+
+    // Call this after table loads to test
+    setTimeout(testStickyBehavior, 1000);
 
     function saveMainApplicants(applicants) {
         try {
@@ -4325,6 +4350,49 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function fixActionColumnSticky() {
+        console.log('Fixing action column sticky behavior...');
+        
+        const table = document.getElementById('main-applicant-table');
+        if (!table) return;
+        
+        // Remove any conflicting styles first
+        const allCells = table.querySelectorAll('th, td');
+        allCells.forEach(cell => {
+            cell.style.position = '';
+            cell.style.transform = '';
+        });
+        
+        // Apply sticky styles specifically to action column
+        const actionHeaders = table.querySelectorAll('thead th:last-child');
+        const actionCells = table.querySelectorAll('tbody td:last-child');
+        
+        // Header cells
+        actionHeaders.forEach((header, index) => {
+            header.style.position = 'sticky';
+            header.style.right = '0';
+            header.style.zIndex = index === 0 ? '103' : '102';
+            header.style.background = index === 0 ? 
+                'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#5d6d7e';
+            header.style.borderLeft = '3px solid rgba(255,255,255,0.3)';
+        });
+        
+        // Body cells
+        actionCells.forEach(cell => {
+            cell.style.position = 'sticky';
+            cell.style.right = '0';
+            cell.style.background = 'white';
+            cell.style.zIndex = '100';
+            cell.style.borderLeft = '3px solid #e0e0e0';
+            cell.style.boxShadow = '-3px 0 10px rgba(0,0,0,0.1)';
+        });
+        
+        console.log(`Fixed ${actionHeaders.length} header cells and ${actionCells.length} body cells`);
+    }
+
+    // Call this after your table loads
+    setTimeout(fixActionColumnSticky, 100);
+
     function syncRowHeights() {
         const mainRows = document.querySelectorAll('.applicant-table tbody tr');
         const actionRows = document.querySelectorAll('.actions-table tbody tr');
@@ -4348,6 +4416,44 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
+
+    function debugActionColumn() {
+        console.log('=== DEBUG ACTION COLUMN ===');
+        
+        const table = document.getElementById('main-applicant-table');
+        if (!table) {
+            console.log('Table not found');
+            return;
+        }
+        
+        const lastHeader = table.querySelector('thead th:last-child');
+        const lastCell = table.querySelector('tbody td:last-child');
+        
+        console.log('Last header:', lastHeader);
+        console.log('Last cell:', lastCell);
+        
+        if (lastHeader) {
+            const style = window.getComputedStyle(lastHeader);
+            console.log('Header styles:', {
+                position: style.position,
+                right: style.right,
+                zIndex: style.zIndex
+            });
+        }
+        
+        if (lastCell) {
+            const style = window.getComputedStyle(lastCell);
+            console.log('Cell styles:', {
+                position: style.position,
+                right: style.right,
+                zIndex: style.zIndex
+            });
+        }
+    }
+    
+
+    // Call this to debug
+    setTimeout(debugActionColumn, 500);
 
     // Call this after your table loads
     setTimeout(initializeScrollSync, 150);

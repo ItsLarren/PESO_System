@@ -349,7 +349,7 @@
                 </div>
                 
                 <div class="table-container-wrapper">
-                    <div class="table-scroll-container">
+                    <div class="table-container">
                         <table class="applicant-table" id="main-applicant-table">
                             <thead>
                                 <tr>
@@ -390,13 +390,13 @@
                                     <th>TERTIARY</th>
                                     <th>GRADUATE STUDIES</th>
                                     <th>TECHNICAL/VOCATIONAL AND OTHER TRAINING</th>
-                                    <th>ELIGIBILITY</th>
+                                    <th>ELIGIBILITY</th> 
                                     <th>WORK EXPERIENCE</th>
                                     <th>OTHER SKILLS</th>
                                     <th>PROGRAM CATEGORY</th>
                                     <th>SPECIFIC PROGRAM</th>
                                     <th>PROGRAM STATUS</th>
-                                    <!-- REMOVE ACTIONS HEADER FROM MAIN TABLE -->
+                                    <th>ACTIONS</th> <!-- ADD THIS NEW COLUMN -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -404,23 +404,11 @@
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- FIXED ACTION COLUMN -->
-                    <div class="fixed-actions-column">
-                        <table class="actions-table">
-                            <thead>
-                                <tr>
-                                    <th class="actions-header">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="actions-tbody">
-                                <!-- Action buttons will be loaded here -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
                 
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
+            </div> <!-- Close table-scroll-container -->
+                
+                <!-- Action buttons at the bottom of the table -->
+                <div class="table-actions" style="display: flex; gap: 10px; margin-top: 15px;">
                     <button id="clear-all-applicants-btn" class="clear-all-btn">
                         <i class="fas fa-trash"></i> Clear All Applicants
                     </button>
