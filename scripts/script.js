@@ -60,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
         viewModal: document.getElementById('viewModal'),
         closeView: document.querySelector('.close-view'),
         exportApplicantsBtn: document.getElementById('export-applicants-btn')
-        
     };
 
     // Global variables
@@ -69,6 +68,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let capturedPhoto = null;
     let activeFilters = {};
     let hasScrolledToHighlight = false;
+    let eventListenersInitialized = false;
 
     // Enhanced Sync Manager
     class SyncManager {
@@ -281,14 +281,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            initializeZeroUnemploymentNavigation();
-
-            initializeFileUploads();
-            
-            // Restore backup if needed
-            if (syncManager.restoreBackupIfNeeded()) {
-                console.log('✅ Data restored from backup');
+            // Prevent duplicate initialization
+            if (eventListenersInitialized) {
+                console.log('⚠️ Event listeners already initialized, skipping...');
+                return;
             }
+
+            initializeZeroUnemploymentNavigation();
 
             // Initialize all components with better error handling
             const initSteps = [
@@ -1456,6 +1455,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
                 
+                // Process data 
                 const processedData = smartImportData(jsonData);
                 const validationResults = validateImportedDataDuplicates(processedData);
                 
@@ -1487,6 +1487,7 @@ document.addEventListener('DOMContentLoaded', function () {
         reader.readAsArrayBuffer(file);
     }
 
+    //Import
     function proceedWithImportToImportedData(newApplicants) {
         try {
             const existingImportedData = JSON.parse(localStorage.getItem('importedData')) || [];
@@ -1903,7 +1904,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 45; // Increase by 1 for the new actions column
+            cell.colSpan = 45; 
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
@@ -1914,7 +1915,6 @@ document.addEventListener('DOMContentLoaded', function () {
         applicants.forEach((applicant, index) => {
             const row = document.createElement('tr');
 
-            // Data columns (first 43 columns - your existing data)
             const columns = [
                 applicant['SRS ID'] || `APP-${index + 1}`,
                 applicant['LAST NAME'] || applicant['SURNAME'] || 'N/A',
@@ -1958,10 +1958,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicant['OTHER SKILLS'] || applicant['SKILLS'] || 'N/A',
                 applicant['PROGRAM CATEGORY'] || 'N/A',
                 applicant['SPECIFIC PROGRAM'] || 'N/A',
-                applicant['PROGRAM STATUS'] || 'N/A'  // This is column 43
+                applicant['PROGRAM STATUS'] || 'N/A'  
             ];
             
-            // Add data cells with compact styling
             columns.forEach((value, colIndex) => {
                 const cell = document.createElement('td');
                 cell.textContent = value;
@@ -1969,7 +1968,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 row.appendChild(cell);
             });
             
-            // NOW ADD THE ACTIONS COLUMN AS A NEW COLUMN (column 44)
             const actionsCell = document.createElement('td');
             actionsCell.className = 'actions-cell';
 
