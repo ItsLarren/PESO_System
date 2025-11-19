@@ -541,12 +541,94 @@
         <div class="page-content" id="employers-content">
             <div class="card">
                 <h2>Employers Management</h2>
-                <p>Manage registered employers and companies</p>
-                <!-- Employers content will go here -->
-                <div class="coming-soon">
-                    <i class="fas fa-tools fa-3x"></i>
-                    <h3>Coming Soon</h3>
-                    <p>Employers management feature is under development</p>
+                
+                <div class="search-container">
+                    <input type="text" id="employer-search-input" class="search-input" placeholder="Search employers...">
+                    <button class="search-btn" id="employer-search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button class="clear-search-btn" id="employer-clear-search-btn">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+
+                <div class="action-buttons-container">
+                    <button class="action-btn" id="employer-advanced-filters-btn" style="background: #9c27b0;">
+                        <i class="fas fa-filter"></i> Advanced Filters
+                    </button>
+                    <button class="add-btn" id="add-employer-btn">
+                        <i class="fas fa-building"></i> Add Employer
+                    </button>
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All Employers</button>
+                    <button class="filter-tab" data-filter="local">Local</button>
+                    <button class="filter-tab" data-filter="overseas">Overseas</button>
+                    <button class="filter-tab" data-filter="active">Active</button>
+                </div>
+
+                <div class="table-container-wrapper">
+                    <div class="table-container">
+                        <table class="applicant-table" id="employers-table">
+                            <thead>
+                                <tr>
+                                    <th>EMPLOYER ID</th>
+                                    <th>COMPANY NAME</th>
+                                    <th>COMPANY TYPE</th>
+                                    <th>INDUSTRY</th>
+                                    <th>CONTACT PERSON</th>
+                                    <th>CONTACT POSITION</th>
+                                    <th>EMAIL</th>
+                                    <th>PHONE</th>
+                                    <th>ADDRESS</th>
+                                    <th>BARANGAY</th>
+                                    <th>CITY/MUNICIPALITY</th>
+                                    <th>PROVINCE</th>
+                                    <th>BUSINESS PERMIT NO.</th>
+                                    <th>BUSINESS PERMIT EXPIRY</th>
+                                    <th>NUMBER OF EMPLOYEES</th>
+                                    <th>YEAR ESTABLISHED</th>
+                                    <th>WEBSITE</th>
+                                    <th>STATUS</th>
+                                    <th>REGISTRATION DATE</th>
+                                    <th>LAST ACTIVE</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Employers data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="table-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="clear-all-employers-btn" class="clear-all-btn">
+                        <i class="fas fa-trash"></i> Clear All Employers
+                    </button>
+                    <button id="export-employers-btn" class="export-applicants-btn">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Upload Employer File</h2>
+                <div class="import-section">
+                    <div class="file-input-container">
+                        <input type="text" id="employer-upload-file-name" class="file-input" placeholder="No file chosen" readonly>
+                        <button class="upload-btn" id="employer-upload-browse-btn">
+                            <i class="fas fa-folder-open"></i> Browse
+                        </button>
+                        <input type="file" id="employer-upload-file-input" accept=".xlsx, .xls" style="display: none;">
+                    </div>
+                    
+                    <button class="add-btn" id="employer-add-btn" disabled>
+                        <i class="fas fa-upload"></i> Upload File
+                    </button>
+
+                    <div id="employer-upload-notification" class="notification"></div>
                 </div>
             </div>
         </div>
@@ -554,13 +636,94 @@
         <!-- Vacancies Page Content -->
         <div class="page-content" id="vacancies-content">
             <div class="card">
-                <h2>Job Vacancies</h2>
-                <p>Manage job postings and vacancies</p>
-                <!-- Vacancies content will go here -->
-                <div class="coming-soon">
-                    <i class="fas fa-tools fa-3x"></i>
-                    <h3>Coming Soon</h3>
-                    <p>Job vacancies management feature is under development</p>
+                <h2>Job Vacancies Management</h2>
+                
+                <div class="search-container">
+                    <input type="text" id="vacancy-search-input" class="search-input" placeholder="Search vacancies...">
+                    <button class="search-btn" id="vacancy-search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button class="clear-search-btn" id="vacancy-clear-search-btn">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+
+                <div class="action-buttons-container">
+                    <button class="action-btn" id="vacancy-advanced-filters-btn" style="background: #9c27b0;">
+                        <i class="fas fa-filter"></i> Advanced Filters
+                    </button>
+                    <button class="add-btn" id="add-vacancy-btn">
+                        <i class="fas fa-briefcase"></i> Add Vacancy
+                    </button>
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All Vacancies</button>
+                    <button class="filter-tab" data-filter="active">Active</button>
+                    <button class="filter-tab" data-filter="filled">Filled</button>
+                    <button class="filter-tab" data-filter="expired">Expired</button>
+                </div>
+
+                <div class="table-container-wrapper">
+                    <div class="table-container">
+                        <table class="applicant-table" id="vacancies-table">
+                            <thead>
+                                <tr>
+                                    <th>VACANCY ID</th>
+                                    <th>JOB TITLE</th>
+                                    <th>EMPLOYER</th>
+                                    <th>INDUSTRY</th>
+                                    <th>JOB TYPE</th>
+                                    <th>SALARY RANGE</th>
+                                    <th>WORK LOCATION</th>
+                                    <th>EDUCATION REQUIREMENT</th>
+                                    <th>EXPERIENCE REQUIREMENT</th>
+                                    <th>SKILLS REQUIRED</th>
+                                    <th>JOB DESCRIPTION</th>
+                                    <th>RESPONSIBILITIES</th>
+                                    <th>BENEFITS</th>
+                                    <th>VACANCY COUNT</th>
+                                    <th>APPLICATION DEADLINE</th>
+                                    <th>DATE POSTED</th>
+                                    <th>STATUS</th>
+                                    <th>APPLICATION COUNT</th>
+                                    <th>VIEWS</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Vacancies data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="table-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="clear-all-vacancies-btn" class="clear-all-btn">
+                        <i class="fas fa-trash"></i> Clear All Vacancies
+                    </button>
+                    <button id="export-vacancies-btn" class="export-applicants-btn">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Upload Vacancies File</h2>
+                <div class="import-section">
+                    <div class="file-input-container">
+                        <input type="text" id="vacancy-upload-file-name" class="file-input" placeholder="No file chosen" readonly>
+                        <button class="upload-btn" id="vacancy-upload-browse-btn">
+                            <i class="fas fa-folder-open"></i> Browse
+                        </button>
+                        <input type="file" id="vacancy-upload-file-input" accept=".xlsx, .xls" style="display: none;">
+                    </div>
+                    
+                    <button class="add-btn" id="vacancy-add-btn" disabled>
+                        <i class="fas fa-upload"></i> Upload File
+                    </button>
+
+                    <div id="vacancy-upload-notification" class="notification"></div>
                 </div>
             </div>
         </div>
@@ -569,12 +732,94 @@
         <div class="page-content" id="programs-content">
             <div class="card">
                 <h2>Programs Management</h2>
-                <p>Manage employment programs and services</p>
-                <!-- Programs content will go here -->
-                <div class="coming-soon">
-                    <i class="fas fa-tools fa-3x"></i>
-                    <h3>Coming Soon</h3>
-                    <p>Programs management feature is under development</p>
+                
+                <div class="search-container">
+                    <input type="text" id="program-search-input" class="search-input" placeholder="Search programs...">
+                    <button class="search-btn" id="program-search-btn">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                    <button class="clear-search-btn" id="program-clear-search-btn">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+
+                <div class="action-buttons-container">
+                    <button class="action-btn" id="program-advanced-filters-btn" style="background: #9c27b0;">
+                        <i class="fas fa-filter"></i> Advanced Filters
+                    </button>
+                    <button class="add-btn" id="add-program-btn">
+                        <i class="fas fa-project-diagram"></i> Add Program
+                    </button>
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All Programs</button>
+                    <button class="filter-tab" data-filter="active">Active</button>
+                    <button class="filter-tab" data-filter="completed">Completed</button>
+                    <button class="filter-tab" data-filter="upcoming">Upcoming</button>
+                </div>
+
+                <div class="table-container-wrapper">
+                    <div class="table-container">
+                        <table class="applicant-table" id="programs-table">
+                            <thead>
+                                <tr>
+                                    <th>PROGRAM ID</th>
+                                    <th>PROGRAM NAME</th>
+                                    <th>PROGRAM CATEGORY</th>
+                                    <th>PROGRAM TYPE</th>
+                                    <th>TARGET BENEFICIARIES</th>
+                                    <th>PROGRAM DESCRIPTION</th>
+                                    <th>OBJECTIVES</th>
+                                    <th>ELIGIBILITY CRITERIA</th>
+                                    <th>BENEFITS PROVIDED</th>
+                                    <th>DURATION</th>
+                                    <th>START DATE</th>
+                                    <th>END DATE</th>
+                                    <th>BUDGET ALLOCATED</th>
+                                    <th>BUDGET UTILIZED</th>
+                                    <th>PARTNER AGENCIES</th>
+                                    <th>PROGRAM COORDINATOR</th>
+                                    <th>CONTACT INFORMATION</th>
+                                    <th>STATUS</th>
+                                    <th>PARTICIPANT COUNT</th>
+                                    <th>SUCCESS RATE</th>
+                                    <th>ACTIONS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Programs data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="table-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button id="clear-all-programs-btn" class="clear-all-btn">
+                        <i class="fas fa-trash"></i> Clear All Programs
+                    </button>
+                    <button id="export-programs-btn" class="export-applicants-btn">
+                        <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Upload Programs File</h2>
+                <div class="import-section">
+                    <div class="file-input-container">
+                        <input type="text" id="program-upload-file-name" class="file-input" placeholder="No file chosen" readonly>
+                        <button class="upload-btn" id="program-upload-browse-btn">
+                            <i class="fas fa-folder-open"></i> Browse
+                        </button>
+                        <input type="file" id="program-upload-file-input" accept=".xlsx, .xls" style="display: none;">
+                    </div>
+                    
+                    <button class="add-btn" id="program-add-btn" disabled>
+                        <i class="fas fa-upload"></i> Upload File
+                    </button>
+
+                    <div id="program-upload-notification" class="notification"></div>
                 </div>
             </div>
         </div>
@@ -582,19 +827,154 @@
         <!-- Reports Page Content -->
         <div class="page-content" id="reports-content">
             <div class="card">
-                <h2>Reports & Statistics</h2>
+                <h2>Comprehensive Reports & Statistics</h2>
                 
                 <div class="report-controls">
-                    <button class="action-btn" id="generate-report-btn" style="background: #2196f3;">
-                        <i class="fas fa-chart-pie"></i> Generate Program Report
+                    <div class="report-period-selector">
+                        <label>Report Period:</label>
+                        <select id="report-period">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month" selected>This Month</option>
+                            <option value="quarter">This Quarter</option>
+                            <option value="year">This Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                        <div id="custom-date-range" style="display: none; margin-top: 10px;">
+                            <input type="date" id="start-date">
+                            <span>to</span>
+                            <input type="date" id="end-date">
+                        </div>
+                    </div>
+                    
+                    <div class="report-type-selector">
+                        <label>Report Type:</label>
+                        <select id="report-type">
+                            <option value="summary">Summary Report</option>
+                            <option value="applicants">Applicants Report</option>
+                            <option value="employers">Employers Report</option>
+                            <option value="vacancies">Vacancies Report</option>
+                            <option value="programs">Programs Report</option>
+                            <option value="comprehensive">Comprehensive Report</option>
+                        </select>
+                    </div>
+                    
+                    <button class="action-btn" id="generate-comprehensive-report-btn" style="background: #2196f3;">
+                        <i class="fas fa-chart-pie"></i> Generate Report
                     </button>
-                    <button class="action-btn" id="export-report-btn" style="background: #4caf50;">
+                    <button class="action-btn" id="export-comprehensive-report-btn" style="background: #4caf50;">
                         <i class="fas fa-file-excel"></i> Export to Excel
+                    </button>
+                    <button class="action-btn" id="export-pdf-report-btn" style="background: #f44336;">
+                        <i class="fas fa-file-pdf"></i> Export to PDF
                     </button>
                 </div>
                 
-                <div id="program-reports" class="reports-container" style="display: none;">
-                    <!-- Reports content -->
+                <div class="reports-dashboard">
+                    <div class="stats-overview">
+                        <h3>System Overview</h3>
+                        <div class="stats-grid">
+                            <div class="stat-card primary">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number" id="report-total-applicants">0</span>
+                                    <span class="stat-label">Total Applicants</span>
+                                </div>
+                            </div>
+                            <div class="stat-card success">
+                                <div class="stat-icon">
+                                    <i class="fas fa-building"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number" id="report-total-employers">0</span>
+                                    <span class="stat-label">Registered Employers</span>
+                                </div>
+                            </div>
+                            <div class="stat-card warning">
+                                <div class="stat-icon">
+                                    <i class="fas fa-briefcase"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number" id="report-active-vacancies">0</span>
+                                    <span class="stat-label">Active Vacancies</span>
+                                </div>
+                            </div>
+                            <div class="stat-card info">
+                                <div class="stat-icon">
+                                    <i class="fas fa-project-diagram"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-number" id="report-active-programs">0</span>
+                                    <span class="stat-label">Active Programs</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-container">
+                        <div class="chart-row">
+                            <div class="chart-card">
+                                <h4>Applicants by Program Category</h4>
+                                <div id="program-category-chart" class="chart-placeholder">
+                                    <!-- Chart will be rendered here -->
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h4>Employment Status Distribution</h4>
+                                <div id="employment-status-chart" class="chart-placeholder">
+                                    <!-- Chart will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-row">
+                            <div class="chart-card">
+                                <h4>Monthly Registration Trend</h4>
+                                <div id="registration-trend-chart" class="chart-placeholder">
+                                    <!-- Chart will be rendered here -->
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h4>Vacancies by Industry</h4>
+                                <div id="vacancies-industry-chart" class="chart-placeholder">
+                                    <!-- Chart will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="detailed-reports">
+                        <h3>Detailed Reports</h3>
+                        <div class="report-tabs">
+                            <button class="report-tab active" data-report="applicants">Applicants</button>
+                            <button class="report-tab" data-report="employers">Employers</button>
+                            <button class="report-tab" data-report="vacancies">Vacancies</button>
+                            <button class="report-tab" data-report="programs">Programs</button>
+                            <button class="report-tab" data-report="matches">Job Matches</button>
+                        </div>
+                        
+                        <div id="applicants-report" class="report-section active">
+                            <!-- Applicants report content -->
+                        </div>
+                        
+                        <div id="employers-report" class="report-section">
+                            <!-- Employers report content -->
+                        </div>
+                        
+                        <div id="vacancies-report" class="report-section">
+                            <!-- Vacancies report content -->
+                        </div>
+                        
+                        <div id="programs-report" class="report-section">
+                            <!-- Programs report content -->
+                        </div>
+                        
+                        <div id="matches-report" class="report-section">
+                            <!-- Job matches report content -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
