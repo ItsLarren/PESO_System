@@ -396,7 +396,7 @@
                                     <th>PROGRAM CATEGORY</th>
                                     <th>SPECIFIC PROGRAM</th>
                                     <th>PROGRAM STATUS</th>
-                                    <th>ACTIONS</th> <!-- ADD THIS NEW COLUMN -->
+                                    <th>ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1008,9 +1008,1063 @@
         </div>
     </div>
 
-    <!-- Include all your existing modals here -->
-    <!-- View Modal, Edit Modal, Camera Modal, Manual Modal -->
-    <!-- Make sure to copy all your modal HTML from your original file -->
+    <!-- MODALS SECTION - Added from another_old.html -->
+    
+    <!-- View Applicant Modal -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2>View Applicant Details</h2>
+                <span class="close-view">&times;</span>
+            </div>
+            
+            <div class="view-photo-section">
+                <div class="photo-preview-container">
+                    <img id="view-photo-preview" src="" alt="Applicant Photo" class="photo-preview">
+                    <div class="photo-placeholder" id="view-photo-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>No Photo</span>
+                    </div>
+                </div>
+            </div>
+                
+            <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+                <div class="form-grid">
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <h3>Personal Information</h3>
+                        <div class="view-field">
+                            <label>SRS ID:</label>
+                            <span id="view-srs-id">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Full Name:</label>
+                            <span id="view-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Last Name:</label>
+                            <span id="view-last-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>First Name:</label>
+                            <span id="view-first-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Middle Name:</label>
+                            <span id="view-middle-name">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Birth Date:</label>
+                            <span id="view-bdate">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Age:</label>
+                            <span id="view-age">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Sex:</label>
+                            <span id="view-sex">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Civil Status:</label>
+                            <span id="view-civil-status">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="form-section">
+                        <h3>Contact Information</h3>
+                        <div class="view-field">
+                            <label>Street Address:</label>
+                            <span id="view-street-address">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Barangay:</label>
+                            <span id="view-barangay">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>City/Municipality:</label>
+                            <span id="view-city-municipality">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Province:</label>
+                            <span id="view-province">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Region:</label>
+                            <span id="view-region">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Email:</label>
+                            <span id="view-email">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Telephone:</label>
+                            <span id="view-telephone">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Cellphone:</label>
+                            <span id="view-cellphone">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Employment & Education -->
+                    <div class="form-section">
+                        <h3>Employment & Education</h3>
+                        <div class="view-field">
+                            <label>Employment Status:</label>
+                            <span id="view-emp-status">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Employment Type:</label>
+                            <span id="view-emp-type">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Education Level:</label>
+                            <span id="view-educ-level">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Course:</label>
+                            <span id="view-course">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Skills:</label>
+                            <span id="view-skills">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Work Experience:</label>
+                            <span id="view-work-experience">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Preferred Position:</label>
+                            <span id="view-preferred-position">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Program Information -->
+                    <div class="form-section">
+                        <h3>Program Information</h3>
+                        <div class="view-field">
+                            <label>Program Category:</label>
+                            <span id="view-program-category">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Specific Program:</label>
+                            <span id="view-specific-program">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Program Status:</label>
+                            <span id="view-program-status">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Registration Date:</label>
+                            <span id="view-reg-date">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- Additional Information -->
+                    <div class="form-section">
+                        <h3>Additional Information</h3>
+                        <div class="view-field">
+                            <label>4Ps Member:</label>
+                            <span id="view-4ps">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>PWD:</label>
+                            <span id="view-pwd">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Disability:</label>
+                            <span id="view-disability">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>OFW:</label>
+                            <span id="view-ofw">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Country:</label>
+                            <span id="view-country">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Former OFW:</label>
+                            <span id="view-former-ofw">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Latest Country:</label>
+                            <span id="view-latest-country">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Remarks:</label>
+                            <span id="view-remarks">N/A</span>
+                        </div>
+                    </div>
+
+                    <!-- System Information -->
+                    <div class="form-section">
+                        <h3>System Information</h3>
+                        <div class="view-field">
+                            <label>Created By:</label>
+                            <span id="view-created-by">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Date Created:</label>
+                            <span id="view-date-created">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Last Modified By:</label>
+                            <span id="view-last-modified-by">N/A</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Date Last Modified:</label>
+                            <span id="view-date-last-modified">N/A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="download-pdf-btn" class="action-btn" style="background: #f44336;">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+                <button id="download-excel-btn" class="action-btn" style="background: #4caf50;">
+                    <i class="fas fa-file-excel"></i> Download Excel
+                </button>
+                <button id="edit-full-applicant-btn" class="action-btn" style="background: #ff9800;">
+                    <i class="fas fa-edit"></i> Edit Applicant (Full Form)
+                </button>
+                <button class="cancel-btn" onclick="document.getElementById('viewModal').style.display='none'">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Applicant Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Applicant</h2>
+                <span class="close">&times;</span>
+            </div>
+            
+            <div class="photo-section">
+                <div class="photo-preview-container">
+                    <img id="edit-photo-preview" src="" alt="Applicant Photo" class="photo-preview">
+                    <div class="photo-placeholder" id="photo-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>No Photo</span>
+                    </div>
+                </div>
+                <div class="photo-upload-controls">
+                    <input type="file" id="edit-photo-input" accept="image/*" style="display: none;">
+                    <button type="button" id="upload-photo-btn" class="upload-photo-btn">
+                        <i class="fas fa-camera"></i> Upload Photo
+                    </button>
+                    <button type="button" id="take-photo-btn" class="take-photo-btn">
+                        <i class="fas fa-camera-retro"></i> Take Photo
+                    </button>
+                    <button type="button" id="remove-photo-btn" class="remove-photo-btn" style="display: none;">
+                        <i class="fas fa-trash"></i> Remove Photo
+                    </button>
+                </div>
+            </div>
+            
+            <div class="date-info">
+                <p><strong>Date Created:</strong> <span id="edit-date-created"></span></p>
+                <p><strong>Last Modified:</strong> <span id="edit-date-last-modified"></span></p>
+            </div>
+            
+            <form id="editApplicantForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="edit-srs-id">SRS ID</label>
+                        <input type="text" id="edit-srs-id" name="edit-srs-id" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-last-name">LAST NAME</label>
+                        <input type="text" id="edit-last-name" name="edit-last-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-first-name">FIRST NAME</label>
+                        <input type="text" id="edit-first-name" name="edit-first-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-middle-name">MIDDLE NAME</label>
+                        <input type="text" id="edit-middle-name" name="edit-middle-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-name">NAME</label>
+                        <input type="text" id="edit-name" name="edit-name">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-bdate">BDATE</label>
+                        <input type="date" id="edit-bdate" name="edit-bdate" class="date-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-age">AGE</label>
+                        <input type="text" id="edit-age" name="edit-age">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-sex">SEX</label>
+                        <select id="edit-sex" name="edit-sex">
+                            <option value=""> Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-civil-status">CIVIL STATUS</label>
+                        <select id="edit-civil-status" name="edit-civil-status">
+                            <option value="">Select Status</option>
+                            <option value="Single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Divorced">Divorced</option>
+                            <option value="Widowed">Widowed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-street-address">STREET ADDRESS</label>
+                        <input type="text" id="edit-street-address" name="edit-street-address">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-barangay">BARANGAY</label>
+                        <input type="text" id="edit-barangay" name="edit-barangay">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-city-municipality">CITY/MUNICIPALITY</label>
+                        <input type="text" id="edit-city-municipality" name="edit-city-municipality">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-province">PROVINCE</label>
+                        <input type="text" id="edit-province" name="edit-province">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-region">REGION</label>
+                        <input type="text" id="edit-region" name="edit-region">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-email">EMAIL</label>
+                        <input type="text" id="edit-email" name="edit-email">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-telephone">TELEPHONE</label>
+                        <input type="text" id="edit-telephone" name="edit-telephone">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-cellphone">CELLPHONE</label>
+                        <input type="text" id="edit-cellphone" name="edit-cellphone">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-emp-status">EMPLOYMENT STATUS</label>
+                        <input type="text" id="edit-emp-status" name="edit-emp-status">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-emp-type">EMPLOYMENT TYPE</label>
+                        <input type="text" id="edit-emp-type" name="edit-emp-type">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-educ-level">EDUCATIONAL LEVEL</label>
+                        <input type="text" id="edit-educ-level" name="edit-educ-level">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-course">COURSE</label>
+                        <input type="text" id="edit-course" name="edit-course">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-4ps">4PS</label>
+                        <select id="edit-4ps" name="edit-4ps">
+                            <option value="">SELECT STATUS</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-pwd">PWD</label>
+                        <select id="edit-pwd" name="edit-pwd">
+                            <option value="">SELECT STATUS</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-disability">DISABILITY</label>
+                        <input type="text" id="edit-disability" name="edit-disability">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-preferred-position">PREFERRED POSITION</label>
+                        <input type="text" id="edit-preferred-position" name="edit-preferred-position">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-skills">SKILLS</label>
+                        <input type="text" id="edit-skills" name="edit-skills">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-work-experience">WORK EXPERIENCE</label>
+                        <input type="text" id="edit-work-experience" name="edit-work-experience">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-ofw">OFW</label>
+                        <select id="edit-ofw" name="edit-ofw">
+                            <option value="">SELECT STATUS</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-country">COUNTRY</label>
+                        <input type="text" id="edit-country" name="edit-country">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-former-ofw">FORMER OFW</label>
+                        <select id="edit-former-ofw" name="edit-former-ofw">
+                            <option value="">SELECT STATUS</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-latest-country">LATEST COUNTRY</label>
+                        <input type="text" id="edit-latest-country" name="edit-latest-country">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-reg-date">REGISTRATION DATE</label>
+                        <input type="date" id="edit-reg-date" name="edit-reg-date" class="date-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-remarks">REMARKS</label>
+                        <input type="text" id="edit-remarks" name="edit-remarks">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-created-by">CREATED BY</label>
+                        <input type="text" id="edit-created-by" name="edit-created-by" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-date-created">DATE CREATED</label>
+                        <input type="text" id="edit-date-created" name="edit-date-created" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-last-modified-by">LAST MODIFIED BY</label>
+                        <input type="text" id="edit-last-modified-by" name="edit-last-modified-by" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-date-last-modified">DATE LAST MODIFIED</label>
+                        <input type="text" id="edit-date-last-modified" name="edit-date-last-modified" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-program-category">PROGRAM CATEGORY</label>
+                        <select id="edit-program-category" name="edit-program-category">
+                            <option value="">Select Category</option>
+                            <option value="Livelihood">Livelihood Program</option>
+                            <option value="Employment">Employment Assistance</option>
+                            <option value="Education">Educational Assistance</option>
+                            <option value="Skills">Skills Training</option>
+                            <option value="OFW">OFW Reintegration</option>
+                            <option value="PWD">PWD Assistance</option>
+                            <option value="4Ps">4Ps Monitoring</option>
+                            <option value="Other">Other Programs</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" id="cancel-edit" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Take Photo</h2>
+                <span class="close-camera">&times;</span>
+            </div>
+            <div class="camera-container">
+                <video id="camera-video" autoplay playsinline></video>
+                <canvas id="camera-canvas" style="display: none;"></canvas>
+                <div class="camera-controls">
+                    <button id="capture-btn" class="capture-btn">
+                        <i class="fas fa-camera"></i> Capture
+                    </button>
+                    <button id="retake-btn" class="retake-btn" style="display: none;">
+                        <i class="fas fa-redo"></i> Retake
+                    </button>
+                    <button id="use-photo-btn" class="use-photo-btn" style="display: none;">
+                        <i class="fas fa-check"></i> Use Photo
+                    </button>
+                </div>
+                <div id="camera-error" class="notification error" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Add Applicant Modal -->
+    <div id="manualModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Applicant</h2>
+                <span class="close-manual">&times;</span>
+            </div>
+            
+            <div class="manual-photo-section">
+                <div class="photo-preview-container">
+                    <img id="manual-photo-preview" src="" alt="Applicant Photo" class="photo-preview">
+                    <div class="photo-placeholder" id="manual-photo-placeholder">
+                        <i class="fas fa-user"></i>
+                        <span>No Photo</span>
+                    </div>
+                </div>
+                <div class="photo-upload-controls">
+                    <input type="file" id="manual-photo-input" accept="image/*" style="display: none;">
+                    <button type="button" id="manual-upload-photo-btn" class="upload-photo-btn">
+                        <i class="fas fa-camera"></i> Upload Photo
+                    </button>
+                    <button type="button" id="manual-take-photo-btn" class="take-photo-btn">
+                        <i class="fas fa-camera-retro"></i> Take Photo
+                    </button>
+                    <button type="button" id="manual-remove-photo-btn" class="remove-photo-btn" style="display: none;">
+                        <i class="fas fa-trash"></i> Remove Photo
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Section Navigation Dropdown -->
+            <div class="section-navigation">
+                <label for="section-selector">Jump to Section:</label>
+                <select id="section-selector" class="section-selector">
+                    <option value="section1">I. Personal Information</option>
+                    <option value="section2">II. Job Preference</option>
+                    <option value="section3">III. Language/Dialect Proficiency</option>
+                    <option value="section4">IV. Educational Background</option>
+                    <option value="section5">V. Technical/Vocational Training</option>
+                    <option value="section6">VI. Eligibility/Professional License</option>
+                    <option value="section7">VII. Work Experience</option>
+                    <option value="section8">VIII. Other Skills</option>
+                </select>
+            </div>
+            
+            <form id="manualApplicantForm">
+                <div class="manual-form-grid">
+                    <!-- Section 1: Personal Information -->
+                    <div id="section1" class="form-section">
+                        <h3>I. Personal Information</h3>
+                        
+                        <div class="form-group required">
+                            <label for="manual-surname" class="required-field">Surname</label>
+                            <input type="text" id="manual-surname" name="manual-surname" required>
+                        </div>
+                        
+                        <div class="form-group required">
+                            <label for="manual-first-name" class="required-field">First Name</label>
+                            <input type="text" id="manual-first-name" name="manual-first-name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-middle-name">Middle Name</label>
+                            <input type="text" id="manual-middle-name" name="manual-middle-name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-suffix">Suffix</label>
+                            <select id="manual-suffix" name="manual-suffix">
+                                <option value="">Select Suffix</option>
+                                <option value="Jr.">Jr.</option>
+                                <option value="Sr.">Sr.</option>
+                                <option value="II">II</option>
+                                <option value="III">III</option>
+                                <option value="IV">IV</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group required">
+                            <label for="manual-bdate" class="required-field">Date of Birth</label>
+                            <input type="date" id="manual-bdate" name="manual-bdate" class="date-input" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-place-birth">Place of Birth</label>
+                            <input type="text" id="manual-place-birth" name="manual-place-birth">
+                        </div>
+
+                        <div class="form-section" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+                            <h4 style="color: #1e88e5; margin-bottom: 15px;">Present Address</h4>
+                            
+                            <div class="form-group">
+                                <label for="manual-house-street">House No./Street/Village</label>
+                                <input type="text" id="manual-house-street" name="manual-house-street" placeholder="House No., Street, Village">
+                            </div>
+                            
+                            <div class="form-group required">
+                                <label for="manual-barangay" class="required-field">Barangay</label>
+                                <input type="text" id="manual-barangay" name="manual-barangay" required>
+                            </div>
+                            
+                            <div class="form-group required">
+                                <label for="manual-city-municipality" class="required-field">Municipality/City</label>
+                                <input type="text" id="manual-city-municipality" name="manual-city-municipality" required>
+                            </div>
+                            
+                            <div class="form-group required">
+                                <label for="manual-province" class="required-field">Province</label>
+                                <input type="text" id="manual-province" name="manual-province" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group required">
+                            <label for="manual-sex" class="required-field">Sex</label>
+                            <select id="manual-sex" name="manual-sex" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-civil-status">Civil Status</label>
+                            <select id="manual-civil-status" name="manual-civil-status">
+                                <option value="">Select Status</option>
+                                <option value="Single">Single</option>
+                                <option value="Married">Married</option>
+                                <option value="Widowed">Widowed</option>
+                                <option value="Separated">Separated</option>
+                                <option value="Live In">Live In</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-tin">TIN</label>
+                            <input type="text" id="manual-tin" name="manual-tin">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-gsis-sss">GSIS/SSS No.</label>
+                            <input type="text" id="manual-gsis-sss" name="manual-gsis-sss">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-pagibig">PAGIBIG No.</label>
+                            <input type="text" id="manual-pagibig" name="manual-pagibig">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-philhealth">Philhealth No.</label>
+                            <input type="text" id="manual-philhealth" name="manual-philhealth">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-height">Height (cm)</label>
+                            <input type="number" id="manual-height" name="manual-height" min="100" max="250">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-email">Email Address</label>
+                            <input type="email" id="manual-email" name="manual-email">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-landline">Landline Number</label>
+                            <input type="text" id="manual-landline" name="manual-landline">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-cellphone">Cellphone Number</label>
+                            <input type="text" id="manual-cellphone" name="manual-cellphone">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Disability</label>
+                            <div class="checkbox-group">
+                                <div><input type="checkbox" id="manual-disability-visual" name="manual-disability" value="Visual"> <label for="manual-disability-visual">Visual</label></div>
+                                <div><input type="checkbox" id="manual-disability-hearing" name="manual-disability" value="Hearing"> <label for="manual-disability-hearing">Hearing</label></div>
+                                <div><input type="checkbox" id="manual-disability-speech" name="manual-disability" value="Speech"> <label for="manual-disability-speech">Speech</label></div>
+                                <div><input type="checkbox" id="manual-disability-physical" name="manual-disability" value="Physical"> <label for="manual-disability-physical">Physical</label></div>
+                                <div><input type="checkbox" id="manual-disability-others" name="manual-disability" value="Others"> <label for="manual-disability-others">Others</label></div>
+                            </div>
+                            <input type="text" id="manual-disability-specify" name="manual-disability-specify" placeholder="Specify disability" style="margin-top: 5px; display: none;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-emp-status">Employment Status/Type</label>
+                            <select id="manual-emp-status" name="manual-emp-status">
+                                <option value="">Select Status</option>
+                                <option value="Employed - Wage Employed">Employed - Wage Employed</option>
+                                <option value="Employed - Self Employed">Employed - Self Employed</option>
+                                <option value="Unemployed - New Entrant/Fresh Graduate">Unemployed - New Entrant/Fresh Graduate</option>
+                                <option value="Unemployed - Finished Contract">Unemployed - Finished Contract</option>
+                                <option value="Unemployed - Resigned">Unemployed - Resigned</option>
+                                <option value="Unemployed - Retired">Unemployed - Retired</option>
+                                <option value="Unemployed - Terminated/Laidoff (local)">Unemployed - Terminated/Laidoff (local)</option>
+                                <option value="Unemployed - Terminated/Laidoff (abroad)">Unemployed - Terminated/Laidoff (abroad)</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <input type="text" id="manual-emp-status-specify" name="manual-emp-status-specify" placeholder="Specify employment status" style="margin-top: 5px; display: none;">
+                            <input type="text" id="manual-emp-status-country" name="manual-emp-status-country" placeholder="Specify country" style="margin-top: 5px; display: none;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Are you actively looking for work?</label>
+                            <div class="radio-group">
+                                <input type="radio" id="manual-looking-work-yes" name="manual-looking-work" value="Yes"> <label for="manual-looking-work-yes">Yes</label>
+                                <input type="radio" id="manual-looking-work-no" name="manual-looking-work" value="No"> <label for="manual-looking-work-no">No</label>
+                            </div>
+                            <input type="text" id="manual-looking-work-duration" name="manual-looking-work-duration" placeholder="How long have you been looking for work?" style="margin-top: 5px; display: none;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Willing to work immediately?</label>
+                            <div class="radio-group">
+                                <input type="radio" id="manual-work-immediately-yes" name="manual-work-immediately" value="Yes"> <label for="manual-work-immediately-yes">Yes</label>
+                                <input type="radio" id="manual-work-immediately-no" name="manual-work-immediately" value="No"> <label for="manual-work-immediately-no">No</label>
+                            </div>
+                            <input type="text" id="manual-work-immediately-when" name="manual-work-immediately-when" placeholder="If no, when?" style="margin-top: 5px; display: none;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Are you a 4Ps beneficiary?</label>
+                            <div class="radio-group">
+                                <input type="radio" id="manual-4ps-yes" name="manual-4ps" value="Yes"> <label for="manual-4ps-yes">Yes</label>
+                                <input type="radio" id="manual-4ps-no" name="manual-4ps" value="No"> <label for="manual-4ps-no">No</label>
+                            </div>
+                            <input type="text" id="manual-4ps-id" name="manual-4ps-id" placeholder="If yes, household ID no." style="margin-top: 5px; display: none;">
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Job Preference -->
+                    <div id="section2" class="form-section">
+                        <h3>II. Job Preference</h3>
+                        
+                        <div class="form-group">
+                            <label>Preferred Occupation</label>
+                            <input type="text" id="manual-pref-occupation1" name="manual-pref-occupation1" placeholder="1">
+                            <input type="text" id="manual-pref-occupation2" name="manual-pref-occupation2" placeholder="2" style="margin-top: 5px;">
+                            <input type="text" id="manual-pref-occupation3" name="manual-pref-occupation3" placeholder="3" style="margin-top: 5px;">
+                            <input type="text" id="manual-pref-occupation4" name="manual-pref-occupation4" placeholder="4" style="margin-top: 5px;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Preferred Work Location</label>
+                            <div class="location-group">
+                                <div class="location-column">
+                                    <label><input type="radio" name="manual-work-location" value="Local"> Local</label>
+                                    <input type="text" id="manual-work-location-local1" name="manual-work-location-local1" placeholder="Specify city/municipality 1" style="margin-top: 5px; display: none;">
+                                    <input type="text" id="manual-work-location-local2" name="manual-work-location-local2" placeholder="Specify city/municipality 2" style="margin-top: 5px; display: none;">
+                                    <input type="text" id="manual-work-location-local3" name="manual-work-location-local3" placeholder="Specify city/municipality 3" style="margin-top: 5px; display: none;">
+                                </div>
+                                <div class="location-column">
+                                    <label><input type="radio" name="manual-work-location" value="Overseas"> Overseas</label>
+                                    <input type="text" id="manual-work-location-overseas1" name="manual-work-location-overseas1" placeholder="Specify country 1" style="margin-top: 5px; display: none;">
+                                    <input type="text" id="manual-work-location-overseas2" name="manual-work-location-overseas2" placeholder="Specify country 2" style="margin-top: 5px; display: none;">
+                                    <input type="text" id="manual-work-location-overseas3" name="manual-work-location-overseas3" placeholder="Specify country 3" style="margin-top: 5px; display: none;">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-expected-salary">Expected Salary Range</label>
+                            <input type="text" id="manual-expected-salary" name="manual-expected-salary">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-passport">Passport No.</label>
+                            <input type="text" id="manual-passport" name="manual-passport">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="manual-passport-expiry">Passport Expiry Date</label>
+                            <input type="date" id="manual-passport-expiry" name="manual-passport-expiry" class="date-input">
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Language/Dialect Proficiency -->
+                    <div id="section3" class="form-section">
+                        <h3>III. Language/Dialect Proficiency</h3>
+                        
+                        <div class="table-container-scroll">
+                            <div class="language-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Language</th>
+                                            <th>Read</th>
+                                            <th>Write</th>
+                                            <th>Speak</th>
+                                            <th>Understand</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>English</td>
+                                            <td><input type="checkbox" id="manual-lang-english-read" name="manual-lang-english-read"></td>
+                                            <td><input type="checkbox" id="manual-lang-english-write" name="manual-lang-english-write"></td>
+                                            <td><input type="checkbox" id="manual-lang-english-speak" name="manual-lang-english-speak"></td>
+                                            <td><input type="checkbox" id="manual-lang-english-understand" name="manual-lang-english-understand"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Filipino</td>
+                                            <td><input type="checkbox" id="manual-lang-filipino-read" name="manual-lang-filipino-read"></td>
+                                            <td><input type="checkbox" id="manual-lang-filipino-write" name="manual-lang-filipino-write"></td>
+                                            <td><input type="checkbox" id="manual-lang-filipino-speak" name="manual-lang-filipino-speak"></td>
+                                            <td><input type="checkbox" id="manual-lang-filipino-understand" name="manual-lang-filipino-understand"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <input type="text" id="manual-lang-other-name" name="manual-lang-other-name" placeholder="Other language">
+                                            </td>
+                                            <td><input type="checkbox" id="manual-lang-other-read" name="manual-lang-other-read"></td>
+                                            <td><input type="checkbox" id="manual-lang-other-write" name="manual-lang-other-write"></td>
+                                            <td><input type="checkbox" id="manual-lang-other-speak" name="manual-lang-other-speak"></td>
+                                            <td><input type="checkbox" id="manual-lang-other-understand" name="manual-lang-other-understand"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Educational Background -->
+                    <div id="section4" class="form-section">
+                        <h3>IV. Educational Background</h3>
+                        
+                        <div class="table-container-scroll">
+                            <div class="education-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Level</th>
+                                            <th>School</th>
+                                            <th>Course</th>
+                                            <th>Year Graduated</th>
+                                            <th>If Undergraduate</th>
+                                            <th>Awards Received</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>Elementary</td>
+                                            <td><input type="text" id="manual-edu-elem-school" name="manual-edu-elem-school"></td>
+                                            <td><input type="text" id="manual-edu-elem-course" name="manual-edu-elem-course"></td>
+                                            <td><input type="text" id="manual-edu-elem-year" name="manual-edu-elem-year"></td>
+                                            <td>
+                                                <input type="text" id="manual-edu-elem-level" name="manual-edu-elem-level" placeholder="What level?">
+                                                <input type="text" id="manual-edu-elem-last-year" name="manual-edu-elem-last-year" placeholder="Year last attended" style="margin-top: 5px;">
+                                            </td>
+                                            <td><input type="text" id="manual-edu-elem-awards" name="manual-edu-elem-awards"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Secondary</td>
+                                            <td><input type="text" id="manual-edu-secondary-school" name="manual-edu-secondary-school"></td>
+                                            <td><input type="text" id="manual-edu-secondary-course" name="manual-edu-secondary-course"></td>
+                                            <td><input type="text" id="manual-edu-secondary-year" name="manual-edu-secondary-year"></td>
+                                            <td>
+                                                <input type="text" id="manual-edu-secondary-level" name="manual-edu-secondary-level" placeholder="What level?">
+                                                <input type="text" id="manual-edu-secondary-last-year" name="manual-edu-secondary-last-year" placeholder="Year last attended" style="margin-top: 5px;">
+                                            </td>
+                                            <td><input type="text" id="manual-edu-secondary-awards" name="manual-edu-secondary-awards"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Tertiary</td>
+                                            <td><input type="text" id="manual-edu-tertiary-school" name="manual-edu-tertiary-school"></td>
+                                            <td><input type="text" id="manual-edu-tertiary-course" name="manual-edu-tertiary-course"></td>
+                                            <td><input type="text" id="manual-edu-tertiary-year" name="manual-edu-tertiary-year"></td>
+                                            <td>
+                                                <input type="text" id="manual-edu-tertiary-level" name="manual-edu-tertiary-level" placeholder="What level?">
+                                                <input type="text" id="manual-edu-tertiary-last-year" name="manual-edu-tertiary-last-year" placeholder="Year last attended" style="margin-top: 5px;">
+                                            </td>
+                                            <td><input type="text" id="manual-edu-tertiary-awards" name="manual-edu-tertiary-awards"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Graduate Studies</td>
+                                            <td><input type="text" id="manual-edu-graduate-school" name="manual-edu-graduate-school"></td>
+                                            <td><input type="text" id="manual-edu-graduate-course" name="manual-edu-graduate-course"></td>
+                                            <td><input type="text" id="manual-edu-graduate-year" name="manual-edu-graduate-year"></td>
+                                            <td>
+                                                <input type="text" id="manual-edu-graduate-level" name="manual-edu-graduate-level" placeholder="What level?">
+                                                <input type="text" id="manual-edu-graduate-last-year" name="manual-edu-graduate-last-year" placeholder="Year last attended" style="margin-top: 5px;">
+                                            </td>
+                                            <td><input type="text" id="manual-edu-graduate-awards" name="manual-edu-graduate-awards"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Technical/Vocational Training -->
+                    <div id="section5" class="form-section">
+                        <h3>V. Technical/Vocational and Other Training</h3>
+                        
+                        <div class="table-container-scroll">
+                            <div class="training-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Training/Vocational Course</th>
+                                            <th>Duration</th>
+                                            <th>Training Institution</th>
+                                            <th>Certificates Received (NC 1-4 etc)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="training-entries">
+                                        <tr>
+                                            <td><input type="text" id="manual-training-course1" name="manual-training-course1"></td>
+                                            <td><input type="text" id="manual-training-duration1" name="manual-training-duration1"></td>
+                                            <td><input type="text" id="manual-training-institution1" name="manual-training-institution1"></td>
+                                            <td><input type="text" id="manual-training-certificate1" name="manual-training-certificate1"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <button type="button" id="add-training-btn" class="add-entry-btn">Add Training Entry</button>
+                    </div>
+
+                    <!-- Section 6: Eligibility/Professional License -->
+                    <div id="section6" class="form-section">
+                        <h3>VI. Eligibility/Professional License</h3>
+                        
+                        <div class="table-container-scroll">
+                            <div class="eligibility-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Eligibility (Civil Service)</th>
+                                            <th>Rating</th>
+                                            <th>Date of Examination</th>
+                                            <th>Professional License (PRC)</th>
+                                            <th>Valid Until</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="eligibility-entries">
+                                        <tr>
+                                            <td><input type="text" id="manual-eligibility1" name="manual-eligibility1"></td>
+                                            <td><input type="text" id="manual-eligibility-rating1" name="manual-eligibility-rating1"></td>
+                                            <td><input type="date" id="manual-eligibility-date1" name="manual-eligibility-date1" class="date-input"></td>
+                                            <td><input type="text" id="manual-license1" name="manual-license1"></td>
+                                            <td><input type="date" id="manual-license-valid1" name="manual-license-valid1" class="date-input"></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <button type="button" id="add-eligibility-btn" class="add-entry-btn">Add Eligibility Entry</button>
+                    </div>
+
+                    <!-- Section 7: Work Experience -->
+                    <div id="section7" class="form-section">
+                        <h3>VII. Work Experience (Limit to 10-year period)</h3>
+                        
+                        <div class="table-container-scroll">
+                            <div class="work-experience-table">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Company Name</th>
+                                            <th>Address (City/Municipality)</th>
+                                            <th>Position</th>
+                                            <th>Inclusive Dates (mm/yyyy to mm/yyyy)</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="work-entries">
+                                        <tr>
+                                            <td><input type="text" id="manual-work-company1" name="manual-work-company1"></td>
+                                            <td><input type="text" id="manual-work-address1" name="manual-work-address1"></td>
+                                            <td><input type="text" id="manual-work-position1" name="manual-work-position1"></td>
+                                            <td><input type="text" id="manual-work-dates1" name="manual-work-dates1"></td>
+                                            <td>
+                                                <select id="manual-work-status1" name="manual-work-status1">
+                                                    <option value="">Select Status</option>
+                                                    <option value="Permanent">Permanent</option>
+                                                    <option value="Contractual">Contractual</option>
+                                                    <option value="Part Time">Part Time</option>
+                                                    <option value="Probationary">Probationary</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <button type="button" id="add-work-btn" class="add-entry-btn">Add Work Experience</button>
+                    </div>
+
+                    <!-- Section 8: Other Skills -->
+                    <div id="section8" class="form-section">
+                        <h3>VIII. Other Skills Acquired Without Formal Training</h3>
+                        
+                        <div class="skills-checkbox-group">
+                            <div class="skills-column">
+                                <div><input type="checkbox" id="manual-skill-auto" name="manual-skill" value="Auto Mechanic"> <label for="manual-skill-auto">Auto Mechanic</label></div>
+                                <div><input type="checkbox" id="manual-skill-electrician" name="manual-skill" value="Electrician"> <label for="manual-skill-electrician">Electrician</label></div>
+                                <div><input type="checkbox" id="manual-skill-photography" name="manual-skill" value="Photography"> <label for="manual-skill-photography">Photography</label></div>
+                                <div><input type="checkbox" id="manual-skill-beautician" name="manual-skill" value="Beautician"> <label for="manual-skill-beautician">Beautician</label></div>
+                                <div><input type="checkbox" id="manual-skill-embroidery" name="manual-skill" value="Embroidery"> <label for="manual-skill-embroidery">Embroidery</label></div>
+                                <div><input type="checkbox" id="manual-skill-plumbing" name="manual-skill" value="Plumbing"> <label for="manual-skill-plumbing">Plumbing</label></div>
+                            </div>
+                            <div class="skills-column">
+                                <div><input type="checkbox" id="manual-skill-carpentry" name="manual-skill" value="Carpentry Work"> <label for="manual-skill-carpentry">Carpentry Work</label></div>
+                                <div><input type="checkbox" id="manual-skill-gardening" name="manual-skill" value="Gardening"> <label for="manual-skill-gardening">Gardening</label></div>
+                                <div><input type="checkbox" id="manual-skill-sewing" name="manual-skill" value="Sewing Dresses"> <label for="manual-skill-sewing">Sewing Dresses</label></div>
+                                <div><input type="checkbox" id="manual-skill-computer" name="manual-skill" value="Computer Literate"> <label for="manual-skill-computer">Computer Literate</label></div>
+                                <div><input type="checkbox" id="manual-skill-masonry" name="manual-skill" value="Masonry"> <label for="manual-skill-masonry">Masonry</label></div>
+                                <div><input type="checkbox" id="manual-skill-stenography" name="manual-skill" value="Stenography"> <label for="manual-skill-stenography">Stenography</label></div>
+                            </div>
+                            <div class="skills-column">
+                                <div><input type="checkbox" id="manual-skill-domestic" name="manual-skill" value="Domestic Chores"> <label for="manual-skill-domestic">Domestic Chores</label></div>
+                                <div><input type="checkbox" id="manual-skill-painter" name="manual-skill" value="Painter/Artist"> <label for="manual-skill-painter">Painter/Artist</label></div>
+                                <div><input type="checkbox" id="manual-skill-tailoring" name="manual-skill" value="Tailoring"> <label for="manual-skill-tailoring">Tailoring</label></div>
+                                <div><input type="checkbox" id="manual-skill-driver" name="manual-skill" value="Driver"> <label for="manual-skill-driver">Driver</label></div>
+                                <div><input type="checkbox" id="manual-skill-painting" name="manual-skill" value="Painting Jobs"> <label for="manual-skill-painting">Painting Jobs</label></div>
+                                <div>
+                                    <input type="checkbox" id="manual-skill-others" name="manual-skill" value="Others"> <label for="manual-skill-others">Others</label>
+                                    <input type="text" id="manual-skill-others-specify" name="manual-skill-others-specify" placeholder="Specify other skills" style="margin-top: 5px; display: none;">
+                                </div>
+                            </div>
+                            <div class="form-section">
+                                <h3>Program Information</h3>
+                                <div class="form-group">
+                                    <label for="manual-program-category">Program Category</label>
+                                    <select id="manual-program-category" name="manual-program-category">
+                                        <option value="">Select Category</option>
+                                        <option value="Livelihood">Livelihood Program</option>
+                                        <option value="Employment">Employment Assistance</option>
+                                        <option value="Education">Educational Assistance</option>
+                                        <option value="Skills">Skills Training</option>
+                                        <option value="OFW">OFW Reintegration</option>
+                                        <option value="PWD">PWD Assistance</option>
+                                        <option value="4Ps">4Ps Monitoring</option>
+                                        <option value="Other">Other Programs</option>
+                                    </select>
+                                </div>
+                            <div class="form-group">
+                                <label for="manual-specific-program">Specific Program</label>
+                                <input type="text" id="manual-specific-program" name="manual-specific-program" placeholder="e.g., Sewing Livelihood, TESDA Training">
+                            </div>
+                             <div class="form-group">
+                                <label for="manual-program-status">Program Status</label>
+                                <select id="manual-program-status" name="manual-program-status">
+                                    <option value="">Select Status</option>
+                                    <option value="Applied">Applied</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Ongoing">Ongoing</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Not Interested">Not Interested</option>
+                                </select>
+                             </div>    
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" id="cancel-manual" class="cancel-btn">Cancel</button>
+                    <button type="submit" class="save-btn">Add Applicant</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="scripts/script.js"></script>
     <script src="scripts/home-dashboard.js"></script>
