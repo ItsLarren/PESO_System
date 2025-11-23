@@ -568,6 +568,60 @@
                     <button class="filter-tab" data-filter="active">Active</button>
                 </div>
 
+                <!-- Advanced Filters Panel -->
+                <div id="employer-advanced-filters-panel" class="advanced-filters" style="display: none;">
+                    <h4 style="margin-bottom: 15px;">Advanced Filters</h4>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">Company Type</label>
+                            <select id="filter-employer-type" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="Local">Local</option>
+                                <option value="Overseas">Overseas</option>
+                                <option value="Government">Government</option>
+                                <option value="Private">Private</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Industry</label>
+                            <input type="text" id="filter-employer-industry" class="filter-input" placeholder="Filter by industry">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Status</label>
+                            <select id="filter-employer-status" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Suspended">Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="action-btn" id="apply-employer-filters-btn" style="background: #4caf50;">
+                            <i class="fas fa-check"></i> Apply Filters
+                        </button>
+                        <button class="clear-search-btn" id="clear-employer-filters-btn">
+                            <i class="fas fa-broom"></i> Clear All Filters
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sort-container">
+                    <label>Sort by:</label>
+                    <select id="employer-sort-select" class="sort-select">
+                        <option value="name">Company Name (A-Z)</option>
+                        <option value="name-desc">Company Name (Z-A)</option>
+                        <option value="date">Registration Date (Newest)</option>
+                        <option value="date-oldest">Registration Date (Oldest)</option>
+                        <option value="employees">Number of Employees</option>
+                    </select>
+                    <span id="employer-active-filters-count" style="font-size: 12px; color: #666;"></span>
+                </div>
+                
                 <div class="table-container-wrapper">
                     <div class="table-container">
                         <table class="applicant-table" id="employers-table">
@@ -664,6 +718,76 @@
                     <button class="filter-tab" data-filter="expired">Expired</button>
                 </div>
 
+                <!-- Advanced Filters Panel -->
+                <div id="vacancy-advanced-filters-panel" class="advanced-filters" style="display: none;">
+                    <h4 style="margin-bottom: 15px;">Advanced Filters</h4>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">Job Type</label>
+                            <select id="filter-vacancy-type" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="Full-time">Full-time</option>
+                                <option value="Part-time">Part-time</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Temporary">Temporary</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Industry</label>
+                            <input type="text" id="filter-vacancy-industry" class="filter-input" placeholder="Filter by industry">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Status</label>
+                            <select id="filter-vacancy-status" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Filled">Filled</option>
+                                <option value="Expired">Expired</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">Salary Range</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="filter-vacancy-salary-min" class="filter-input" placeholder="Min">
+                                <input type="number" id="filter-vacancy-salary-max" class="filter-input" placeholder="Max">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Location</label>
+                            <input type="text" id="filter-vacancy-location" class="filter-input" placeholder="Filter by location">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="action-btn" id="apply-vacancy-filters-btn" style="background: #4caf50;">
+                            <i class="fas fa-check"></i> Apply Filters
+                        </button>
+                        <button class="clear-search-btn" id="clear-vacancy-filters-btn">
+                            <i class="fas fa-broom"></i> Clear All Filters
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sort-container">
+                    <label>Sort by:</label>
+                    <select id="vacancy-sort-select" class="sort-select">
+                        <option value="title">Job Title (A-Z)</option>
+                        <option value="title-desc">Job Title (Z-A)</option>
+                        <option value="date">Date Posted (Newest)</option>
+                        <option value="date-oldest">Date Posted (Oldest)</option>
+                        <option value="salary">Salary (High to Low)</option>
+                        <option value="salary-low">Salary (Low to High)</option>
+                    </select>
+                    <span id="vacancy-active-filters-count" style="font-size: 12px; color: #666;"></span>
+                </div>
+
                 <div class="table-container-wrapper">
                     <div class="table-container">
                         <table class="applicant-table" id="vacancies-table">
@@ -757,6 +881,84 @@
                     <button class="filter-tab" data-filter="active">Active</button>
                     <button class="filter-tab" data-filter="completed">Completed</button>
                     <button class="filter-tab" data-filter="upcoming">Upcoming</button>
+                </div>
+
+                <!-- Advanced Filters Panel -->
+                <div id="program-advanced-filters-panel" class="advanced-filters" style="display: none;">
+                    <h4 style="margin-bottom: 15px;">Advanced Filters</h4>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">Program Category</label>
+                            <select id="filter-program-category-type" class="filter-select">
+                                <option value="">All Categories</option>
+                                <option value="Livelihood">Livelihood</option>
+                                <option value="Employment">Employment</option>
+                                <option value="Education">Education</option>
+                                <option value="Skills">Skills Training</option>
+                                <option value="OFW">OFW Reintegration</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Program Type</label>
+                            <select id="filter-program-type" class="filter-select">
+                                <option value="">All Types</option>
+                                <option value="Government">Government</option>
+                                <option value="Private">Private</option>
+                                <option value="NGO">NGO</option>
+                                <option value="International">International</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Status</label>
+                            <select id="filter-program-status-type" class="filter-select">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Upcoming">Upcoming</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">Budget Range</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="number" id="filter-program-budget-min" class="filter-input" placeholder="Min">
+                                <input type="number" id="filter-program-budget-max" class="filter-input" placeholder="Max">
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Duration (Months)</label>
+                            <input type="number" id="filter-program-duration" class="filter-input" placeholder="Max duration">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="action-btn" id="apply-program-filters-btn" style="background: #4caf50;">
+                            <i class="fas fa-check"></i> Apply Filters
+                        </button>
+                        <button class="clear-search-btn" id="clear-program-filters-btn">
+                            <i class="fas fa-broom"></i> Clear All Filters
+                        </button>
+                    </div>
+                </div>
+
+                <div class="sort-container">
+                    <label>Sort by:</label>
+                    <select id="program-sort-select" class="sort-select">
+                        <option value="name">Program Name (A-Z)</option>
+                        <option value="name-desc">Program Name (Z-A)</option>
+                        <option value="date">Start Date (Newest)</option>
+                        <option value="date-oldest">Start Date (Oldest)</option>
+                        <option value="budget">Budget (High to Low)</option>
+                        <option value="participants">Participants (High to Low)</option>
+                    </select>
+                    <span id="program-active-filters-count" style="font-size: 12px; color: #666;"></span>
                 </div>
 
                 <div class="table-container-wrapper">

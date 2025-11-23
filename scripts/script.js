@@ -3439,7 +3439,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 32; 
+            cell.colSpan = 43; // Updated column count to match your table structure
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
@@ -3450,208 +3450,150 @@ document.addEventListener('DOMContentLoaded', function () {
         applicants.forEach((applicant, index) => {
             const row = document.createElement('tr');
             
-            const idCell = document.createElement('td');
-            idCell.textContent = applicant['SRS ID'] || `APP-${index + 1}`;
-            idCell.style.fontFamily = 'monospace';
-            idCell.style.fontSize = '10px';
-            row.appendChild(idCell);
-
-            const fullNameCell = document.createElement('td');
-            fullNameCell.textContent = applicant.NAME || formatFullName(applicant) || 'N/A';
-            fullNameCell.className = 'compact-cell';
-            row.appendChild(fullNameCell);
+            // Create all table cells in the correct order
+            const cells = [
+                // SRS ID
+                createTableCell(applicant['SRS ID'] || `APP-${index + 1}`, '', '10px', 'monospace'),
+                
+                // Personal Information
+                createTableCell(applicant['SURNAME'] || 'N/A'),
+                createTableCell(applicant['FIRST NAME'] || 'N/A'),
+                createTableCell(applicant['MIDDLE NAME'] || 'N/A'),
+                createTableCell(applicant['SUFFIX'] || 'N/A'),
+                createTableCell(applicant['DATE OF BIRTH'] || 'N/A', '', '10px'),
+                createTableCell(applicant['PLACE OF BIRTH'] || 'N/A'),
+                createTableCell(applicant['HOUSE NO./STREET/VILLAGE'] || 'N/A'),
+                createTableCell(applicant['BARANGAY'] || 'N/A'),
+                createTableCell(applicant['MUNICIPALITY/CITY'] || 'N/A'),
+                createTableCell(applicant['PROVINCE'] || 'N/A'),
+                
+                // Personal Details
+                createTableCell(applicant['SEX'] || 'N/A', 'center'),
+                createTableCell(applicant['CIVIL STATUS'] || 'N/A'),
+                createTableCell(applicant['TIN'] || 'N/A'),
+                createTableCell(applicant['GSIS/SSS No.'] || 'N/A'),
+                createTableCell(applicant['PAGIBIG No.'] || 'N/A'),
+                createTableCell(applicant['PHILHEALTH No.'] || 'N/A'),
+                createTableCell(applicant['HEIGHT'] || 'N/A'),
+                
+                // Contact Information
+                createTableCell(applicant['EMAIL ADDRESS'] || 'N/A'),
+                createTableCell(applicant['LANDLINE NUMBER'] || 'N/A'),
+                createTableCell(applicant['CELLPHONE NUMBER'] || 'N/A'),
+                
+                // Additional Information
+                createTableCell(applicant['DISABILITY'] || 'N/A'),
+                createTableCell(applicant['EMPLOYMENT STATUS/TYPE'] || 'N/A'),
+                createTableCell(applicant['ARE YOU ACTIVELY LOOKING FOR WORK?'] || 'N/A'),
+                createTableCell(applicant['WILLING TO WORK IMMEDIATELY?'] || 'N/A'),
+                createTableCell(applicant['ARE YOU A 4PS BENEFICIARY?'] || 'N/A'),
+                
+                // Job Preference
+                createTableCell(applicant['PREFERRED OCCUPATION'] || 'N/A'),
+                createTableCell(applicant['PREFERRED WORK LOCATION'] || 'N/A'),
+                createTableCell(applicant['EXPECTED SALARY'] || 'N/A'),
+                createTableCell(applicant['PASSPORT NO.'] || 'N/A'),
+                createTableCell(applicant['PASSPORT EXPIRY DATE'] || 'N/A', '', '10px'),
+                createTableCell(applicant['LANGUAGE'] || 'N/A'),
+                
+                // Education
+                createTableCell(applicant['ELEMENTARY'] || 'N/A'),
+                createTableCell(applicant['SECONDARY'] || 'N/A'),
+                createTableCell(applicant['TERTIARY'] || 'N/A'),
+                createTableCell(applicant['GRADUATE STUDIES'] || 'N/A'),
+                createTableCell(applicant['TECHNICAL/VOCATIONAL AND OTHER TRAINING'] || 'N/A'),
+                createTableCell(applicant['ELIGIBILITY'] || 'N/A'),
+                
+                // Work & Skills
+                createTableCell(applicant['WORK EXPERIENCE'] || 'N/A'),
+                createTableCell(applicant['OTHER SKILLS'] || 'N/A'),
+                
+                // Program Information
+                createTableCell(applicant['PROGRAM CATEGORY'] || 'N/A'),
+                createTableCell(applicant['SPECIFIC PROGRAM'] || 'N/A'),
+                createTableCell(applicant['PROGRAM STATUS'] || 'N/A'),
+                
+                // ACTIONS COLUMN - This is where the 4 buttons should be
+                createActionsCell(applicant, index)
+            ];
             
-            const bdateCell = document.createElement('td');
-            bdateCell.textContent = applicant.BDATE || 'N/A';
-            bdateCell.style.fontSize = '10px';
-            row.appendChild(bdateCell);
-            
-            const ageCell = document.createElement('td');
-            ageCell.textContent = applicant.AGE || 'N/A';
-            ageCell.style.textAlign = 'center';
-            row.appendChild(ageCell);
-            
-            const sexCell = document.createElement('td');
-            sexCell.textContent = applicant.SEX || 'N/A';
-            sexCell.style.textAlign = 'center';
-            row.appendChild(sexCell);
-            
-            const civilStatusCell = document.createElement('td');
-            civilStatusCell.textContent = applicant['CIVIL STATUS'] || 'N/A';
-            row.appendChild(civilStatusCell);
-            
-            const streetCell = document.createElement('td');
-            streetCell.textContent = applicant['STREET ADDRESS'] || 'N/A';
-            streetCell.className = 'compact-cell';
-            row.appendChild(streetCell);
-            
-            const barangayCell = document.createElement('td');
-            barangayCell.textContent = applicant.BARANGAY || 'N/A';
-            row.appendChild(barangayCell);
-            
-            const cityCell = document.createElement('td');
-            cityCell.textContent = applicant['CITY/MUNICIPALITY'] || 'N/A';
-            row.appendChild(cityCell);
-            
-            const provinceCell = document.createElement('td');
-            provinceCell.textContent = applicant.PROVINCE || 'N/A';
-            row.appendChild(provinceCell);
-            
-            const regionCell = document.createElement('td');
-            regionCell.textContent = applicant.REGION || 'N/A';
-            row.appendChild(regionCell);
-            
-            const emailCell = document.createElement('td');
-            emailCell.textContent = applicant.EMAIL || 'N/A';
-            emailCell.className = 'compact-cell';
-            row.appendChild(emailCell);
-            
-            const telephoneCell = document.createElement('td');
-            telephoneCell.textContent = applicant.TELEPHONE || 'N/A';
-            row.appendChild(telephoneCell);
-            
-            const cellphoneCell = document.createElement('td');
-            cellphoneCell.textContent = applicant.CELLPHONE || 'N/A';
-            row.appendChild(cellphoneCell);
-            
-            const empStatusCell = document.createElement('td');
-            empStatusCell.textContent = applicant['EMP. STATUS'] || 'N/A';
-            row.appendChild(empStatusCell);
-            
-            const empTypeCell = document.createElement('td');
-            empTypeCell.textContent = applicant['EMP. TYPE'] || 'N/A';
-            row.appendChild(empTypeCell);
-            
-            const educCell = document.createElement('td');
-            educCell.textContent = applicant['EDUC LEVEL'] || 'N/A';
-            row.appendChild(educCell);
-            
-            const courseCell = document.createElement('td');
-            courseCell.textContent = applicant.COURSE || 'N/A';
-            row.appendChild(courseCell);
-            
-            const fourPsCell = document.createElement('td');
-            fourPsCell.textContent = applicant['4Ps'] || 'N/A';
-            fourPsCell.style.textAlign = 'center';
-            row.appendChild(fourPsCell);
-            
-            const pwdCell = document.createElement('td');
-            pwdCell.textContent = applicant.PWD || 'N/A';
-            pwdCell.style.textAlign = 'center';
-            row.appendChild(pwdCell);
-            
-            const disabilityCell = document.createElement('td');
-            disabilityCell.textContent = applicant.DISABILITY || 'N/A';
-            row.appendChild(disabilityCell);
-            
-            const preferredPositionCell = document.createElement('td');
-            preferredPositionCell.textContent = applicant['PREFERRED POSITION'] || 'N/A';
-            row.appendChild(preferredPositionCell);
-            
-            const skillsCell = document.createElement('td');
-            skillsCell.textContent = applicant.SKILLS || 'N/A';
-            skillsCell.className = 'compact-cell';
-            row.appendChild(skillsCell);
-            
-            const workExpCell = document.createElement('td');
-            workExpCell.textContent = applicant['WORK EXPERIENCE'] || 'N/A';
-            workExpCell.className = 'compact-cell';
-            row.appendChild(workExpCell);
-            
-            const ofwCell = document.createElement('td');
-            ofwCell.textContent = applicant.OFW || 'N/A';
-            ofwCell.style.textAlign = 'center';
-            row.appendChild(ofwCell);
-            
-            const countryCell = document.createElement('td');
-            countryCell.textContent = applicant.COUNTRY || 'N/A';
-            row.appendChild(countryCell);
-            
-            const formerOfwCell = document.createElement('td');
-            formerOfwCell.textContent = applicant['FORMER OFW'] || 'N/A';
-            row.appendChild(formerOfwCell);
-            
-            const latestCountryCell = document.createElement('td');
-            latestCountryCell.textContent = applicant['LATEST COUNTRY'] || 'N/A';
-            row.appendChild(latestCountryCell);
-            
-            const regDateCell = document.createElement('td');
-            regDateCell.textContent = applicant['REG. DATE'] || 'N/A';
-            regDateCell.style.fontSize = '10px';
-            row.appendChild(regDateCell);
-            
-            const remarksCell = document.createElement('td');
-            remarksCell.textContent = applicant.REMARKS || 'N/A';
-            row.appendChild(remarksCell);
-            
-            const createdByCell = document.createElement('td');
-            createdByCell.textContent = applicant['CREATED BY'] || 'System';
-            row.appendChild(createdByCell);
-            
-            const dateCreatedCell = document.createElement('td');
-            dateCreatedCell.textContent = applicant['DATE CREATED'] || 'N/A';
-            dateCreatedCell.style.fontSize = '10px';
-            row.appendChild(dateCreatedCell);
-            
-            const lastModifiedByCell = document.createElement('td');
-            lastModifiedByCell.textContent = applicant['LAST MODIFIED BY'] || 'System';
-            row.appendChild(lastModifiedByCell);
-            
-            const dateModifiedCell = document.createElement('td');
-            dateModifiedCell.textContent = applicant['DATE LAST MODIFIED'] || 'N/A';
-            dateModifiedCell.style.fontSize = '10px';
-            row.appendChild(dateModifiedCell);
-            
-            const actionsCell = document.createElement('td');
-            actionsCell.className = 'actions-cell';
-            
-            const actionButtons = document.createElement('div');
-            actionButtons.className = 'action-buttons';
-
-            // Add View Button
-            const viewBtn = document.createElement('button');
-            viewBtn.className = 'view-btn';
-            viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
-            viewBtn.title = 'View Applicant Details';
-            viewBtn.addEventListener('click', function() {
-                openViewModal(applicant);
-            });
-            
-            const editBtn = document.createElement('button');
-            editBtn.className = 'edit-btn';
-            editBtn.innerHTML = '<i class="fas fa-edit"></i>';
-            editBtn.title = 'Edit Applicant';
-            editBtn.addEventListener('click', function() {
-                openEditModal(applicant);
-            });
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'delete-btn';
-            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteBtn.title = 'Delete Applicant';
-            deleteBtn.addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete this applicant?')) {
-                    deleteApplicant(applicant['SRS ID'] || applicant.ID);
-                }
-            });
-            
-            const downloadBtn = document.createElement('button');
-            downloadBtn.className = 'download-btn';
-            downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
-            downloadBtn.title = 'Download Data';
-            downloadBtn.addEventListener('click', function() {
-                downloadApplicantData(applicant);
-            });
-            
-            actionButtons.appendChild(viewBtn);
-            actionButtons.appendChild(editBtn);
-            actionButtons.appendChild(downloadBtn);
-            actionButtons.appendChild(deleteBtn);
-            actionsCell.appendChild(actionButtons);
-            row.appendChild(actionsCell);
+            // Append all cells to the row
+            cells.forEach(cell => row.appendChild(cell));
             
             tbody.appendChild(row);
         });
+    }
+
+    // Helper function to create table cells
+    function createTableCell(content, align = '', fontSize = '', fontFamily = '') {
+        const cell = document.createElement('td');
+        cell.textContent = content;
+        
+        if (align) cell.style.textAlign = align;
+        if (fontSize) cell.style.fontSize = fontSize;
+        if (fontFamily) cell.style.fontFamily = fontFamily;
+        
+        if (content.length > 20) {
+            cell.className = 'compact-cell';
+        }
+        
+        return cell;
+    }
+
+    // Helper function to create the actions cell with all 4 buttons
+    function createActionsCell(applicant, index) {
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'action-buttons';
+
+        // 1. View Button
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'view-btn';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        viewBtn.title = 'View Applicant Details';
+        viewBtn.addEventListener('click', function() {
+            openViewModal(applicant);
+        });
+        
+        // 2. Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.title = 'Edit Applicant';
+        editBtn.addEventListener('click', function() {
+            openEditModal(applicant);
+        });
+        
+        // 3. Download Button
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+        downloadBtn.title = 'Download Data';
+        downloadBtn.addEventListener('click', function() {
+            downloadApplicantData(applicant);
+        });
+        
+        // 4. Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.title = 'Delete Applicant';
+        deleteBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this applicant?')) {
+                deleteApplicant(applicant['SRS ID'] || applicant.ID);
+            }
+        });
+        
+        // Add all buttons to the actions container
+        actionButtons.appendChild(viewBtn);
+        actionButtons.appendChild(editBtn);
+        actionButtons.appendChild(downloadBtn);
+        actionButtons.appendChild(deleteBtn);
+        
+        actionsCell.appendChild(actionButtons);
+        return actionsCell;
     }
 
     function getStatusClass(status) {
