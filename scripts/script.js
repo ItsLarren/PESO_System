@@ -60,18 +60,13 @@ document.addEventListener('DOMContentLoaded', function () {
         closeView: document.querySelector('.close-view'),
     };
 
-    // Add this missing function that was likely causing the error
     function initializeManualFormControls() {
-        // Initialize photo controls
         initializeManualPhotoControls();
         
-        // Initialize dynamic form elements
         initializeDynamicFormElements();
         
-        // Initialize add entry buttons
         initializeAddEntryButtons();
         
-        // Add submit handler for adding new applicants
         if (elements.manualApplicantForm) {
             elements.manualApplicantForm.addEventListener('submit', function(event) {
                 event.preventDefault();
@@ -81,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
-    // Add this function to initialize the view modal
+
     function initializeViewModal() {
         if (elements.viewModal) {
             const closeBtn = elements.viewModal.querySelector('.close-view');
@@ -99,11 +94,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add this function to open the view modal
     function openViewModal(applicant) {
         if (!elements.viewModal) return;
         
-        // Populate the view modal with applicant data
         const fieldToIdMap = {
             'SRS ID': 'view-srs-id',
             'LAST NAME': 'view-last-name',
@@ -160,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Handle photo
         const photoId = applicant['SRS ID'] || applicant.ID;
         const viewPhotoPreview = document.getElementById('view-photo-preview');
         const viewPhotoPlaceholder = document.getElementById('view-photo-placeholder');
@@ -178,7 +170,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Set up edit button
         const editFullBtn = document.getElementById('edit-full-applicant-btn');
         if (editFullBtn) {
             editFullBtn.onclick = function() {
@@ -186,7 +177,6 @@ document.addEventListener('DOMContentLoaded', function () {
             };
         }
         
-        // Set up download buttons
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
         const downloadExcelBtn = document.getElementById('download-excel-btn');
         
@@ -205,10 +195,8 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.viewModal.style.display = 'block';
     }
 
-    // Add this function to download as PDF
     function downloadApplicantAsPDF(applicant) {
         try {
-            // Create a new window with the applicant data formatted for PDF
             const printWindow = window.open('', 'CPESO Comprehensive Program Report');
             const applicantName = applicant.NAME || 'applicant';
             const fileName = `applicant_${applicantName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`;
@@ -356,20 +344,17 @@ document.addEventListener('DOMContentLoaded', function () {
     let stream = null;
     let capturedPhoto = null;
     let activeFilters = {};
-
+    
     function initializeApp() {
         try {
             console.log('Initializing application...');
             
-            // Check authentication
             if (localStorage.getItem('isLoggedIn') !== 'true') {
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Wait a bit for DOM to be fully ready
             setTimeout(() => {
-                // Initialize all components
                 initializeManualForm();
                 initializeCamera();
                 initializeSearch();
@@ -378,12 +363,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 initializeAdvancedFilters();
                 initializeReporting();
                 initializeViewModal();
-                
-                // Load data
                 loadMainApplicants();
                 loadImportedData();
-                
-                // Initialize UI components
                 initializeDynamicFormElements();
                 initializeAddEntryButtons();
                 displayCurrentUser();
@@ -398,7 +379,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initializeDynamicFormElements() {
-        // Disability "Others" specification
         const disabilityOthers = document.getElementById('manual-disability-others');
         const disabilitySpecify = document.getElementById('manual-disability-specify');
         
@@ -408,7 +388,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Employment status specification
         const empStatus = document.getElementById('manual-emp-status');
         const empStatusSpecify = document.getElementById('manual-emp-status-specify');
         const empStatusCountry = document.getElementById('manual-emp-status-country');
@@ -420,7 +399,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Looking for work duration
         const lookingWorkYes = document.getElementById('manual-looking-work-yes');
         const lookingWorkDuration = document.getElementById('manual-looking-work-duration');
         
@@ -3439,7 +3417,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (applicants.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 43; // Updated column count to match your table structure
+            cell.colSpan = 43; 
             cell.className = 'no-results';
             cell.textContent = 'No applicants found';
             row.appendChild(cell);
