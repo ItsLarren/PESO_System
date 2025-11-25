@@ -38,12 +38,11 @@ function initializeDashboard() {
     loadRecentActivity();
 }
 
-// Load dashboard statistics
 function loadDashboardStats() {
-    // Load quick stats
     const applicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
     const employers = JSON.parse(localStorage.getItem('employers')) || [];
     const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+    const programs = JSON.parse(localStorage.getItem('programs')) || [];
     
     // Update quick stats
     document.getElementById('quick-applicants').textContent = applicants.length;
@@ -54,20 +53,41 @@ function loadDashboardStats() {
     document.getElementById('total-applicants').textContent = applicants.length;
     document.getElementById('total-employers').textContent = employers.length;
     document.getElementById('active-vacancies').textContent = vacancies.length;
-    document.getElementById('job-matches').textContent = '0'; // You can calculate this
+    document.getElementById('job-matches').textContent = calculateJobMatches(applicants, vacancies);
     
-    // Calculate additional stats
-    const employedApplicants = applicants.filter(app => 
+    // Update detailed stats
+    updateDetailedStats(applicants, employers);
+}
+
+function calculateJobMatches(applicants, vacancies) {
+    // Simple matching logic - you can make this more sophisticated
+    return Math.min(applicants.length, vacancies.length);
+}
+
+function updateDetailedStats(applicants, employers) {
+    // Calculate additional statistics
+    const employedCount = applicants.filter(app => 
         app['EMP. STATUS'] && app['EMP. STATUS'].toLowerCase().includes('employed')
     ).length;
     
-    const unemployedApplicants = applicants.filter(app => 
+    const unemployedCount = applicants.filter(app => 
         app['EMP. STATUS'] && app['EMP. STATUS'].toLowerCase().includes('unemployed')
     ).length;
     
-    document.getElementById('employed-applicants').textContent = employedApplicants;
-    document.getElementById('unemployed-applicants').textContent = unemployedApplicants;
-    document.getElementById('new-applicants-month').textContent = calculateNewThisMonth(applicants);
+    const newThisMonth = applicants.filter(app => {
+        const regDate = app['REG. DATE'];
+        if (!regDate) return false;
+        const regMonth = new Date(regDate).getMonth();
+        const currentMonth = new Date().getMonth();
+        return regMonth === currentMonth;
+    }).length;
+    
+    // Update DOM elements
+    document.getElementById('new-applicants-month').textContent = newThisMonth;
+    document.getElementById('employed-applicants').textContent = employedCount;
+    document.getElementById('unemployed-applicants').textContent = unemployedCount;
+    
+
 }
 
 // Calculate new applicants this month

@@ -369,6 +369,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 initializeAddEntryButtons();
                 displayCurrentUser();
 
+                // NEW: Add these initializations
+                initializeNavigation();
+                initializeEmployers();
+                initializeVacancies();
+                initializePrograms();
+                
+                loadMainApplicants();
+                loadImportedData();
+                initializeDynamicFormElements();
+                initializeAddEntryButtons();
+                displayCurrentUser();
+
+                // Initialize the currently active tab
+                const activeTab = document.querySelector('.nav-tab.active');
+                if (activeTab) {
+                    const activePage = activeTab.getAttribute('data-page');
+                    loadPageData(activePage);
+                } else {
+                    // Default to applicants tab if no active tab
+                    loadPageData('applicants');
+                }
+
+                // Load initial data
+                loadDashboardStats();
+
                 console.log('Application initialized successfully');
             }, 100);
             
@@ -376,6 +401,13 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error during application initialization:', error);
             showNotification('Error initializing application: ' + error.message, 'error');
         }
+
+        // Force initialize all modules
+        setTimeout(() => {
+            initializeEmployers();
+            initializeVacancies();
+            initializePrograms();
+        }, 500);
     }
 
     function initializeDynamicFormElements() {
@@ -6276,6 +6308,2573 @@ document.addEventListener('DOMContentLoaded', function () {
         
         console.log('✅ Debug complete');
     }
+
+    function initializeNavigation() {
+        // Tab navigation
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const pageContents = document.querySelectorAll('.page-content');
+        
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const targetPage = this.getAttribute('data-page');
+                
+                // Remove active class from all tabs and contents
+                navTabs.forEach(t => t.classList.remove('active'));
+                pageContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to current tab and content
+                this.classList.add('active');
+                document.getElementById(`${targetPage}-content`).classList.add('active');
+                
+                // Load data for the active page
+                loadPageData(targetPage);
+            });
+        });
+    }
+
+    function loadPageData(page) {
+        console.log('Loading page:', page);
+        
+        switch(page) {
+            case 'dashboard':
+                loadDashboardStats();
+                break;
+            case 'applicants':
+                loadMainApplicants();
+                break;
+            case 'employers':
+                // Re-initialize employers when tab is clicked
+                setTimeout(() => {
+                    initializeEmployers();
+                    loadEmployers();
+                }, 100);
+                break;
+            case 'vacancies':
+                // Re-initialize vacancies when tab is clicked
+                setTimeout(() => {
+                    initializeVacancies();
+                    loadVacancies();
+                }, 100);
+                break;
+            case 'programs':
+                // Re-initialize programs when tab is clicked
+                setTimeout(() => {
+                    initializePrograms();
+                    loadPrograms();
+                }, 100);
+                break;
+            case 'reports':
+                // Reports are generated on demand
+                break;
+            case 'tools':
+            case 'admin':
+                // Coming soon pages
+                break;
+        }
+    }
+
+    // Employers Management
+    function initializeEmployers() {
+        console.log('Initializing employers...');
+        
+        // Employer search functionality
+        const employerSearchBtn = document.getElementById('employer-search-btn');
+        const employerClearSearchBtn = document.getElementById('employer-clear-search-btn');
+        const employerSearchInput = document.getElementById('employer-search-input');
+        
+        if (employerSearchBtn) {
+            employerSearchBtn.addEventListener('click', searchEmployers);
+            console.log('Employer search button initialized');
+        } else {
+            console.warn('Employer search button not found');
+        }
+        
+        if (employerClearSearchBtn) {
+            employerClearSearchBtn.addEventListener('click', clearEmployerSearch);
+            console.log('Employer clear search button initialized');
+        }
+        
+        if (employerSearchInput) {
+            employerSearchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') searchEmployers();
+            });
+        }
+        
+        // Add employer button - FIXED
+        const addEmployerBtn = document.getElementById('add-employer-btn');
+        if (addEmployerBtn) {
+            addEmployerBtn.addEventListener('click', function() {
+                console.log('Add employer button clicked');
+                openAddEmployerModal();
+            });
+            console.log('Add employer button initialized');
+        } else {
+            console.warn('Add employer button not found');
+        }
+        
+        // Advanced filters button - FIXED
+        const advancedFiltersBtn = document.getElementById('employer-advanced-filters-btn');
+        const filtersPanel = document.getElementById('employer-advanced-filters-panel');
+        
+        if (advancedFiltersBtn && filtersPanel) {
+            advancedFiltersBtn.addEventListener('click', function() {
+                console.log('Advanced filters button clicked');
+                filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+            });
+            console.log('Employer advanced filters button initialized');
+        } else {
+            console.warn('Employer advanced filters elements not found');
+        }
+        
+        // Apply and clear filters buttons
+        const applyFiltersBtn = document.getElementById('apply-employer-filters-btn');
+        const clearFiltersBtn = document.getElementById('clear-employer-filters-btn');
+        
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', applyEmployerFilters);
+        }
+        
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearEmployerFilters);
+        }
+        
+        // Export employers
+        const exportEmployersBtn = document.getElementById('export-employers-btn');
+        if (exportEmployersBtn) {
+            exportEmployersBtn.addEventListener('click', exportEmployersToExcel);
+        }
+        
+        // Clear all employers
+        const clearAllEmployersBtn = document.getElementById('clear-all-employers-btn');
+        if (clearAllEmployersBtn) {
+            clearAllEmployersBtn.addEventListener('click', clearAllEmployers);
+        }
+        
+        // File upload for employers - FIXED
+        initializeEmployerFileUpload();
+        
+        console.log('Employers initialization complete');
+    }
+
+    function loadEmployers() {
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        displayEmployers(employers);
+    }
+
+    function displayEmployers(employers) {
+        const table = document.getElementById('employers-table');
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (employers.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 21; // Adjust based on your table columns
+            cell.className = 'no-results';
+            cell.textContent = 'No employers found';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            return;
+        }
+        
+        employers.forEach((employer, index) => {
+            const row = document.createElement('tr');
+            
+            // Create cells for each employer field
+            const cells = [
+                createTableCell(employer['EMPLOYER ID'] || `EMP-${index + 1}`),
+                createTableCell(employer['COMPANY NAME'] || 'N/A'),
+                createTableCell(employer['COMPANY TYPE'] || 'N/A'),
+                createTableCell(employer['INDUSTRY'] || 'N/A'),
+                createTableCell(employer['CONTACT PERSON'] || 'N/A'),
+                createTableCell(employer['CONTACT POSITION'] || 'N/A'),
+                createTableCell(employer['EMAIL'] || 'N/A'),
+                createTableCell(employer['PHONE'] || 'N/A'),
+                createTableCell(employer['ADDRESS'] || 'N/A'),
+                createTableCell(employer['BARANGAY'] || 'N/A'),
+                createTableCell(employer['CITY/MUNICIPALITY'] || 'N/A'),
+                createTableCell(employer['PROVINCE'] || 'N/A'),
+                createTableCell(employer['BUSINESS PERMIT NO.'] || 'N/A'),
+                createTableCell(employer['BUSINESS PERMIT EXPIRY'] || 'N/A'),
+                createTableCell(employer['NUMBER OF EMPLOYEES'] || 'N/A'),
+                createTableCell(employer['YEAR ESTABLISHED'] || 'N/A'),
+                createTableCell(employer['WEBSITE'] || 'N/A'),
+                createTableCell(employer['STATUS'] || 'N/A'),
+                createTableCell(employer['REGISTRATION DATE'] || 'N/A'),
+                createTableCell(employer['LAST ACTIVE'] || 'N/A'),
+                createEmployerActionsCell(employer, index)
+            ];
+            
+            cells.forEach(cell => row.appendChild(cell));
+            tbody.appendChild(row);
+        });
+    }
+
+    function createEmployerActionsCell(employer, index) {
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'action-buttons';
+
+        // View Button
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'view-btn';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        viewBtn.title = 'View Employer Details';
+        viewBtn.addEventListener('click', function() {
+            openViewEmployerModal(employer);
+        });
+        
+        // Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.title = 'Edit Employer';
+        editBtn.addEventListener('click', function() {
+            openEditEmployerModal(employer);
+        });
+        
+        // Download Button - ADDED
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+        downloadBtn.title = 'Download Employer Data';
+        downloadBtn.addEventListener('click', function() {
+            downloadEmployerData(employer);
+        });
+        
+        // Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.title = 'Delete Employer';
+        deleteBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this employer?')) {
+                deleteEmployer(employer['EMPLOYER ID'] || employer.ID);
+            }
+        });
+        
+        // Add all buttons to the actions container
+        actionButtons.appendChild(viewBtn);
+        actionButtons.appendChild(editBtn);
+        actionButtons.appendChild(downloadBtn);
+        actionButtons.appendChild(deleteBtn);
+        
+        actionsCell.appendChild(actionButtons);
+        return actionsCell;
+    }
+
+    // Add View Employer Modal Function
+    function openViewEmployerModal(employer) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2>Employer Details</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Company Information</h3>
+                            <div class="view-field">
+                                <label>Company Name:</label>
+                                <span>${employer['COMPANY NAME'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Company Type:</label>
+                                <span>${employer['COMPANY TYPE'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Industry:</label>
+                                <span>${employer['INDUSTRY'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Business Permit:</label>
+                                <span>${employer['BUSINESS PERMIT NO.'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Employees:</label>
+                                <span>${employer['NUMBER OF EMPLOYEES'] || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Contact Information</h3>
+                            <div class="view-field">
+                                <label>Contact Person:</label>
+                                <span>${employer['CONTACT PERSON'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Position:</label>
+                                <span>${employer['CONTACT POSITION'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Email:</label>
+                                <span>${employer['EMAIL'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Phone:</label>
+                                <span>${employer['PHONE'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Status:</label>
+                                <span class="status-badge status-${(employer['STATUS'] || 'Active').toLowerCase()}">${employer['STATUS'] || 'Active'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Address Information</h3>
+                        <div class="view-field">
+                            <label>Address:</label>
+                            <span>${employer['ADDRESS'] || 'N/A'}</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Barangay:</label>
+                            <span>${employer['BARANGAY'] || 'N/A'}</span>
+                        </div>
+                        <div class="view-field">
+                            <label>City/Municipality:</label>
+                            <span>${employer['CITY/MUNICIPALITY'] || 'N/A'}</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Province:</label>
+                            <span>${employer['PROVINCE'] || 'N/A'}</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Additional Information</h3>
+                        <div class="view-field">
+                            <label>Year Established:</label>
+                            <span>${employer['YEAR ESTABLISHED'] || 'N/A'}</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Website:</label>
+                            <span>${employer['WEBSITE'] || 'N/A'}</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Registration Date:</label>
+                            <span>${employer['REGISTRATION DATE'] || 'N/A'}</span>
+                        </div>
+                        <div class="view-field">
+                            <label>Last Active:</label>
+                            <span>${employer['LAST ACTIVE'] || 'N/A'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="cancel-btn" id="close-view-employer">Close</button>
+                    <button class="download-btn" id="download-employer-data">
+                        <i class="fas fa-download"></i> Download Data
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const closeBtn = modal.querySelector('.close');
+        const closeViewBtn = modal.querySelector('#close-view-employer');
+        const downloadBtn = modal.querySelector('#download-employer-data');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        closeViewBtn.addEventListener('click', () => document.body.removeChild(modal));
+        downloadBtn.addEventListener('click', () => {
+            downloadEmployerData(employer);
+            document.body.removeChild(modal);
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    // Add Download Employer Data Function
+    function downloadEmployerData(employer) {
+        try {
+            const worksheet = XLSX.utils.json_to_sheet([employer]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Employer Data");
+            
+            const fileName = `employer_${employer['EMPLOYER ID'] || employer['COMPANY NAME'] || 'data'}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+            
+            showNotification('Employer data downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error downloading employer data:', error);
+            showNotification('Error downloading employer data', 'error');
+        }
+    }
+
+    function searchEmployers() {
+        const searchInput = document.getElementById('employer-search-input');
+        if (!searchInput) return;
+        
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        
+        if (!searchTerm) {
+            displayEmployers(employers);
+            return;
+        }
+        
+        const filteredEmployers = employers.filter(employer => {
+            const searchableFields = [
+                employer['COMPANY NAME'],
+                employer['CONTACT PERSON'],
+                employer['INDUSTRY'],
+                employer['EMAIL'],
+                employer['BARANGAY']
+            ].join(' ').toLowerCase();
+            
+            return searchableFields.includes(searchTerm);
+        });
+        
+        displayEmployers(filteredEmployers);
+        showNotification(`Found ${filteredEmployers.length} employer(s)`, 'success');
+    }
+
+    function clearEmployerSearch() {
+        const searchInput = document.getElementById('employer-search-input');
+        if (searchInput) {
+            searchInput.value = '';
+            loadEmployers();
+        }
+    }
+
+    function exportEmployersToExcel() {
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        if (employers.length === 0) {
+            showNotification('No employers to export', 'error');
+            return;
+        }
+        
+        try {
+            const worksheet = XLSX.utils.json_to_sheet(employers);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Employers");
+            
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `employers_${today}.xlsx`);
+            
+            showNotification('Employers exported successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting employers:', error);
+            showNotification('Error exporting employers: ' + error.message, 'error');
+        }
+    }
+
+    function deleteEmployer(id) {
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        const updatedEmployers = employers.filter(employer => 
+            employer['EMPLOYER ID'] !== id && employer.ID !== id
+        );
+        
+        localStorage.setItem('employers', JSON.stringify(updatedEmployers));
+        displayEmployers(updatedEmployers);
+        showNotification('Employer deleted successfully!', 'success');
+    }
+
+    function clearAllEmployers() {
+        if (confirm('Are you sure you want to clear ALL employers? This action cannot be undone.')) {
+            localStorage.removeItem('employers');
+            displayEmployers([]);
+            showNotification('All employers cleared successfully.', 'success');
+        }
+    }
+
+    // Filter functions for employers
+    function applyEmployerFilters() {
+        showNotification('Employer filters applied', 'success');
+    }
+
+    function clearEmployerFilters() {
+        showNotification('Employer filters cleared', 'info');
+    }
+
+    // Fixed employer file upload function
+    function initializeEmployerFileUpload() {
+        console.log('Initializing employer file upload...');
+        
+        const uploadBtn = document.getElementById('employer-add-btn');
+        const fileInput = document.getElementById('employer-upload-file-input');
+        const browseBtn = document.getElementById('employer-browse-btn');
+        const fileName = document.getElementById('employer-upload-file-name');
+        
+        // Browse button functionality - FIXED
+        if (browseBtn && fileInput) {
+            browseBtn.addEventListener('click', function() {
+                console.log('Browse button clicked');
+                fileInput.click();
+            });
+            console.log('Employer browse button initialized');
+        } else {
+            console.warn('Employer browse button or file input not found');
+        }
+        
+        // File input change handler - FIXED
+        if (fileInput && fileName) {
+            fileInput.addEventListener('change', function() {
+                console.log('File input changed');
+                if (this.files && this.files.length > 0) {
+                    fileName.value = this.files[0].name;
+                    if (uploadBtn) {
+                        uploadBtn.disabled = false;
+                        uploadBtn.style.opacity = '1';
+                        uploadBtn.style.cursor = 'pointer';
+                    }
+                    console.log('File selected:', this.files[0].name);
+                } else {
+                    fileName.value = '';
+                    if (uploadBtn) {
+                        uploadBtn.disabled = true;
+                        uploadBtn.style.opacity = '0.6';
+                        uploadBtn.style.cursor = 'not-allowed';
+                    }
+                }
+            });
+        }
+        
+        // Upload button functionality - FIXED
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', function() {
+                console.log('Upload button clicked');
+                
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    showNotification('Please select a file first.', 'error');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                
+                // Check if it's an Excel file
+                if (!file.name.match(/\.(xlsx|xls)$/)) {
+                    showNotification('Please select an Excel file (.xlsx or .xls).', 'error');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        console.log('File read successfully');
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        console.log('Excel data parsed:', jsonData.length, 'rows');
+                        
+                        if (jsonData.length === 0) {
+                            showNotification('The file does not contain any data.', 'error');
+                            return;
+                        }
+                        
+                        const processedData = processEmployerData(jsonData);
+                        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+                        const updatedEmployers = [...employers, ...processedData];
+                        
+                        localStorage.setItem('employers', JSON.stringify(updatedEmployers));
+                        displayEmployers(updatedEmployers);
+                        
+                        showNotification(`Successfully imported ${processedData.length} employers`, 'success');
+                        
+                        // Reset file input
+                        if (fileInput) fileInput.value = '';
+                        if (fileName) fileName.value = '';
+                        if (uploadBtn) {
+                            uploadBtn.disabled = true;
+                            uploadBtn.style.opacity = '0.6';
+                            uploadBtn.style.cursor = 'not-allowed';
+                        }
+                        
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        showNotification('Error processing file: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.onerror = function() {
+                    console.error('Error reading file');
+                    showNotification('Error reading file. Please try again.', 'error');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+            console.log('Employer upload button initialized');
+        } else {
+            console.warn('Employer upload button not found');
+        }
+    }
+
+    function processEmployerData(jsonData) {
+        return jsonData.map((record, index) => {
+            return {
+                'EMPLOYER ID': generateUniqueId('EMP'),
+                'COMPANY NAME': record['COMPANY NAME'] || record['Company Name'] || 'N/A',
+                'COMPANY TYPE': record['COMPANY TYPE'] || record['Company Type'] || 'N/A',
+                'INDUSTRY': record['INDUSTRY'] || record['Industry'] || 'N/A',
+                'CONTACT PERSON': record['CONTACT PERSON'] || record['Contact Person'] || 'N/A',
+                'CONTACT POSITION': record['CONTACT POSITION'] || record['Contact Position'] || 'N/A',
+                'EMAIL': record['EMAIL'] || record['Email'] || 'N/A',
+                'PHONE': record['PHONE'] || record['Phone'] || 'N/A',
+                'ADDRESS': record['ADDRESS'] || record['Address'] || 'N/A',
+                'BARANGAY': record['BARANGAY'] || record['Barangay'] || 'N/A',
+                'CITY/MUNICIPALITY': record['CITY/MUNICIPALITY'] || record['City/Municipality'] || 'N/A',
+                'PROVINCE': record['PROVINCE'] || record['Province'] || 'N/A',
+                'BUSINESS PERMIT NO.': record['BUSINESS PERMIT NO.'] || record['Business Permit No.'] || 'N/A',
+                'BUSINESS PERMIT EXPIRY': record['BUSINESS PERMIT EXPIRY'] || record['Business Permit Expiry'] || 'N/A',
+                'NUMBER OF EMPLOYEES': record['NUMBER OF EMPLOYEES'] || record['Number of Employees'] || 'N/A',
+                'YEAR ESTABLISHED': record['YEAR ESTABLISHED'] || record['Year Established'] || 'N/A',
+                'WEBSITE': record['WEBSITE'] || record['Website'] || 'N/A',
+                'STATUS': record['STATUS'] || record['Status'] || 'Active',
+                'REGISTRATION DATE': new Date().toLocaleDateString(),
+                'LAST ACTIVE': new Date().toLocaleDateString()
+            };
+        });
+    }
+
+    // Add employer modal function
+    function openAddEmployerModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2>Add New Employer</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <form id="addEmployerForm">
+                    <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="employer-company-name">Company Name *</label>
+                                <input type="text" id="employer-company-name" name="company-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-company-type">Company Type</label>
+                                <select id="employer-company-type" name="company-type">
+                                    <option value="Private">Private</option>
+                                    <option value="Government">Government</option>
+                                    <option value="NGO">NGO</option>
+                                    <option value="International">International</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-industry">Industry</label>
+                                <input type="text" id="employer-industry" name="industry">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-contact-person">Contact Person *</label>
+                                <input type="text" id="employer-contact-person" name="contact-person" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-contact-position">Contact Position</label>
+                                <input type="text" id="employer-contact-position" name="contact-position">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-email">Email</label>
+                                <input type="email" id="employer-email" name="email">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-phone">Phone</label>
+                                <input type="text" id="employer-phone" name="phone">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-address">Address</label>
+                                <input type="text" id="employer-address" name="address">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-barangay">Barangay</label>
+                                <input type="text" id="employer-barangay" name="barangay">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-city">City/Municipality</label>
+                                <input type="text" id="employer-city" name="city">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-province">Province</label>
+                                <input type="text" id="employer-province" name="province">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-business-permit">Business Permit No.</label>
+                                <input type="text" id="employer-business-permit" name="business-permit">
+                            </div>
+                            <div class="form-group">
+                                <label for="employer-employees">Number of Employees</label>
+                                <input type="number" id="employer-employees" name="employees" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="cancel-btn" id="cancel-employer">Cancel</button>
+                        <button type="submit" class="save-btn">Add Employer</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event handlers
+        const closeBtn = modal.querySelector('.close');
+        const cancelBtn = modal.querySelector('#cancel-employer');
+        const form = modal.querySelector('#addEmployerForm');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        cancelBtn.addEventListener('click', () => document.body.removeChild(modal));
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addNewEmployer();
+            document.body.removeChild(modal);
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function addNewEmployer() {
+        const form = document.querySelector('#addEmployerForm');
+        if (!form) return;
+        
+        const formData = new FormData(form);
+        const employer = {
+            'EMPLOYER ID': generateUniqueId('EMP'),
+            'COMPANY NAME': formData.get('company-name'),
+            'COMPANY TYPE': formData.get('company-type') || 'Private',
+            'INDUSTRY': formData.get('industry') || 'N/A',
+            'CONTACT PERSON': formData.get('contact-person'),
+            'CONTACT POSITION': formData.get('contact-position') || 'N/A',
+            'EMAIL': formData.get('email') || 'N/A',
+            'PHONE': formData.get('phone') || 'N/A',
+            'ADDRESS': formData.get('address') || 'N/A',
+            'BARANGAY': formData.get('barangay') || 'N/A',
+            'CITY/MUNICIPALITY': formData.get('city') || 'N/A',
+            'PROVINCE': formData.get('province') || 'N/A',
+            'BUSINESS PERMIT NO.': formData.get('business-permit') || 'N/A',
+            'NUMBER OF EMPLOYEES': formData.get('employees') || 'N/A',
+            'STATUS': 'Active',
+            'REGISTRATION DATE': new Date().toLocaleDateString(),
+            'LAST ACTIVE': new Date().toLocaleDateString()
+        };
+        
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        employers.push(employer);
+        localStorage.setItem('employers', JSON.stringify(employers));
+        
+        displayEmployers(employers);
+        showNotification('Employer added successfully!', 'success');
+    }
+
+
+    function initializeVacancies() {
+        console.log('Initializing vacancies...');
+        
+        // Vacancy search functionality
+        const vacancySearchBtn = document.getElementById('vacancy-search-btn');
+        const vacancyClearSearchBtn = document.getElementById('vacancy-clear-search-btn');
+        const vacancySearchInput = document.getElementById('vacancy-search-input');
+        
+        if (vacancySearchBtn) {
+            vacancySearchBtn.addEventListener('click', searchVacancies);
+        }
+        if (vacancyClearSearchBtn) {
+            vacancyClearSearchBtn.addEventListener('click', clearVacancySearch);
+        }
+        if (vacancySearchInput) {
+            vacancySearchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') searchVacancies();
+            });
+        }
+        
+        // Add vacancy button - FIXED
+        const addVacancyBtn = document.getElementById('add-vacancy-btn');
+        if (addVacancyBtn) {
+            addVacancyBtn.addEventListener('click', function() {
+                console.log('Add vacancy button clicked');
+                openAddVacancyModal();
+            });
+        }
+        
+        // Advanced filters button - FIXED
+        const advancedFiltersBtn = document.getElementById('vacancy-advanced-filters-btn');
+        const filtersPanel = document.getElementById('vacancy-advanced-filters-panel');
+        
+        if (advancedFiltersBtn && filtersPanel) {
+            advancedFiltersBtn.addEventListener('click', function() {
+                console.log('Vacancy advanced filters button clicked');
+                filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        
+        // Apply and clear filters buttons
+        const applyFiltersBtn = document.getElementById('apply-vacancy-filters-btn');
+        const clearFiltersBtn = document.getElementById('clear-vacancy-filters-btn');
+        
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', applyVacancyFilters);
+        }
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearVacancyFilters);
+        }
+        
+        // Export vacancies
+        const exportVacanciesBtn = document.getElementById('export-vacancies-btn');
+        if (exportVacanciesBtn) {
+            exportVacanciesBtn.addEventListener('click', exportVacanciesToExcel);
+        }
+        
+        // Clear all vacancies
+        const clearAllVacanciesBtn = document.getElementById('clear-all-vacancies-btn');
+        if (clearAllVacanciesBtn) {
+            clearAllVacanciesBtn.addEventListener('click', clearAllVacancies);
+        }
+        
+        // File upload for vacancies - FIXED
+        initializeVacancyFileUpload();
+        
+        console.log('Vacancies initialization complete');
+    }
+
+    function loadVacancies() {
+        const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+        displayVacancies(vacancies);
+    }
+
+    function displayVacancies(vacancies) {
+        const table = document.getElementById('vacancies-table');
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (vacancies.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 20; // Adjust based on your table columns
+            cell.className = 'no-results';
+            cell.textContent = 'No vacancies found';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            return;
+        }
+        
+        vacancies.forEach((vacancy, index) => {
+            const row = document.createElement('tr');
+            
+            // Create cells for each vacancy field
+            const cells = [
+                createTableCell(vacancy['VACANCY ID'] || `VAC-${index + 1}`),
+                createTableCell(vacancy['JOB TITLE'] || 'N/A'),
+                createTableCell(vacancy['EMPLOYER'] || 'N/A'),
+                createTableCell(vacancy['INDUSTRY'] || 'N/A'),
+                createTableCell(vacancy['JOB TYPE'] || 'N/A'),
+                createTableCell(vacancy['SALARY RANGE'] || 'N/A'),
+                createTableCell(vacancy['WORK LOCATION'] || 'N/A'),
+                createTableCell(vacancy['EDUCATION REQUIREMENT'] || 'N/A'),
+                createTableCell(vacancy['EXPERIENCE REQUIREMENT'] || 'N/A'),
+                createTableCell(vacancy['SKILLS REQUIRED'] || 'N/A'),
+                createTableCell(vacancy['JOB DESCRIPTION'] || 'N/A', '', '', 'long-text-cell'),
+                createTableCell(vacancy['RESPONSIBILITIES'] || 'N/A', '', '', 'long-text-cell'),
+                createTableCell(vacancy['BENEFITS'] || 'N/A', '', '', 'long-text-cell'),
+                createTableCell(vacancy['VACANCY COUNT'] || 'N/A'),
+                createTableCell(vacancy['APPLICATION DEADLINE'] || 'N/A'),
+                createTableCell(vacancy['DATE POSTED'] || 'N/A'),
+                createStatusCell(vacancy['STATUS'] || 'Active'),
+                createTableCell(vacancy['APPLICATION COUNT'] || '0'),
+                createTableCell(vacancy['VIEWS'] || '0'),
+                createVacancyActionsCell(vacancy, index)
+            ];
+            
+            cells.forEach(cell => row.appendChild(cell));
+            tbody.appendChild(row);
+        });
+    }
+
+    function createStatusCell(status) {
+        const cell = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = `status-badge status-${status.toLowerCase()}`;
+        badge.textContent = status;
+        cell.appendChild(badge);
+        return cell;
+    }
+
+    function createVacancyActionsCell(vacancy, index) {
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'action-buttons';
+
+        // View Button
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'view-btn';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        viewBtn.title = 'View Vacancy Details';
+        viewBtn.addEventListener('click', function() {
+            openViewVacancyModal(vacancy);
+        });
+        
+        // Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.title = 'Edit Vacancy';
+        editBtn.addEventListener('click', function() {
+            openEditVacancyModal(vacancy);
+        });
+        
+        // Download Button - ADDED
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+        downloadBtn.title = 'Download Vacancy Data';
+        downloadBtn.addEventListener('click', function() {
+            downloadVacancyData(vacancy);
+        });
+        
+        // Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.title = 'Delete Vacancy';
+        deleteBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this vacancy?')) {
+                deleteVacancy(vacancy['VACANCY ID'] || vacancy.ID);
+            }
+        });
+        
+        actionButtons.appendChild(viewBtn);
+        actionButtons.appendChild(editBtn);
+        actionButtons.appendChild(downloadBtn);
+        actionButtons.appendChild(deleteBtn);
+        actionsCell.appendChild(actionButtons);
+        
+        return actionsCell;
+    }
+
+    // Add Download Vacancy Data Function
+    function downloadVacancyData(vacancy) {
+        try {
+            const worksheet = XLSX.utils.json_to_sheet([vacancy]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Vacancy Data");
+            
+            const fileName = `vacancy_${vacancy['VACANCY ID'] || vacancy['JOB TITLE'] || 'data'}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+            
+            showNotification('Vacancy data downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error downloading vacancy data:', error);
+            showNotification('Error downloading vacancy data', 'error');
+        }
+    }
+
+    function searchVacancies() {
+        const searchInput = document.getElementById('vacancy-search-input');
+        if (!searchInput) return;
+        
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+        
+        if (!searchTerm) {
+            displayVacancies(vacancies);
+            return;
+        }
+        
+        const filteredVacancies = vacancies.filter(vacancy => {
+            const searchableFields = [
+                vacancy['JOB TITLE'],
+                vacancy['EMPLOYER'],
+                vacancy['INDUSTRY'],
+                vacancy['WORK LOCATION'],
+                vacancy['SKILLS REQUIRED'],
+                vacancy['JOB DESCRIPTION']
+            ].join(' ').toLowerCase();
+            
+            return searchableFields.includes(searchTerm);
+        });
+        
+        displayVacancies(filteredVacancies);
+        showNotification(`Found ${filteredVacancies.length} vacancy(s)`, 'success');
+    }
+
+    function clearVacancySearch() {
+        const searchInput = document.getElementById('vacancy-search-input');
+        if (searchInput) {
+            searchInput.value = '';
+            loadVacancies();
+        }
+    }
+
+    function openAddVacancyModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2>Add New Job Vacancy</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <form id="addVacancyForm">
+                    <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="vacancy-job-title">Job Title *</label>
+                                <input type="text" id="vacancy-job-title" name="job-title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="vacancy-employer">Employer *</label>
+                                <input type="text" id="vacancy-employer" name="employer" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="vacancy-industry">Industry</label>
+                                <input type="text" id="vacancy-industry" name="industry">
+                            </div>
+                            <div class="form-group">
+                                <label for="vacancy-job-type">Job Type</label>
+                                <select id="vacancy-job-type" name="job-type">
+                                    <option value="Full-time">Full-time</option>
+                                    <option value="Part-time">Part-time</option>
+                                    <option value="Contract">Contract</option>
+                                    <option value="Temporary">Temporary</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="vacancy-salary">Salary Range</label>
+                                <input type="text" id="vacancy-salary" name="salary" placeholder="e.g., ₱20,000 - ₱30,000">
+                            </div>
+                            <div class="form-group">
+                                <label for="vacancy-location">Work Location</label>
+                                <input type="text" id="vacancy-location" name="location">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="vacancy-description">Job Description</label>
+                                <textarea id="vacancy-description" name="description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="vacancy-requirements">Requirements</label>
+                                <textarea id="vacancy-requirements" name="requirements" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="vacancy-count">Vacancy Count</label>
+                                <input type="number" id="vacancy-count" name="count" min="1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="vacancy-deadline">Application Deadline</label>
+                                <input type="date" id="vacancy-deadline" name="deadline">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="cancel-btn" id="cancel-vacancy">Cancel</button>
+                        <button type="submit" class="save-btn">Add Vacancy</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event handlers
+        const closeBtn = modal.querySelector('.close');
+        const cancelBtn = modal.querySelector('#cancel-vacancy');
+        const form = modal.querySelector('#addVacancyForm');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        cancelBtn.addEventListener('click', () => document.body.removeChild(modal));
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addNewVacancy();
+            document.body.removeChild(modal);
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function addNewVacancy() {
+        const form = document.querySelector('#addVacancyForm');
+        if (!form) return;
+        
+        const formData = new FormData(form);
+        const vacancy = {
+            'VACANCY ID': generateUniqueId('VAC'),
+            'JOB TITLE': formData.get('job-title'),
+            'EMPLOYER': formData.get('employer'),
+            'INDUSTRY': formData.get('industry') || 'N/A',
+            'JOB TYPE': formData.get('job-type'),
+            'SALARY RANGE': formData.get('salary') || 'N/A',
+            'WORK LOCATION': formData.get('location') || 'N/A',
+            'JOB DESCRIPTION': formData.get('description') || 'N/A',
+            'SKILLS REQUIRED': formData.get('requirements') || 'N/A',
+            'VACANCY COUNT': formData.get('count') || '1',
+            'APPLICATION DEADLINE': formData.get('deadline') || 'N/A',
+            'DATE POSTED': new Date().toLocaleDateString(),
+            'STATUS': 'Active',
+            'APPLICATION COUNT': '0',
+            'VIEWS': '0'
+        };
+        
+        const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+        vacancies.push(vacancy);
+        localStorage.setItem('vacancies', JSON.stringify(vacancies));
+        
+        displayVacancies(vacancies);
+        showNotification('Vacancy added successfully!', 'success');
+    }
+
+    function openEditVacancyModal(vacancy) {
+        showNotification('Edit vacancy functionality coming soon', 'info');
+    }
+
+    function openViewVacancyModal(vacancy) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2>Vacancy Details</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Job Information</h3>
+                            <div class="view-field">
+                                <label>Job Title:</label>
+                                <span>${vacancy['JOB TITLE'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Employer:</label>
+                                <span>${vacancy['EMPLOYER'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Industry:</label>
+                                <span>${vacancy['INDUSTRY'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Job Type:</label>
+                                <span>${vacancy['JOB TYPE'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Salary Range:</label>
+                                <span>${vacancy['SALARY RANGE'] || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Position Details</h3>
+                            <div class="view-field">
+                                <label>Work Location:</label>
+                                <span>${vacancy['WORK LOCATION'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Vacancy Count:</label>
+                                <span>${vacancy['VACANCY COUNT'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Applications:</label>
+                                <span>${vacancy['APPLICATION COUNT'] || '0'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Date Posted:</label>
+                                <span>${vacancy['DATE POSTED'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Deadline:</label>
+                                <span>${vacancy['APPLICATION DEADLINE'] || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Job Description</h3>
+                        <p>${vacancy['JOB DESCRIPTION'] || 'No description provided.'}</p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Requirements & Skills</h3>
+                        <p>${vacancy['SKILLS REQUIRED'] || 'No specific requirements listed.'}</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="cancel-btn" id="close-view-vacancy">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const closeBtn = modal.querySelector('.close');
+        const closeViewBtn = modal.querySelector('#close-view-vacancy');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        closeViewBtn.addEventListener('click', () => document.body.removeChild(modal));
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function exportVacanciesToExcel() {
+        const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+        if (vacancies.length === 0) {
+            showNotification('No vacancies to export', 'error');
+            return;
+        }
+        
+        try {
+            const exportData = vacancies.map(vacancy => ({
+                'Vacancy ID': vacancy['VACANCY ID'],
+                'Job Title': vacancy['JOB TITLE'],
+                'Employer': vacancy['EMPLOYER'],
+                'Industry': vacancy['INDUSTRY'],
+                'Job Type': vacancy['JOB TYPE'],
+                'Salary Range': vacancy['SALARY RANGE'],
+                'Work Location': vacancy['WORK LOCATION'],
+                'Vacancy Count': vacancy['VACANCY COUNT'],
+                'Application Deadline': vacancy['APPLICATION DEADLINE'],
+                'Date Posted': vacancy['DATE POSTED'],
+                'Status': vacancy['STATUS'],
+                'Applications': vacancy['APPLICATION COUNT']
+            }));
+            
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Vacancies");
+            
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `vacancies_${today}.xlsx`);
+            
+            showNotification('Vacancies exported successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting vacancies:', error);
+            showNotification('Error exporting vacancies: ' + error.message, 'error');
+        }
+    }
+
+    function deleteVacancy(id) {
+        const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+        const updatedVacancies = vacancies.filter(vacancy => 
+            vacancy['VACANCY ID'] !== id && vacancy.ID !== id
+        );
+        
+        localStorage.setItem('vacancies', JSON.stringify(updatedVacancies));
+        displayVacancies(updatedVacancies);
+        showNotification('Vacancy deleted successfully!', 'success');
+    }
+
+    function clearAllVacancies() {
+        if (confirm('Are you sure you want to clear ALL vacancies? This action cannot be undone.')) {
+            localStorage.removeItem('vacancies');
+            displayVacancies([]);
+            showNotification('All vacancies cleared successfully.', 'success');
+        }
+    }
+
+    // Fixed vacancy file upload function
+function initializeVacancyFileUpload() {
+    console.log('Initializing vacancy file upload...');
+    
+    const uploadBtn = document.getElementById('vacancy-add-btn');
+    const fileInput = document.getElementById('vacancy-upload-file-input');
+    const browseBtn = document.getElementById('vacancy-browse-btn');
+    const fileName = document.getElementById('vacancy-upload-file-name');
+    
+    // Browse button functionality
+    if (browseBtn && fileInput) {
+        browseBtn.addEventListener('click', function() {
+            console.log('Vacancy browse button clicked');
+            fileInput.click();
+        });
+    }
+    
+    // File input change handler
+    if (fileInput && fileName) {
+        fileInput.addEventListener('change', function() {
+            console.log('Vacancy file input changed');
+            if (this.files && this.files.length > 0) {
+                fileName.value = this.files[0].name;
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.style.opacity = '1';
+                    uploadBtn.style.cursor = 'pointer';
+                }
+            } else {
+                fileName.value = '';
+                if (uploadBtn) {
+                    uploadBtn.disabled = true;
+                    uploadBtn.style.opacity = '0.6';
+                    uploadBtn.style.cursor = 'not-allowed';
+                }
+            }
+        });
+    }
+    
+    // Upload button functionality
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                showNotification('Please select a file first.', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            if (!file.name.match(/\.(xlsx|xls)$/)) {
+                showNotification('Please select an Excel file (.xlsx or .xls).', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData.length === 0) {
+                        showNotification('The file does not contain any data.', 'error');
+                        return;
+                    }
+                    
+                    const processedData = processVacancyData(jsonData);
+                    const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+                    const updatedVacancies = [...vacancies, ...processedData];
+                    
+                    localStorage.setItem('vacancies', JSON.stringify(updatedVacancies));
+                    displayVacancies(updatedVacancies);
+                    
+                    showNotification(`Successfully imported ${processedData.length} vacancies`, 'success');
+                    
+                    // Reset file input
+                    if (fileInput) fileInput.value = '';
+                    if (fileName) fileName.value = '';
+                    if (uploadBtn) {
+                        uploadBtn.disabled = true;
+                        uploadBtn.style.opacity = '0.6';
+                        uploadBtn.style.cursor = 'not-allowed';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    showNotification('Error processing file: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('Error reading file.', 'error');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        });
+    }
+}
+
+// Fixed program file upload function
+function initializeProgramFileUpload() {
+    console.log('Initializing program file upload...');
+    
+    const uploadBtn = document.getElementById('program-add-btn');
+    const fileInput = document.getElementById('program-upload-file-input');
+    const browseBtn = document.getElementById('program-browse-btn');
+    const fileName = document.getElementById('program-upload-file-name');
+    
+    // Browse button functionality
+    if (browseBtn && fileInput) {
+        browseBtn.addEventListener('click', function() {
+            console.log('Program browse button clicked');
+            fileInput.click();
+        });
+    }
+    
+    // File input change handler
+    if (fileInput && fileName) {
+        fileInput.addEventListener('change', function() {
+            console.log('Program file input changed');
+            if (this.files && this.files.length > 0) {
+                fileName.value = this.files[0].name;
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.style.opacity = '1';
+                    uploadBtn.style.cursor = 'pointer';
+                }
+            } else {
+                fileName.value = '';
+                if (uploadBtn) {
+                    uploadBtn.disabled = true;
+                    uploadBtn.style.opacity = '0.6';
+                    uploadBtn.style.cursor = 'not-allowed';
+                }
+            }
+        });
+    }
+    
+    // Upload button functionality
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                showNotification('Please select a file first.', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            if (!file.name.match(/\.(xlsx|xls)$/)) {
+                showNotification('Please select an Excel file (.xlsx or .xls).', 'error');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (jsonData.length === 0) {
+                        showNotification('The file does not contain any data.', 'error');
+                        return;
+                    }
+                    
+                    const processedData = processProgramData(jsonData);
+                    const programs = JSON.parse(localStorage.getItem('programs')) || [];
+                    const updatedPrograms = [...programs, ...processedData];
+                    
+                    localStorage.setItem('programs', JSON.stringify(updatedPrograms));
+                    displayPrograms(updatedPrograms);
+                    updateProgramStats();
+                    
+                    showNotification(`Successfully imported ${processedData.length} programs`, 'success');
+                    
+                    // Reset file input
+                    if (fileInput) fileInput.value = '';
+                    if (fileName) fileName.value = '';
+                    if (uploadBtn) {
+                        uploadBtn.disabled = true;
+                        uploadBtn.style.opacity = '0.6';
+                        uploadBtn.style.cursor = 'not-allowed';
+                    }
+                    
+                } catch (error) {
+                    console.error('Error processing file:', error);
+                    showNotification('Error processing file: ' + error.message, 'error');
+                }
+            };
+            
+            reader.onerror = function() {
+                showNotification('Error reading file.', 'error');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        });
+    }
+}
+
+    function processVacancyData(jsonData) {
+        return jsonData.map((record, index) => {
+            return {
+                'VACANCY ID': generateUniqueId('VAC'),
+                'JOB TITLE': record['JOB TITLE'] || record['Job Title'] || 'N/A',
+                'EMPLOYER': record['EMPLOYER'] || record['Employer'] || 'N/A',
+                'INDUSTRY': record['INDUSTRY'] || record['Industry'] || 'N/A',
+                'JOB TYPE': record['JOB TYPE'] || record['Job Type'] || 'Full-time',
+                'SALARY RANGE': record['SALARY RANGE'] || record['Salary Range'] || 'N/A',
+                'WORK LOCATION': record['WORK LOCATION'] || record['Work Location'] || 'N/A',
+                'JOB DESCRIPTION': record['JOB DESCRIPTION'] || record['Job Description'] || 'N/A',
+                'SKILLS REQUIRED': record['SKILLS REQUIRED'] || record['Skills Required'] || 'N/A',
+                'VACANCY COUNT': record['VACANCY COUNT'] || record['Vacancy Count'] || '1',
+                'APPLICATION DEADLINE': record['APPLICATION DEADLINE'] || record['Application Deadline'] || 'N/A',
+                'DATE POSTED': new Date().toLocaleDateString(),
+                'STATUS': 'Active',
+                'APPLICATION COUNT': '0',
+                'VIEWS': '0'
+            };
+        });
+    }
+
+    function initializeVacancyFilters() {
+        const filtersBtn = document.getElementById('vacancy-advanced-filters-btn');
+        const filtersPanel = document.getElementById('vacancy-advanced-filters-panel');
+        
+        if (filtersBtn && filtersPanel) {
+            filtersBtn.addEventListener('click', function() {
+                filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        
+        const applyFiltersBtn = document.getElementById('apply-vacancy-filters-btn');
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', applyVacancyFilters);
+        }
+        
+        const clearFiltersBtn = document.getElementById('clear-vacancy-filters-btn');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearVacancyFilters);
+        }
+    }
+
+    function applyVacancyFilters() {
+        // Implementation for vacancy filters
+        showNotification('Vacancy filters applied', 'success');
+    }
+
+    function clearVacancyFilters() {
+        // Implementation for clearing vacancy filters
+        showNotification('Vacancy filters cleared', 'info');
+    }
+
+    // Programs Management
+    function initializePrograms() {
+        console.log('Initializing programs...');
+        
+        // Program search functionality
+        const programSearchBtn = document.getElementById('program-search-btn');
+        const programClearSearchBtn = document.getElementById('program-clear-search-btn');
+        const programSearchInput = document.getElementById('program-search-input');
+        
+        if (programSearchBtn) {
+            programSearchBtn.addEventListener('click', searchPrograms);
+        }
+        if (programClearSearchBtn) {
+            programClearSearchBtn.addEventListener('click', clearProgramSearch);
+        }
+        if (programSearchInput) {
+            programSearchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') searchPrograms();
+            });
+        }
+        
+        // Add program button - FIXED
+        const addProgramBtn = document.getElementById('add-program-btn');
+        if (addProgramBtn) {
+            addProgramBtn.addEventListener('click', function() {
+                console.log('Add program button clicked');
+                openAddProgramModal();
+            });
+        }
+        
+        // Advanced filters button - FIXED
+        const advancedFiltersBtn = document.getElementById('program-advanced-filters-btn');
+        const filtersPanel = document.getElementById('program-advanced-filters-panel');
+        
+        if (advancedFiltersBtn && filtersPanel) {
+            advancedFiltersBtn.addEventListener('click', function() {
+                console.log('Program advanced filters button clicked');
+                filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        
+        // Apply and clear filters buttons
+        const applyFiltersBtn = document.getElementById('apply-program-filters-btn');
+        const clearFiltersBtn = document.getElementById('clear-program-filters-btn');
+        
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', applyProgramFilters);
+        }
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearProgramFilters);
+        }
+        
+        // Export programs
+        const exportProgramsBtn = document.getElementById('export-programs-btn');
+        if (exportProgramsBtn) {
+            exportProgramsBtn.addEventListener('click', exportProgramsToExcel);
+        }
+        
+        // Clear all programs
+        const clearAllProgramsBtn = document.getElementById('clear-all-programs-btn');
+        if (clearAllProgramsBtn) {
+            clearAllProgramsBtn.addEventListener('click', clearAllPrograms);
+        }
+        
+        // File upload for programs - FIXED
+        initializeProgramFileUpload();
+        
+        console.log('Programs initialization complete');
+    }
+
+    function loadPrograms() {
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        displayPrograms(programs);
+    }
+
+    function displayPrograms(programs) {
+        const table = document.getElementById('programs-table');
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (programs.length === 0) {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 21; // Adjust based on your table columns
+            cell.className = 'no-results';
+            cell.textContent = 'No programs found';
+            row.appendChild(cell);
+            tbody.appendChild(row);
+            return;
+        }
+        
+        programs.forEach((program, index) => {
+            const row = document.createElement('tr');
+            
+            // Create cells for each program field
+            const cells = [
+                createTableCell(program['PROGRAM ID'] || `PROG-${index + 1}`),
+                createTableCell(program['PROGRAM NAME'] || 'N/A'),
+                createTableCell(program['PROGRAM CATEGORY'] || 'N/A'),
+                createTableCell(program['PROGRAM TYPE'] || 'N/A'),
+                createTableCell(program['TARGET BENEFICIARIES'] || 'N/A'),
+                createTableCell(program['PROGRAM DESCRIPTION'] || 'N/A', '', '', 'long-text-cell'),
+                createTableCell(program['OBJECTIVES'] || 'N/A', '', '', 'long-text-cell'),
+                createTableCell(program['ELIGIBILITY CRITERIA'] || 'N/A', '', '', 'long-text-cell'),
+                createTableCell(program['BENEFITS PROVIDED'] || 'N/A', '', '', 'long-text-cell'),
+                createTableCell(program['DURATION'] || 'N/A'),
+                createTableCell(program['START DATE'] || 'N/A'),
+                createTableCell(program['END DATE'] || 'N/A'),
+                createTableCell(formatCurrency(program['BUDGET ALLOCATED'] || '0')),
+                createTableCell(formatCurrency(program['BUDGET UTILIZED'] || '0')),
+                createTableCell(program['PARTNER AGENCIES'] || 'N/A'),
+                createTableCell(program['PROGRAM COORDINATOR'] || 'N/A'),
+                createTableCell(program['CONTACT INFORMATION'] || 'N/A'),
+                createStatusCell(program['STATUS'] || 'Active'),
+                createTableCell(program['PARTICIPANT COUNT'] || '0'),
+                createTableCell(formatPercentage(program['SUCCESS RATE'] || '0')),
+                createProgramActionsCell(program, index)
+            ];
+            
+            cells.forEach(cell => row.appendChild(cell));
+            tbody.appendChild(row);
+        });
+    }
+
+    function formatCurrency(amount) {
+        if (!amount || amount === 'N/A') return 'N/A';
+        const num = parseFloat(amount);
+        return isNaN(num) ? amount : '₱' + num.toLocaleString('en-PH');
+    }
+
+    function formatPercentage(value) {
+        if (!value || value === 'N/A') return 'N/A';
+        const num = parseFloat(value);
+        return isNaN(num) ? value : num.toFixed(1) + '%';
+    }
+
+    function createProgramActionsCell(program, index) {
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'action-buttons';
+
+        // View Button
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'view-btn';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        viewBtn.title = 'View Program Details';
+        viewBtn.addEventListener('click', function() {
+            openViewProgramModal(program);
+        });
+        
+        // Edit Button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.title = 'Edit Program';
+        editBtn.addEventListener('click', function() {
+            openEditProgramModal(program);
+        });
+        
+        // Download Button - ADDED
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+        downloadBtn.title = 'Download Program Data';
+        downloadBtn.addEventListener('click', function() {
+            downloadProgramData(program);
+        });
+        
+        // Delete Button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.title = 'Delete Program';
+        deleteBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this program?')) {
+                deleteProgram(program['PROGRAM ID'] || program.ID);
+            }
+        });
+        
+        actionButtons.appendChild(viewBtn);
+        actionButtons.appendChild(editBtn);
+        actionButtons.appendChild(downloadBtn);
+        actionButtons.appendChild(deleteBtn);
+        actionsCell.appendChild(actionButtons);
+        
+        return actionsCell;
+    }
+
+    // Add Download Program Data Function
+    function downloadProgramData(program) {
+        try {
+            const worksheet = XLSX.utils.json_to_sheet([program]);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Program Data");
+            
+            const fileName = `program_${program['PROGRAM ID'] || program['PROGRAM NAME'] || 'data'}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+            
+            showNotification('Program data downloaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error downloading program data:', error);
+            showNotification('Error downloading program data', 'error');
+        }
+    }
+
+    function searchPrograms() {
+        const searchInput = document.getElementById('program-search-input');
+        if (!searchInput) return;
+        
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        
+        if (!searchTerm) {
+            displayPrograms(programs);
+            return;
+        }
+        
+        const filteredPrograms = programs.filter(program => {
+            const searchableFields = [
+                program['PROGRAM NAME'],
+                program['PROGRAM CATEGORY'],
+                program['PROGRAM TYPE'],
+                program['TARGET BENEFICIARIES'],
+                program['PROGRAM DESCRIPTION'],
+                program['PROGRAM COORDINATOR']
+            ].join(' ').toLowerCase();
+            
+            return searchableFields.includes(searchTerm);
+        });
+        
+        displayPrograms(filteredPrograms);
+        showNotification(`Found ${filteredPrograms.length} program(s)`, 'success');
+    }
+
+    function clearProgramSearch() {
+        const searchInput = document.getElementById('program-search-input');
+        if (searchInput) {
+            searchInput.value = '';
+            loadPrograms();
+        }
+    }
+
+    function openAddProgramModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2>Add New Program</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <form id="addProgramForm">
+                    <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="program-name">Program Name *</label>
+                                <input type="text" id="program-name" name="program-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="program-category">Program Category *</label>
+                                <select id="program-category" name="program-category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Livelihood">Livelihood Program</option>
+                                    <option value="Employment">Employment Assistance</option>
+                                    <option value="Education">Educational Assistance</option>
+                                    <option value="Skills">Skills Training</option>
+                                    <option value="OFW">OFW Reintegration</option>
+                                    <option value="PWD">PWD Assistance</option>
+                                    <option value="4Ps">4Ps Monitoring</option>
+                                    <option value="Other">Other Programs</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="program-type">Program Type</label>
+                                <select id="program-type" name="program-type">
+                                    <option value="Government">Government</option>
+                                    <option value="Private">Private</option>
+                                    <option value="NGO">NGO</option>
+                                    <option value="International">International</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="program-status">Status</label>
+                                <select id="program-status" name="program-status">
+                                    <option value="Active">Active</option>
+                                    <option value="Upcoming">Upcoming</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="target-beneficiaries">Target Beneficiaries</label>
+                                <input type="text" id="target-beneficiaries" name="target-beneficiaries">
+                            </div>
+                            <div class="form-group">
+                                <label for="program-duration">Duration (Months)</label>
+                                <input type="number" id="program-duration" name="program-duration" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="start-date">Start Date</label>
+                                <input type="date" id="start-date" name="start-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="end-date">End Date</label>
+                                <input type="date" id="end-date" name="end-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="budget-allocated">Budget Allocated (₱)</label>
+                                <input type="number" id="budget-allocated" name="budget-allocated" min="0" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="program-coordinator">Program Coordinator</label>
+                                <input type="text" id="program-coordinator" name="program-coordinator">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="program-description">Program Description</label>
+                                <textarea id="program-description" name="program-description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="program-objectives">Objectives</label>
+                                <textarea id="program-objectives" name="program-objectives" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="eligibility-criteria">Eligibility Criteria</label>
+                                <textarea id="eligibility-criteria" name="eligibility-criteria" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="benefits-provided">Benefits Provided</label>
+                                <textarea id="benefits-provided" name="benefits-provided" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="partner-agencies">Partner Agencies</label>
+                                <input type="text" id="partner-agencies" name="partner-agencies">
+                            </div>
+                            <div class="form-group">
+                                <label for="contact-information">Contact Information</label>
+                                <input type="text" id="contact-information" name="contact-information">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="cancel-btn" id="cancel-program">Cancel</button>
+                        <button type="submit" class="save-btn">Add Program</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event handlers
+        const closeBtn = modal.querySelector('.close');
+        const cancelBtn = modal.querySelector('#cancel-program');
+        const form = modal.querySelector('#addProgramForm');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        cancelBtn.addEventListener('click', () => document.body.removeChild(modal));
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            addNewProgram();
+            document.body.removeChild(modal);
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function addNewProgram() {
+        const form = document.querySelector('#addProgramForm');
+        if (!form) return;
+        
+        const formData = new FormData(form);
+        const program = {
+            'PROGRAM ID': generateUniqueId('PROG'),
+            'PROGRAM NAME': formData.get('program-name'),
+            'PROGRAM CATEGORY': formData.get('program-category'),
+            'PROGRAM TYPE': formData.get('program-type') || 'Government',
+            'TARGET BENEFICIARIES': formData.get('target-beneficiaries') || 'N/A',
+            'PROGRAM DESCRIPTION': formData.get('program-description') || 'N/A',
+            'OBJECTIVES': formData.get('program-objectives') || 'N/A',
+            'ELIGIBILITY CRITERIA': formData.get('eligibility-criteria') || 'N/A',
+            'BENEFITS PROVIDED': formData.get('benefits-provided') || 'N/A',
+            'DURATION': formData.get('program-duration') ? formData.get('program-duration') + ' months' : 'N/A',
+            'START DATE': formData.get('start-date') || 'N/A',
+            'END DATE': formData.get('end-date') || 'N/A',
+            'BUDGET ALLOCATED': formData.get('budget-allocated') || '0',
+            'BUDGET UTILIZED': '0',
+            'PARTNER AGENCIES': formData.get('partner-agencies') || 'N/A',
+            'PROGRAM COORDINATOR': formData.get('program-coordinator') || 'N/A',
+            'CONTACT INFORMATION': formData.get('contact-information') || 'N/A',
+            'STATUS': formData.get('program-status') || 'Active',
+            'PARTICIPANT COUNT': '0',
+            'SUCCESS RATE': '0'
+        };
+        
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        programs.push(program);
+        localStorage.setItem('programs', JSON.stringify(programs));
+        
+        displayPrograms(programs);
+        updateProgramStats();
+        showNotification('Program added successfully!', 'success');
+    }
+
+    function openEditProgramModal(program) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h2>Edit Program</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <form id="editProgramForm">
+                    <div style="padding: 20px; max-height: 70vh; overflow-y: auto;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="edit-program-name">Program Name *</label>
+                                <input type="text" id="edit-program-name" name="program-name" value="${program['PROGRAM NAME'] || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-program-category">Program Category *</label>
+                                <select id="edit-program-category" name="program-category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Livelihood" ${program['PROGRAM CATEGORY'] === 'Livelihood' ? 'selected' : ''}>Livelihood Program</option>
+                                    <option value="Employment" ${program['PROGRAM CATEGORY'] === 'Employment' ? 'selected' : ''}>Employment Assistance</option>
+                                    <option value="Education" ${program['PROGRAM CATEGORY'] === 'Education' ? 'selected' : ''}>Educational Assistance</option>
+                                    <option value="Skills" ${program['PROGRAM CATEGORY'] === 'Skills' ? 'selected' : ''}>Skills Training</option>
+                                    <option value="OFW" ${program['PROGRAM CATEGORY'] === 'OFW' ? 'selected' : ''}>OFW Reintegration</option>
+                                    <option value="PWD" ${program['PROGRAM CATEGORY'] === 'PWD' ? 'selected' : ''}>PWD Assistance</option>
+                                    <option value="4Ps" ${program['PROGRAM CATEGORY'] === '4Ps' ? 'selected' : ''}>4Ps Monitoring</option>
+                                    <option value="Other" ${program['PROGRAM CATEGORY'] === 'Other' ? 'selected' : ''}>Other Programs</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-program-type">Program Type</label>
+                                <select id="edit-program-type" name="program-type">
+                                    <option value="Government" ${program['PROGRAM TYPE'] === 'Government' ? 'selected' : ''}>Government</option>
+                                    <option value="Private" ${program['PROGRAM TYPE'] === 'Private' ? 'selected' : ''}>Private</option>
+                                    <option value="NGO" ${program['PROGRAM TYPE'] === 'NGO' ? 'selected' : ''}>NGO</option>
+                                    <option value="International" ${program['PROGRAM TYPE'] === 'International' ? 'selected' : ''}>International</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-program-status">Status</label>
+                                <select id="edit-program-status" name="program-status">
+                                    <option value="Active" ${program['STATUS'] === 'Active' ? 'selected' : ''}>Active</option>
+                                    <option value="Upcoming" ${program['STATUS'] === 'Upcoming' ? 'selected' : ''}>Upcoming</option>
+                                    <option value="Completed" ${program['STATUS'] === 'Completed' ? 'selected' : ''}>Completed</option>
+                                    <option value="Cancelled" ${program['STATUS'] === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-target-beneficiaries">Target Beneficiaries</label>
+                                <input type="text" id="edit-target-beneficiaries" name="target-beneficiaries" value="${program['TARGET BENEFICIARIES'] || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-program-duration">Duration (Months)</label>
+                                <input type="number" id="edit-program-duration" name="program-duration" min="1" value="${parseInt(program['DURATION']) || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-start-date">Start Date</label>
+                                <input type="date" id="edit-start-date" name="start-date" value="${program['START DATE'] || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-end-date">End Date</label>
+                                <input type="date" id="edit-end-date" name="end-date" value="${program['END DATE'] || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-budget-allocated">Budget Allocated (₱)</label>
+                                <input type="number" id="edit-budget-allocated" name="budget-allocated" min="0" step="0.01" value="${program['BUDGET ALLOCATED'] || '0'}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-budget-utilized">Budget Utilized (₱)</label>
+                                <input type="number" id="edit-budget-utilized" name="budget-utilized" min="0" step="0.01" value="${program['BUDGET UTILIZED'] || '0'}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-program-coordinator">Program Coordinator</label>
+                                <input type="text" id="edit-program-coordinator" name="program-coordinator" value="${program['PROGRAM COORDINATOR'] || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-participant-count">Participant Count</label>
+                                <input type="number" id="edit-participant-count" name="participant-count" min="0" value="${program['PARTICIPANT COUNT'] || '0'}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-success-rate">Success Rate (%)</label>
+                                <input type="number" id="edit-success-rate" name="success-rate" min="0" max="100" step="0.1" value="${parseFloat(program['SUCCESS RATE']) || '0'}">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="edit-program-description">Program Description</label>
+                                <textarea id="edit-program-description" name="program-description" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">${program['PROGRAM DESCRIPTION'] || ''}</textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="edit-program-objectives">Objectives</label>
+                                <textarea id="edit-program-objectives" name="program-objectives" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">${program['OBJECTIVES'] || ''}</textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="edit-eligibility-criteria">Eligibility Criteria</label>
+                                <textarea id="edit-eligibility-criteria" name="eligibility-criteria" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">${program['ELIGIBILITY CRITERIA'] || ''}</textarea>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="edit-benefits-provided">Benefits Provided</label>
+                                <textarea id="edit-benefits-provided" name="benefits-provided" rows="3" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">${program['BENEFITS PROVIDED'] || ''}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-partner-agencies">Partner Agencies</label>
+                                <input type="text" id="edit-partner-agencies" name="partner-agencies" value="${program['PARTNER AGENCIES'] || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-contact-information">Contact Information</label>
+                                <input type="text" id="edit-contact-information" name="contact-information" value="${program['CONTACT INFORMATION'] || ''}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="cancel-btn" id="cancel-edit-program">Cancel</button>
+                        <button type="submit" class="save-btn">Update Program</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event handlers
+        const closeBtn = modal.querySelector('.close');
+        const cancelBtn = modal.querySelector('#cancel-edit-program');
+        const form = modal.querySelector('#editProgramForm');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        cancelBtn.addEventListener('click', () => document.body.removeChild(modal));
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateProgram(program['PROGRAM ID'] || program.ID);
+            document.body.removeChild(modal);
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function updateProgram(programId) {
+        const form = document.querySelector('#editProgramForm');
+        if (!form) return;
+        
+        const formData = new FormData(form);
+        const updatedProgram = {
+            'PROGRAM ID': programId,
+            'PROGRAM NAME': formData.get('program-name'),
+            'PROGRAM CATEGORY': formData.get('program-category'),
+            'PROGRAM TYPE': formData.get('program-type') || 'Government',
+            'TARGET BENEFICIARIES': formData.get('target-beneficiaries') || 'N/A',
+            'PROGRAM DESCRIPTION': formData.get('program-description') || 'N/A',
+            'OBJECTIVES': formData.get('program-objectives') || 'N/A',
+            'ELIGIBILITY CRITERIA': formData.get('eligibility-criteria') || 'N/A',
+            'BENEFITS PROVIDED': formData.get('benefits-provided') || 'N/A',
+            'DURATION': formData.get('program-duration') ? formData.get('program-duration') + ' months' : 'N/A',
+            'START DATE': formData.get('start-date') || 'N/A',
+            'END DATE': formData.get('end-date') || 'N/A',
+            'BUDGET ALLOCATED': formData.get('budget-allocated') || '0',
+            'BUDGET UTILIZED': formData.get('budget-utilized') || '0',
+            'PARTNER AGENCIES': formData.get('partner-agencies') || 'N/A',
+            'PROGRAM COORDINATOR': formData.get('program-coordinator') || 'N/A',
+            'CONTACT INFORMATION': formData.get('contact-information') || 'N/A',
+            'STATUS': formData.get('program-status') || 'Active',
+            'PARTICIPANT COUNT': formData.get('participant-count') || '0',
+            'SUCCESS RATE': formData.get('success-rate') || '0'
+        };
+        
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        const programIndex = programs.findIndex(p => 
+            p['PROGRAM ID'] === programId || p.ID === programId
+        );
+        
+        if (programIndex !== -1) {
+            programs[programIndex] = updatedProgram;
+            localStorage.setItem('programs', JSON.stringify(programs));
+            displayPrograms(programs);
+            updateProgramStats();
+            showNotification('Program updated successfully!', 'success');
+        } else {
+            showNotification('Program not found!', 'error');
+        }
+    }
+
+    function openViewProgramModal(program) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="modal-header">
+                    <h2>Program Details</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div style="padding: 20px; max-height: 80vh; overflow-y: auto;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Program Information</h3>
+                            <div class="view-field">
+                                <label>Program Name:</label>
+                                <span>${program['PROGRAM NAME'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Category:</label>
+                                <span>${program['PROGRAM CATEGORY'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Type:</label>
+                                <span>${program['PROGRAM TYPE'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Status:</label>
+                                <span class="status-badge status-${(program['STATUS'] || 'Active').toLowerCase()}">${program['STATUS'] || 'Active'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Target Beneficiaries:</label>
+                                <span>${program['TARGET BENEFICIARIES'] || 'N/A'}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Program Timeline & Budget</h3>
+                            <div class="view-field">
+                                <label>Duration:</label>
+                                <span>${program['DURATION'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Start Date:</label>
+                                <span>${program['START DATE'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>End Date:</label>
+                                <span>${program['END DATE'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Budget Allocated:</label>
+                                <span>${formatCurrency(program['BUDGET ALLOCATED'] || '0')}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Budget Utilized:</label>
+                                <span>${formatCurrency(program['BUDGET UTILIZED'] || '0')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Program Performance</h3>
+                            <div class="view-field">
+                                <label>Participant Count:</label>
+                                <span>${program['PARTICIPANT COUNT'] || '0'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Success Rate:</label>
+                                <span>${formatPercentage(program['SUCCESS RATE'] || '0')}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                            <h3 style="color: #1e88e5; margin-bottom: 15px;">Contact Information</h3>
+                            <div class="view-field">
+                                <label>Program Coordinator:</label>
+                                <span>${program['PROGRAM COORDINATOR'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Contact Info:</label>
+                                <span>${program['CONTACT INFORMATION'] || 'N/A'}</span>
+                            </div>
+                            <div class="view-field">
+                                <label>Partner Agencies:</label>
+                                <span>${program['PARTNER AGENCIES'] || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Program Description</h3>
+                        <p>${program['PROGRAM DESCRIPTION'] || 'No description provided.'}</p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Objectives</h3>
+                        <p>${program['OBJECTIVES'] || 'No objectives listed.'}</p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Eligibility Criteria</h3>
+                        <p>${program['ELIGIBILITY CRITERIA'] || 'No eligibility criteria specified.'}</p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+                        <h3 style="color: #1e88e5; margin-bottom: 15px;">Benefits Provided</h3>
+                        <p>${program['BENEFITS PROVIDED'] || 'No benefits information available.'}</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="cancel-btn" id="close-view-program">Close</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const closeBtn = modal.querySelector('.close');
+        const closeViewBtn = modal.querySelector('#close-view-program');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        closeViewBtn.addEventListener('click', () => document.body.removeChild(modal));
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function exportProgramsToExcel() {
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        if (programs.length === 0) {
+            showNotification('No programs to export', 'error');
+            return;
+        }
+        
+        try {
+            const exportData = programs.map(program => ({
+                'Program ID': program['PROGRAM ID'],
+                'Program Name': program['PROGRAM NAME'],
+                'Category': program['PROGRAM CATEGORY'],
+                'Type': program['PROGRAM TYPE'],
+                'Status': program['STATUS'],
+                'Target Beneficiaries': program['TARGET BENEFICIARIES'],
+                'Duration': program['DURATION'],
+                'Start Date': program['START DATE'],
+                'End Date': program['END DATE'],
+                'Budget Allocated': program['BUDGET ALLOCATED'],
+                'Budget Utilized': program['BUDGET UTILIZED'],
+                'Participant Count': program['PARTICIPANT COUNT'],
+                'Success Rate': program['SUCCESS RATE'],
+                'Program Coordinator': program['PROGRAM COORDINATOR']
+            }));
+            
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Programs");
+            
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(workbook, `programs_${today}.xlsx`);
+            
+            showNotification('Programs exported successfully!', 'success');
+        } catch (error) {
+            console.error('Error exporting programs:', error);
+            showNotification('Error exporting programs: ' + error.message, 'error');
+        }
+    }
+
+    function deleteProgram(id) {
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        const updatedPrograms = programs.filter(program => 
+            program['PROGRAM ID'] !== id && program.ID !== id
+        );
+        
+        localStorage.setItem('programs', JSON.stringify(updatedPrograms));
+        displayPrograms(updatedPrograms);
+        updateProgramStats();
+        showNotification('Program deleted successfully!', 'success');
+    }
+
+    function clearAllPrograms() {
+        if (confirm('Are you sure you want to clear ALL programs? This action cannot be undone.')) {
+            localStorage.removeItem('programs');
+            displayPrograms([]);
+            updateProgramStats();
+            showNotification('All programs cleared successfully.', 'success');
+        }
+    }
+
+    function initializeProgramFileUpload() {
+        const uploadBtn = document.getElementById('program-add-btn');
+        const fileInput = document.getElementById('program-upload-file-input');
+        
+        if (uploadBtn && fileInput) {
+            uploadBtn.addEventListener('click', function() {
+                if (!fileInput.files.length) {
+                    showNotification('Please select a file first.', 'error');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        if (jsonData.length === 0) {
+                            showNotification('The file does not contain any data.', 'error');
+                            return;
+                        }
+                        
+                        const processedData = processProgramData(jsonData);
+                        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+                        const updatedPrograms = [...programs, ...processedData];
+                        
+                        localStorage.setItem('programs', JSON.stringify(updatedPrograms));
+                        displayPrograms(updatedPrograms);
+                        updateProgramStats();
+                        
+                        showNotification(`Successfully imported ${processedData.length} programs`, 'success');
+                        
+                        // Reset file input
+                        fileInput.value = '';
+                        document.getElementById('program-upload-file-name').value = '';
+                        uploadBtn.disabled = true;
+                        
+                    } catch (error) {
+                        console.error('Error processing file:', error);
+                        showNotification('Error processing file: ' + error.message, 'error');
+                    }
+                };
+                
+                reader.onerror = function() {
+                    showNotification('Error reading file.', 'error');
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+    }
+
+    function processProgramData(jsonData) {
+        return jsonData.map((record, index) => {
+            return {
+                'PROGRAM ID': generateUniqueId('PROG'),
+                'PROGRAM NAME': record['PROGRAM NAME'] || record['Program Name'] || 'N/A',
+                'PROGRAM CATEGORY': record['PROGRAM CATEGORY'] || record['Program Category'] || 'Other',
+                'PROGRAM TYPE': record['PROGRAM TYPE'] || record['Program Type'] || 'Government',
+                'TARGET BENEFICIARIES': record['TARGET BENEFICIARIES'] || record['Target Beneficiaries'] || 'N/A',
+                'PROGRAM DESCRIPTION': record['PROGRAM DESCRIPTION'] || record['Program Description'] || 'N/A',
+                'OBJECTIVES': record['OBJECTIVES'] || record['Objectives'] || 'N/A',
+                'ELIGIBILITY CRITERIA': record['ELIGIBILITY CRITERIA'] || record['Eligibility Criteria'] || 'N/A',
+                'BENEFITS PROVIDED': record['BENEFITS PROVIDED'] || record['Benefits Provided'] || 'N/A',
+                'DURATION': record['DURATION'] || record['Duration'] || 'N/A',
+                'START DATE': record['START DATE'] || record['Start Date'] || 'N/A',
+                'END DATE': record['END DATE'] || record['End Date'] || 'N/A',
+                'BUDGET ALLOCATED': record['BUDGET ALLOCATED'] || record['Budget Allocated'] || '0',
+                'BUDGET UTILIZED': record['BUDGET UTILIZED'] || record['Budget Utilized'] || '0',
+                'PARTNER AGENCIES': record['PARTNER AGENCIES'] || record['Partner Agencies'] || 'N/A',
+                'PROGRAM COORDINATOR': record['PROGRAM COORDINATOR'] || record['Program Coordinator'] || 'N/A',
+                'CONTACT INFORMATION': record['CONTACT INFORMATION'] || record['Contact Information'] || 'N/A',
+                'STATUS': record['STATUS'] || record['Status'] || 'Active',
+                'PARTICIPANT COUNT': record['PARTICIPANT COUNT'] || record['Participant Count'] || '0',
+                'SUCCESS RATE': record['SUCCESS RATE'] || record['Success Rate'] || '0'
+            };
+        });
+    }
+
+    function initializeProgramFilters() {
+        const filtersBtn = document.getElementById('program-advanced-filters-btn');
+        const filtersPanel = document.getElementById('program-advanced-filters-panel');
+        
+        if (filtersBtn && filtersPanel) {
+            filtersBtn.addEventListener('click', function() {
+                filtersPanel.style.display = filtersPanel.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        
+        const applyFiltersBtn = document.getElementById('apply-program-filters-btn');
+        if (applyFiltersBtn) {
+            applyFiltersBtn.addEventListener('click', applyProgramFilters);
+        }
+        
+        const clearFiltersBtn = document.getElementById('clear-program-filters-btn');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', clearProgramFilters);
+        }
+    }
+
+    function applyProgramFilters() {
+        const categoryFilter = document.getElementById('program-filter-category');
+        const typeFilter = document.getElementById('program-filter-type');
+        const statusFilter = document.getElementById('program-filter-status');
+        const dateFromFilter = document.getElementById('program-filter-date-from');
+        const dateToFilter = document.getElementById('program-filter-date-to');
+        
+        const filters = {
+            category: categoryFilter ? categoryFilter.value : '',
+            type: typeFilter ? typeFilter.value : '',
+            status: statusFilter ? statusFilter.value : '',
+            dateFrom: dateFromFilter ? dateFromFilter.value : '',
+            dateTo: dateToFilter ? dateToFilter.value : ''
+        };
+        
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        const filteredPrograms = programs.filter(program => {
+            let matches = true;
+            
+            if (filters.category && program['PROGRAM CATEGORY'] !== filters.category) {
+                matches = false;
+            }
+            
+            if (filters.type && program['PROGRAM TYPE'] !== filters.type) {
+                matches = false;
+            }
+            
+            if (filters.status && program['STATUS'] !== filters.status) {
+                matches = false;
+            }
+            
+            if (filters.dateFrom || filters.dateTo) {
+                const programDate = new Date(program['START DATE']);
+                if (filters.dateFrom && programDate < new Date(filters.dateFrom)) {
+                    matches = false;
+                }
+                if (filters.dateTo && programDate > new Date(filters.dateTo)) {
+                    matches = false;
+                }
+            }
+            
+            return matches;
+        });
+        
+        displayPrograms(filteredPrograms);
+        showNotification(`Found ${filteredPrograms.length} program(s) matching your filters`, 'success');
+    }
+
+    function clearProgramFilters() {
+        const categoryFilter = document.getElementById('program-filter-category');
+        const typeFilter = document.getElementById('program-filter-type');
+        const statusFilter = document.getElementById('program-filter-status');
+        const dateFromFilter = document.getElementById('program-filter-date-from');
+        const dateToFilter = document.getElementById('program-filter-date-to');
+        
+        if (categoryFilter) categoryFilter.value = '';
+        if (typeFilter) typeFilter.value = '';
+        if (statusFilter) statusFilter.value = '';
+        if (dateFromFilter) dateFromFilter.value = '';
+        if (dateToFilter) dateToFilter.value = '';
+        
+        loadPrograms();
+        showNotification('All filters cleared', 'info');
+    }
+
+    function updateProgramStats() {
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        
+        const totalPrograms = programs.length;
+        const activePrograms = programs.filter(p => p['STATUS'] === 'Active').length;
+        const completedPrograms = programs.filter(p => p['STATUS'] === 'Completed').length;
+        const totalBudget = programs.reduce((sum, p) => sum + parseFloat(p['BUDGET ALLOCATED'] || 0), 0);
+        const totalParticipants = programs.reduce((sum, p) => sum + parseInt(p['PARTICIPANT COUNT'] || 0), 0);
+        
+        // Update stats cards
+        updateStatCard('total-programs-count', totalPrograms);
+        updateStatCard('active-programs-count', activePrograms);
+        updateStatCard('completed-programs-count', completedPrograms);
+        updateStatCard('total-budget-allocated', '₱' + totalBudget.toLocaleString('en-PH'));
+        updateStatCard('total-participants-count', totalParticipants);
+        
+        // Update category distribution
+        updateProgramCategoryDistribution(programs);
+    }
+
+    function updateProgramCategoryDistribution(programs) {
+        const categoryChart = document.getElementById('program-category-chart');
+        if (!categoryChart) return;
+        
+        const categoryCount = {};
+        programs.forEach(program => {
+            const category = program['PROGRAM CATEGORY'] || 'Unknown';
+            categoryCount[category] = (categoryCount[category] || 0) + 1;
+        });
+        
+        console.log('Program Category Distribution:', categoryCount);
+    }
+
+    // Initialize programs when document is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        initializePrograms();
+        loadPrograms();
+        updateProgramStats();
+    });
 
     initializeApp();
 });

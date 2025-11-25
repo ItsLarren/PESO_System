@@ -149,14 +149,8 @@ Form 2 - Employers Vacancies Status Report -
 Other Reports
 Summary of Applicants Registered and Vacancies Solicited
 
-how to fix the action column, because when I scroll the scroll bar horizontally the action buttons (view, edit, download and delete buttons) were moving to the program status
 
-prpoblems
-the action column
-not working actions and the add manual applicant button and also check the other button
-the delete button at the action column intead of delecting sche onlyl, it deletes all
 
-browse at the imported data - the file document folder will oen twice , why is that?
 
 so the problem now was the function of the other tabs such as the employers, vacancies and the programs table their functionalities such as the butons were not working at all and the stats were not yet fully done.
 the welcome admin log put buttonn were just a reundant and can mbe remoevbed since  it alreqady has the existing functional button.
