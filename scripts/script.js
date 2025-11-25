@@ -380,6 +380,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 initializeDynamicFormElements();
                 initializeAddEntryButtons();
                 displayCurrentUser();
+                
+                setTimeout(() => {
+                    const allLogoutButtons = document.querySelectorAll('#logout-btn');
+                    allLogoutButtons.forEach(btn => {
+                        btn.addEventListener('click', handleLogout);
+                    });
+                }, 1000);
 
                 // Initialize the currently active tab
                 const activeTab = document.querySelector('.nav-tab.active');
@@ -3408,24 +3415,77 @@ document.addEventListener('DOMContentLoaded', function () {
         showNotification(message, type, elements.uploadNotification);
     }
 
+    function initializeLogoutButton() {
+        console.log('Initializing logout button...');
+        
+        // Use event delegation - listen for clicks on the document
+        document.addEventListener('click', function(event) {
+            if (event.target.id === 'logout-btn' || 
+                event.target.closest('#logout-btn') || 
+                event.target.classList.contains('logout-btn') ||
+                event.target.closest('.logout-btn')) {
+                console.log('Logout button clicked via event delegation');
+                handleLogout();
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        });
+        
+        // Also try to find and directly attach to any existing logout button
+        setTimeout(() => {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                console.log('Directly attaching to logout button');
+                logoutBtn.onclick = handleLogout;
+            }
+        }, 100);
+    }
+
+    function handleLogout() {
+        console.log('Logout initiated...');
+        
+        // Clear all authentication data
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('currentUser');
+        
+        console.log('Authentication data cleared, redirecting to login...');
+        
+        // Redirect to login page
+        window.location.href = 'login.html';
+    }
+
     function displayCurrentUser() {
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
             const header = document.querySelector('header .header-content');
             if (header) {
+                // Remove existing user info if it exists
+                const existingUserInfo = header.querySelector('.user-info');
+                if (existingUserInfo) {
+                    existingUserInfo.remove();
+                }
+
                 const userInfo = document.createElement('div');
                 userInfo.className = 'user-info';
                 userInfo.innerHTML = `
-                    <span>Welcome, ${currentUser}</span>
-                    <button id="logout-btn" class="logout-btn">Logout</button>
+                    <span style="margin-right: 15px; font-weight: 500;">Welcome, ${currentUser}</span>
+                    <button id="logout-btn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 `;
                 header.appendChild(userInfo);
 
-                document.getElementById('logout-btn').addEventListener('click', function() {
-                    localStorage.removeItem('isLoggedIn');
-                    localStorage.removeItem('currentUser');
-                    window.location.href = 'login.html';
-                });
+                // Initialize the logout button immediately after creating it
+                const logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                    console.log('New logout button created, adding event listener');
+                    // Remove any existing listeners first
+                    const newLogoutBtn = logoutBtn.cloneNode(true);
+                    logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+                    
+                    // Add the event listener to the new button
+                    newLogoutBtn.addEventListener('click', handleLogout);
+                }
             }
         }
     }

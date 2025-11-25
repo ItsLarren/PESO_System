@@ -3165,3 +3165,24 @@ input[type="date"]:after {
     }
 }
 
+.logout-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+    background: #c82333;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    padding-right: 20px;
+}
