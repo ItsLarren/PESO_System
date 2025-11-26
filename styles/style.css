@@ -3186,3 +3186,48 @@ input[type="date"]:after {
     margin-left: auto;
     padding-right: 20px;
 }
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-active {
+    background-color: #e8f5e8;
+    color: #2e7d32;
+}
+
+.status-inactive {
+    background-color: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-completed {
+    background-color: #e3f2fd;
+    color: #1565c0;
+}
+
+.status-cancelled {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.status-upcoming {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.long-text-cell {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.compact-cell {
+    font-size: 12px;
+    padding: 4px 6px;
+}

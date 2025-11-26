@@ -150,12 +150,10 @@ Other Reports
 Summary of Applicants Registered and Vacancies Solicited
 
 
-
-
-
-the welcome admin log put buttonn were just a reundant and can mbe remoevbed since  it alreqady has the existing functional button.
 at the vacancies tab the there should be at the bottom where in iut is the "Top vacancies" only top 10 needed where in for example the top 1: sales clerk - 100 applicants applied here and so on.
 
 also have the top preffered  same as the top vacancies  but is is the top prefereed occupation like a summary sample: call center.
 
 at the employers, it has the top company listed same as at the  top vacancies.
+
+When the add employer, vacancies and programs were clicked there were so many modals appearing. It was around 9 modals are appearing

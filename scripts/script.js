@@ -28,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function () {
         uploadPhotoBtn: document.getElementById('upload-photo-btn'),
         removePhotoBtn: document.getElementById('remove-photo-btn'),
         takePhotoBtn: document.getElementById('take-photo-btn'),
-        
         cameraModal: document.getElementById('cameraModal'),
         closeCamera: document.querySelector('.close-camera'),
         cameraVideo: document.getElementById('camera-video'),
@@ -151,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             }
-        }
+        } 
         
         const photoId = applicant['SRS ID'] || applicant.ID;
         const viewPhotoPreview = document.getElementById('view-photo-preview');
@@ -380,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Load initial data
             loadDashboardStats();
 
-            // FIXED: Initialize logout button properly
+            // Initialize logout button properly
             initializeLogoutButton();
 
             console.log('Application initialized successfully');
@@ -421,7 +420,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Work immediately when
         const workImmediatelyNo = document.getElementById('manual-work-immediately-no');
         const workImmediatelyWhen = document.getElementById('manual-work-immediately-when');
         
@@ -431,7 +429,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // 4Ps beneficiary ID
         const fourPsYes = document.getElementById('manual-4ps-yes');
         const fourPsId = document.getElementById('manual-4ps-id');
         
@@ -441,7 +438,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Work location inputs
         const workLocationLocal = document.querySelector('input[name="manual-work-location"][value="Local"]');
         const workLocationOverseas = document.querySelector('input[name="manual-work-location"][value="Overseas"]');
         
@@ -451,7 +447,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('manual-work-location-local2').style.display = this.checked ? 'block' : 'none';
                 document.getElementById('manual-work-location-local3').style.display = this.checked ? 'block' : 'none';
                 
-                // Hide overseas inputs
                 document.getElementById('manual-work-location-overseas1').style.display = 'none';
                 document.getElementById('manual-work-location-overseas2').style.display = 'none';
                 document.getElementById('manual-work-location-overseas3').style.display = 'none';
@@ -464,14 +459,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('manual-work-location-overseas2').style.display = this.checked ? 'block' : 'none';
                 document.getElementById('manual-work-location-overseas3').style.display = this.checked ? 'block' : 'none';
                 
-                // Hide local inputs
                 document.getElementById('manual-work-location-local1').style.display = 'none';
                 document.getElementById('manual-work-location-local2').style.display = 'none';
                 document.getElementById('manual-work-location-local3').style.display = 'none';
             });
         }
         
-        // Skills "Others" specification
         const skillOthers = document.getElementById('manual-skill-others');
         const skillOthersSpecify = document.getElementById('manual-skill-others-specify');
         
@@ -482,9 +475,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Initialize add entry buttons for dynamic tables
     function initializeAddEntryButtons() {
-        // Training entries
         const addTrainingBtn = document.getElementById('add-training-btn');
         if (addTrainingBtn) {
             addTrainingBtn.addEventListener('click', function() {
@@ -492,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Eligibility entries
         const addEligibilityBtn = document.getElementById('add-eligibility-btn');
         if (addEligibilityBtn) {
             addEligibilityBtn.addEventListener('click', function() {
@@ -500,7 +490,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Work experience entries
         const addWorkBtn = document.getElementById('add-work-btn');
         if (addWorkBtn) {
             addWorkBtn.addEventListener('click', function() {
@@ -509,7 +498,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Add new row to tables
     function addTableEntry(tableId, type) {
         const tableBody = document.getElementById(tableId);
         if (!tableBody) return;
@@ -555,20 +543,16 @@ document.addEventListener('DOMContentLoaded', function () {
         
         tableBody.appendChild(newRow);
         
-        // Scroll to the bottom of the table container to show the new row
         const tableContainer = tableBody.closest('.table-container-scroll');
         if (tableContainer) {
             tableContainer.scrollLeft = tableContainer.scrollWidth;
         }
     }
 
-    // Update the manual form submission handler to include all new fields
     function handleManualFormSubmission(e) {
         e.preventDefault();
         
-        // Get all form values
         const formData = {
-            // Personal Information
             surname: document.getElementById('manual-surname').value,
             firstName: document.getElementById('manual-first-name').value,
             middleName: document.getElementById('manual-middle-name').value,
@@ -3408,6 +3392,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // Method 2: Directly attach to any existing logout buttons
         const attachToExistingButtons = () => {
             const logoutButtons = document.querySelectorAll('#logout-btn, .logout-btn');
+            console.log(`Found ${logoutButtons.length} logout button(s)`);
+            
             logoutButtons.forEach(button => {
                 // Remove any existing listeners first
                 const newButton = button.cloneNode(true);
@@ -3421,10 +3407,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     e.stopPropagation();
                 });
             });
-            
-            if (logoutButtons.length > 0) {
-                console.log(`Found and attached to ${logoutButtons.length} logout button(s)`);
-            }
         };
         
         // Try immediately
@@ -6865,24 +6847,33 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const uploadBtn = document.getElementById('employer-add-btn');
         const fileInput = document.getElementById('employer-upload-file-input');
-        const browseBtn = document.getElementById('employer-browse-btn');
+        const browseBtn = document.getElementById('employer-upload-browse-btn'); // Fixed ID
         const fileName = document.getElementById('employer-upload-file-name');
+        
+        console.log('Employer upload elements:', {
+            uploadBtn: !!uploadBtn,
+            fileInput: !!fileInput,
+            browseBtn: !!browseBtn,
+            fileName: !!fileName
+        });
         
         // Browse button functionality - FIXED
         if (browseBtn && fileInput) {
             browseBtn.addEventListener('click', function() {
-                console.log('Browse button clicked');
+                console.log('Employer browse button clicked');
                 fileInput.click();
             });
             console.log('Employer browse button initialized');
         } else {
             console.warn('Employer browse button or file input not found');
+            if (!browseBtn) console.warn('Browse button not found - ID: employer-upload-browse-btn');
+            if (!fileInput) console.warn('File input not found - ID: employer-upload-file-input');
         }
         
         // File input change handler - FIXED
         if (fileInput && fileName) {
             fileInput.addEventListener('change', function() {
-                console.log('File input changed');
+                console.log('Employer file input changed');
                 if (this.files && this.files.length > 0) {
                     fileName.value = this.files[0].name;
                     if (uploadBtn) {
@@ -6905,7 +6896,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Upload button functionality - FIXED
         if (uploadBtn) {
             uploadBtn.addEventListener('click', function() {
-                console.log('Upload button clicked');
+                console.log('Employer upload button clicked');
                 
                 if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
                     showNotification('Please select a file first.', 'error');
@@ -8959,6 +8950,98 @@ function initializeProgramFileUpload() {
         } catch (error) {
             console.error('Error clearing storage:', error);
             return false;
+        }
+    }
+
+    function loadDashboardStats() {
+        console.log('Loading dashboard stats...');
+        // This will be implemented when you add the dashboard functionality
+        const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        
+        // Update quick stats
+        updateQuickStats(savedApplicants.length, employers.length, vacancies.length);
+    }
+
+    function updateQuickStats(applicants, employers, vacancies) {
+        const quickApplicants = document.getElementById('quick-applicants');
+        const quickEmployers = document.getElementById('quick-employers');
+        const quickVacancies = document.getElementById('quick-vacancies');
+        
+        if (quickApplicants) quickApplicants.textContent = applicants;
+        if (quickEmployers) quickEmployers.textContent = employers;
+        if (quickVacancies) quickVacancies.textContent = vacancies;
+    }
+
+    function navigateToPage(page) {
+        console.log('Navigating to page:', page);
+        const tab = document.querySelector(`[data-page="${page}"]`);
+        if (tab) {
+            tab.click();
+        }
+    }
+
+    // Add this to your initializeApp() function
+    function initializeGlobalEventHandlers() {
+        // Use event delegation for all modal buttons
+        document.addEventListener('click', function(event) {
+            // Add Employer button
+            if (event.target.matches('#add-employer-btn, #add-employer-btn *')) {
+                event.preventDefault();
+                event.stopPropagation();
+                console.log('Add employer button clicked via delegation');
+                openAddEmployerModal();
+                return;
+            }
+            
+            // Add Vacancy button
+            if (event.target.matches('#add-vacancy-btn, #add-vacancy-btn *')) {
+                event.preventDefault();
+                event.stopPropagation();
+                console.log('Add vacancy button clicked via delegation');
+                openAddVacancyModal();
+                return;
+            }
+            
+            // Add Program button
+            if (event.target.matches('#add-program-btn, #add-program-btn *')) {
+                event.preventDefault();
+                event.stopPropagation();
+                console.log('Add program button clicked via delegation');
+                openAddProgramModal();
+                return;
+            }
+            
+            // Advanced filters buttons
+            if (event.target.matches('#employer-advanced-filters-btn, #employer-advanced-filters-btn *')) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleFiltersPanel('employer');
+                return;
+            }
+            
+            if (event.target.matches('#vacancy-advanced-filters-btn, #vacancy-advanced-filters-btn *')) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleFiltersPanel('vacancy');
+                return;
+            }
+            
+            if (event.target.matches('#program-advanced-filters-btn, #program-advanced-filters-btn *')) {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleFiltersPanel('program');
+                return;
+            }
+        });
+    }
+
+    function toggleFiltersPanel(type) {
+        const panel = document.getElementById(`${type}-advanced-filters-panel`);
+        if (panel) {
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
         }
     }
 
