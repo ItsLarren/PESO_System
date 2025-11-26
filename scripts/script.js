@@ -348,73 +348,47 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeApp() {
         try {
             console.log('Initializing application...');
+
+            clearStorageSpace();
             
             if (localStorage.getItem('isLoggedIn') !== 'true') {
                 window.location.href = 'login.html';
                 return;
             }
 
-            setTimeout(() => {
-                initializeManualForm();
-                initializeCamera();
-                initializeSearch();
-                initializeEditModal();
-                initializeFileUploads();
-                initializeAdvancedFilters();
-                initializeReporting();
-                initializeViewModal();
-                loadMainApplicants();
-                loadImportedData();
-                initializeDynamicFormElements();
-                initializeAddEntryButtons();
-                displayCurrentUser();
+            // Initialize all modules first
+            initializeManualForm();
+            initializeCamera();
+            initializeSearch();
+            initializeEditModal();
+            initializeFileUploads();
+            initializeAdvancedFilters();
+            initializeReporting();
+            initializeViewModal();
+            loadMainApplicants();
+            loadImportedData();
+            initializeDynamicFormElements();
+            initializeAddEntryButtons();
+            displayCurrentUser();
 
-                // NEW: Add these initializations
-                initializeNavigation();
-                initializeEmployers();
-                initializeVacancies();
-                initializePrograms();
-                
-                loadMainApplicants();
-                loadImportedData();
-                initializeDynamicFormElements();
-                initializeAddEntryButtons();
-                displayCurrentUser();
-                
-                setTimeout(() => {
-                    const allLogoutButtons = document.querySelectorAll('#logout-btn');
-                    allLogoutButtons.forEach(btn => {
-                        btn.addEventListener('click', handleLogout);
-                    });
-                }, 1000);
+            // Initialize navigation and other modules
+            initializeNavigation();
+            initializeEmployers();
+            initializeVacancies();
+            initializePrograms();
+            
+            // Load initial data
+            loadDashboardStats();
 
-                // Initialize the currently active tab
-                const activeTab = document.querySelector('.nav-tab.active');
-                if (activeTab) {
-                    const activePage = activeTab.getAttribute('data-page');
-                    loadPageData(activePage);
-                } else {
-                    // Default to applicants tab if no active tab
-                    loadPageData('applicants');
-                }
+            // FIXED: Initialize logout button properly
+            initializeLogoutButton();
 
-                // Load initial data
-                loadDashboardStats();
-
-                console.log('Application initialized successfully');
-            }, 100);
+            console.log('Application initialized successfully');
             
         } catch (error) {
             console.error('Error during application initialization:', error);
             showNotification('Error initializing application: ' + error.message, 'error');
         }
-
-        // Force initialize all modules
-        setTimeout(() => {
-            initializeEmployers();
-            initializeVacancies();
-            initializePrograms();
-        }, 500);
     }
 
     function initializeDynamicFormElements() {
@@ -3418,7 +3392,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeLogoutButton() {
         console.log('Initializing logout button...');
         
-        // Use event delegation - listen for clicks on the document
+        // Method 1: Event delegation - listen for clicks on the document
         document.addEventListener('click', function(event) {
             if (event.target.id === 'logout-btn' || 
                 event.target.closest('#logout-btn') || 
@@ -3431,14 +3405,34 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // Also try to find and directly attach to any existing logout button
-        setTimeout(() => {
-            const logoutBtn = document.getElementById('logout-btn');
-            if (logoutBtn) {
-                console.log('Directly attaching to logout button');
-                logoutBtn.onclick = handleLogout;
+        // Method 2: Directly attach to any existing logout buttons
+        const attachToExistingButtons = () => {
+            const logoutButtons = document.querySelectorAll('#logout-btn, .logout-btn');
+            logoutButtons.forEach(button => {
+                // Remove any existing listeners first
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+                
+                // Add the event listener to the new button
+                newButton.addEventListener('click', function(e) {
+                    console.log('Logout button clicked directly');
+                    handleLogout();
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+            
+            if (logoutButtons.length > 0) {
+                console.log(`Found and attached to ${logoutButtons.length} logout button(s)`);
             }
-        }, 100);
+        };
+        
+        // Try immediately
+        attachToExistingButtons();
+        
+        // Try again after a short delay in case buttons are created dynamically
+        setTimeout(attachToExistingButtons, 500);
+        setTimeout(attachToExistingButtons, 1000);
     }
 
     function handleLogout() {
@@ -8935,6 +8929,38 @@ function initializeProgramFileUpload() {
         loadPrograms();
         updateProgramStats();
     });
+
+    function clearStorageSpace() {
+        try {
+            // Check current storage usage
+            let totalSize = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    totalSize += localStorage[key].length * 2; // Approximate size in bytes
+                }
+            }
+            console.log(`Current storage usage: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+
+            // Clear imported data first (usually the largest)
+            localStorage.removeItem('importedData');
+            
+            // Optionally clear other temporary data
+            const tempKeys = [];
+            for (let key in localStorage) {
+                if (key.startsWith('temp') || key.startsWith('photo_')) {
+                    tempKeys.push(key);
+                }
+            }
+            
+            tempKeys.forEach(key => localStorage.removeItem(key));
+            
+            console.log('Storage cleared successfully');
+            return true;
+        } catch (error) {
+            console.error('Error clearing storage:', error);
+            return false;
+        }
+    }
 
     initializeApp();
 });
