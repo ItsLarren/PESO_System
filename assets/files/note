@@ -150,10 +150,33 @@ Other Reports
 Summary of Applicants Registered and Vacancies Solicited
 
 
-at the vacancies tab the there should be at the bottom where in iut is the "Top vacancies" only top 10 needed where in for example the top 1: sales clerk - 100 applicants applied here and so on.
 
-also have the top preffered  same as the top vacancies  but is is the top prefereed occupation like a summary sample: call center.
+Employers Tab:
+    - "Top Company"
+    - Advanced Filter not working 
+    - Add employer when cliked it opens so many modals.
+    - sort by not functioning
+    - Browse button working but the file directory opens twice.
+    - uploaded excel file all infos inputed as N/A.
+    - edit button shows error
 
-at the employers, it has the top company listed same as at the  top vacancies.
+Vacancies Tab:
+    - Make a "Top 10 Vacancies" 
+    - "Top Preffered Occupation"
+    - Advanced Filter not working 
+    - Add employer when cliked it opens so many modals.
+    - sort by not functioning    
+    - Browse button  not working
+    - Edit button not working
 
-When the add employer, vacancies and programs were clicked there were so many modals appearing. It was around 9 modals are appearing
+Programs Tab:
+    - Advanced Filter not working 
+    - Add employer when cliked it opens so many modals.
+    - sort by not functioning    
+    - Browse button  not working
+    - Update program (edit button) shows error
+
+Reports and Statistics Tab:
+    - Shows error when clicked
+
+    
