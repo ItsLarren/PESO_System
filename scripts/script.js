@@ -6148,6 +6148,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function initializeEmployers() {
         console.log('Initializing employers...');
+
+        loadEmployers();
+        initializeEmployerForm();
+        initializeEmployerFilters();
+        initializeEmployerFileUpload();
         
         const employerSearchBtn = document.getElementById('employer-search-btn');
         const employerClearSearchBtn = document.getElementById('employer-clear-search-btn');
@@ -6224,6 +6229,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadEmployers() {
         const employers = JSON.parse(localStorage.getItem('employers')) || [];
         displayEmployers(employers);
+        updateEmployerStats(employers);
     }
 
     function displayEmployers(employers) {
@@ -6237,45 +6243,149 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (employers.length === 0) {
             const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = 21; 
-            cell.className = 'no-results';
-            cell.textContent = 'No employers found';
-            row.appendChild(cell);
+            row.innerHTML = `<td colspan="8" class="no-results">No employers found</td>`;
             tbody.appendChild(row);
             return;
         }
         
         employers.forEach((employer, index) => {
             const row = document.createElement('tr');
-            
-            const cells = [
-                createTableCell(employer['EMPLOYER ID'] || `EMP-${index + 1}`),
-                createTableCell(employer['COMPANY NAME'] || 'N/A'),
-                createTableCell(employer['COMPANY TYPE'] || 'N/A'),
-                createTableCell(employer['INDUSTRY'] || 'N/A'),
-                createTableCell(employer['CONTACT PERSON'] || 'N/A'),
-                createTableCell(employer['CONTACT POSITION'] || 'N/A'),
-                createTableCell(employer['EMAIL'] || 'N/A'),
-                createTableCell(employer['PHONE'] || 'N/A'),
-                createTableCell(employer['ADDRESS'] || 'N/A'),
-                createTableCell(employer['BARANGAY'] || 'N/A'),
-                createTableCell(employer['CITY/MUNICIPALITY'] || 'N/A'),
-                createTableCell(employer['PROVINCE'] || 'N/A'),
-                createTableCell(employer['BUSINESS PERMIT NO.'] || 'N/A'),
-                createTableCell(employer['BUSINESS PERMIT EXPIRY'] || 'N/A'),
-                createTableCell(employer['NUMBER OF EMPLOYEES'] || 'N/A'),
-                createTableCell(employer['YEAR ESTABLISHED'] || 'N/A'),
-                createTableCell(employer['WEBSITE'] || 'N/A'),
-                createTableCell(employer['STATUS'] || 'N/A'),
-                createTableCell(employer['REGISTRATION DATE'] || 'N/A'),
-                createTableCell(employer['LAST ACTIVE'] || 'N/A'),
-                createEmployerActionsCell(employer, index)
-            ];
-            
-            cells.forEach(cell => row.appendChild(cell));
+            row.innerHTML = `
+                <td>${employer.companyName || 'N/A'}</td>
+                <td>${employer.industry || 'N/A'}</td>
+                <td>${employer.contactPerson || 'N/A'}</td>
+                <td>${employer.email || 'N/A'}</td>
+                <td>${employer.phone || 'N/A'}</td>
+                <td>${employer.vacanciesCount || 0}</td>
+                <td>${employer.status || 'Active'}</td>
+                <td class="actions-cell">
+                    <div class="action-buttons">
+                        <button class="edit-btn" onclick="editEmployer('${employer.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" onclick="deleteEmployer('${employer.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
             tbody.appendChild(row);
         });
+    }
+
+    function initializeEmployerForm() {
+        const addEmployerBtn = document.getElementById('add-employer-btn');
+        const employerModal = document.getElementById('employer-modal');
+        const closeEmployerModal = document.getElementById('close-employer-modal');
+        const cancelEmployer = document.getElementById('cancel-employer');
+        const employerForm = document.getElementById('employer-form');
+        
+        if (addEmployerBtn) {
+            addEmployerBtn.addEventListener('click', function() {
+                openEmployerModal();
+            });
+        }
+        
+        if (closeEmployerModal) {
+            closeEmployerModal.addEventListener('click', closeEmployerModalFunc);
+        }
+        
+        if (cancelEmployer) {
+            cancelEmployer.addEventListener('click', closeEmployerModalFunc);
+        }
+        
+        if (employerModal) {
+            employerModal.addEventListener('click', function(e) {
+                if (e.target === employerModal) {
+                    closeEmployerModalFunc();
+                }
+            });
+        }
+        
+        if (employerForm) {
+            employerForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveEmployer();
+            });
+        }
+    }
+
+    function openEmployerModal(employer = null) {
+        const modal = document.getElementById('employer-modal');
+        const form = document.getElementById('employer-form');
+        const title = document.getElementById('employer-modal-title');
+        
+        if (!modal || !form) return;
+        
+        if (employer) {
+            // Edit mode
+            title.textContent = 'Edit Employer';
+            populateEmployerForm(employer);
+        } else {
+            // Add mode
+            title.textContent = 'Add New Employer';
+            form.reset();
+        }
+        
+        modal.style.display = 'block';
+    }
+
+    function closeEmployerModalFunc() {
+        const modal = document.getElementById('employer-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    function populateEmployerForm(employer) {
+        document.getElementById('employer-company-name').value = employer.companyName || '';
+        document.getElementById('employer-industry').value = employer.industry || '';
+        document.getElementById('employer-address').value = employer.address || '';
+        document.getElementById('employer-contact-person').value = employer.contactPerson || '';
+        document.getElementById('employer-email').value = employer.email || '';
+        document.getElementById('employer-phone').value = employer.phone || '';
+        document.getElementById('employer-website').value = employer.website || '';
+        document.getElementById('employer-status').value = employer.status || 'Active';
+        
+        // Store the employer ID for update
+        document.getElementById('employer-form').dataset.employerId = employer.id;
+    }
+
+    function saveEmployer() {
+        const form = document.getElementById('employer-form');
+        const employerId = form.dataset.employerId || generateUniqueId();
+        
+        const employerData = {
+            id: employerId,
+            companyName: document.getElementById('employer-company-name').value,
+            industry: document.getElementById('employer-industry').value,
+            address: document.getElementById('employer-address').value,
+            contactPerson: document.getElementById('employer-contact-person').value,
+            email: document.getElementById('employer-email').value,
+            phone: document.getElementById('employer-phone').value,
+            website: document.getElementById('employer-website').value,
+            status: document.getElementById('employer-status').value,
+            dateCreated: new Date().toLocaleString(),
+            lastModified: new Date().toLocaleString()
+        };
+        
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        
+        if (form.dataset.employerId) {
+            // Update existing employer
+            const index = employers.findIndex(emp => emp.id === employerId);
+            if (index !== -1) {
+                employers[index] = { ...employers[index], ...employerData };
+            }
+        } else {
+            // Add new employer
+            employers.push(employerData);
+        }
+        
+        localStorage.setItem('employers', JSON.stringify(employers));
+        displayEmployers(employers);
+        closeEmployerModalFunc();
+        showNotification('Employer saved successfully!', 'success');
     }
 
     function createEmployerActionsCell(employer, index) {
