@@ -355,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Initialize all modules first
             initializeManualForm();
             initializeCamera();
             initializeSearch();
@@ -369,17 +368,13 @@ document.addEventListener('DOMContentLoaded', function () {
             initializeDynamicFormElements();
             initializeAddEntryButtons();
             displayCurrentUser();
-
-            // Initialize navigation and other modules
             initializeNavigation();
             initializeEmployers();
             initializeVacancies();
             initializePrograms();
             
-            // Load initial data
             loadDashboardStats();
 
-            // Initialize logout button properly
             initializeLogoutButton();
 
             console.log('Application initialized successfully');
@@ -575,11 +570,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Process the form data and add to applicants array
         // ... existing code ...
         
-        // Close modal and reset form
         document.getElementById('manualModal').style.display = 'none';
         document.getElementById('manualApplicantForm').reset();
         
-        // Update applicant list display
         displayApplicants();
     }
 
@@ -688,7 +681,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!elements.manualModal) return;
         elements.manualModal.style.display = 'none';
         
-        // Reset to add mode
         const modalHeader = elements.manualModal.querySelector('.modal-header h2');
         if (modalHeader) {
             modalHeader.textContent = 'Add New Applicant';
@@ -697,12 +689,10 @@ document.addEventListener('DOMContentLoaded', function () {
         
         elements.manualModal.classList.remove('manual-form-edit-mode');
         
-        // Always reset to add mode when closing
         setTimeout(() => {
             resetManualFormToAddMode();
         }, 100);
         
-        // Clear any temporary photo
         localStorage.removeItem('tempManualPhoto');
     }
 
@@ -714,13 +704,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 reader.onload = function(e) {
                     const photoData = e.target.result;
                     
-                    // Set the photo preview immediately
                     elements.manualPhotoPreview.src = photoData;
                     elements.manualPhotoPreview.style.display = 'block';
                     elements.manualPhotoPlaceholder.style.display = 'none';
                     elements.manualRemovePhotoBtn.style.display = 'block';
                     
-                    // Store temporarily for form submission
                     localStorage.setItem('tempManualPhoto', photoData);
                 };
                 reader.readAsDataURL(file);
@@ -730,7 +718,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Update the remove photo function
     if (elements.manualRemovePhotoBtn) {
         elements.manualRemovePhotoBtn.addEventListener('click', function() {
             elements.manualPhotoPreview.src = '';
@@ -739,7 +726,6 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.manualRemovePhotoBtn.style.display = 'none';
             elements.manualPhotoInput.value = '';
             
-            // Remove temporary photo
             localStorage.removeItem('tempManualPhoto');
         });
     }
@@ -748,7 +734,6 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             
-            // If no existing applicants, no duplicates
             if (savedApplicants.length === 0) {
                 return {
                     hasMatches: false,
@@ -760,7 +745,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const newName = (applicantData.NAME || '').toString().toLowerCase().trim();
             const newBdate = (applicantData.BDATE || '').toString().trim();
 
-            // Skip if new applicant has no name
             if (!newName || newName === 'n/a') {
                 return {
                     hasMatches: false,
@@ -772,22 +756,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 const existingName = (existingApp.NAME || '').toString().toLowerCase().trim();
                 const existingBdate = (existingApp.BDATE || '').toString().trim();
 
-                // Skip if existing applicant has no name
                 if (!existingName || existingName === 'n/a') {
                     continue;
                 }
 
-                // Only consider it a duplicate if:
-                // 1. Names match EXACTLY (case insensitive)
-                // 2. AND birthdates match EXACTLY
-                // 3. AND both are not "N/A"
                 const nameMatch = newName === existingName;
                 const bdateMatch = newBdate && existingBdate && 
                                 newBdate === existingBdate &&
                                 newBdate !== 'N/A' && 
                                 existingBdate !== 'N/A';
 
-                // STRICT duplicate: must have both name AND birthday match
                 if (nameMatch && bdateMatch) {
                     console.log('🔴 STRICT DUPLICATE FOUND:', {
                         newName,
@@ -803,7 +781,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         sameNameDifferentBday: false
                     });
                 }
-                // Only name match (different birthday) - just log for info
                 else if (nameMatch) {
                     console.log('🟡 SAME NAME, DIFFERENT BIRTHDAY:', {
                         newName,
@@ -955,7 +932,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (nameCell && nameCell.textContent.trim().toLowerCase() === match.existingApplicant.NAME.toLowerCase()) {
                     row.classList.add('duplicate-highlight');
                     
-                    // Add special styling for same name different birthday cases
                     if (match.sameNameDifferentBday) {
                         row.classList.add('same-name-different-bday');
                     }
@@ -989,12 +965,10 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData(elements.manualApplicantForm);
             const applicantData = {};
             
-            // Get individual name parts
             const lastName = document.getElementById('manual-surname')?.value.trim() || '';
             const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
             const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
             
-            // Combine into full name
             if (lastName && firstName) {
                 let fullName = `${lastName}, ${firstName}`;
                 if (middleName) {
@@ -1005,12 +979,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['NAME'] = 'N/A';
             }
             
-            // Store individual name parts
             applicantData['LAST NAME'] = lastName || 'N/A';
             applicantData['FIRST NAME'] = firstName || 'N/A';
             applicantData['MIDDLE NAME'] = middleName || 'N/A';
             
-            // Process other form data
             formData.forEach((value, key) => {
                 if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
                     !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
@@ -1019,10 +991,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
             
-            // Generate unique ID
             applicantData['SRS ID'] = generateUniqueId();
             
-            // Process date field
             if (applicantData['BDATE']) {
                 try {
                     const date = new Date(applicantData['BDATE']);
@@ -1037,13 +1007,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['BDATE'] = 'N/A';
             }
             
-            // Add system fields
             applicantData['REG. DATE'] = new Date().toLocaleDateString();
             applicantData['DATE CREATED'] = new Date().toLocaleString();
             applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
             applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
             
-            // Address fields
             applicantData['STREET ADDRESS'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
             applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
             applicantData['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
@@ -1051,7 +1019,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.log('📝 New applicant data:', applicantData);
 
-            // Check for duplicates (with strict matching)
             const duplicateCheck = checkApplicantDuplicate(applicantData);
             
             if (duplicateCheck.hasMatches) {
@@ -1081,15 +1048,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function proceedWithAddingApplicant(applicantData) {
         try {
-            // Generate a unique ID for the new applicant
             applicantData['SRS ID'] = generateUniqueId();
             
-            // Add timestamps
             applicantData['DATE CREATED'] = new Date().toLocaleString();
             applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
             applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
             
-            // Handle photo
             const tempPhoto = localStorage.getItem('tempManualPhoto');
             if (tempPhoto) {
                 const photoId = applicantData['SRS ID'];
@@ -1098,19 +1062,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['PHOTO'] = tempPhoto;
             }
             
-            // Save to main applicants
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             savedApplicants.push(applicantData);
             saveMainApplicants(savedApplicants);
             
-            // Update display
             displayMainApplicants(savedApplicants);
             removeHighlights();
-            
-            // Close modal and show success
             closeManualModal();
-            
-            // Show appropriate program prompt
             showProgramSuccessPrompt(applicantData);
             
         } catch (error) {
@@ -1119,7 +1077,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Helper function to show success message
     function showProgramSuccessPrompt(applicantData) {
         const programCategory = applicantData['PROGRAM CATEGORY'] || '';
         const programLower = programCategory.toLowerCase();
@@ -1210,7 +1167,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Employment Assistance Program Prompt
     function showEmploymentProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1278,7 +1234,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Educational Assistance Program Prompt
     function showEducationProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1346,7 +1301,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Skills Training Program Prompt
     function showSkillsTrainingProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1414,7 +1368,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // OFW Reintegration Program Prompt
     function showOFWProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1482,7 +1435,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // PWD Assistance Program Prompt
     function showPWDProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -1550,7 +1502,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // 4Ps Monitoring Program Prompt
     function show4PsProgramPrompt(applicantData) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -2026,7 +1977,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const firstName = document.getElementById('edit-first-name').value.trim();
         const middleName = document.getElementById('edit-middle-name').value.trim();
         
-        // Combine into full name
         if (lastName && firstName) {
             let fullName = `${lastName}, ${firstName}`;
             if (middleName) {
@@ -2035,12 +1985,10 @@ document.addEventListener('DOMContentLoaded', function () {
             updatedApplicant['NAME'] = fullName;
         }
         
-        // Store individual name parts
         updatedApplicant['LAST NAME'] = lastName || 'N/A';
         updatedApplicant['FIRST NAME'] = firstName || 'N/A';
         updatedApplicant['MIDDLE NAME'] = middleName || 'N/A';
         
-        // Process other form data
         formData.forEach((value, key) => {
             if (!key.startsWith('edit-last-name') && !key.startsWith('edit-first-name') && 
                 !key.startsWith('edit-middle-name') && !key.startsWith('edit-name')) {
@@ -2080,9 +2028,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showNotification('Applicant updated successfully!', 'success');
     }
         
-    // Replace the Excel Import section in initializeFileUploads function
     function initializeFileUploads() {
-        // 1. FILE UPLOAD FOR IMPORTED DATA TABLE (Excel Import section)
         if (elements.browsebtn && elements.fileInput) {
             elements.browsebtn.addEventListener('click', function() {
                 elements.fileInput.click();
@@ -2101,7 +2047,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Excel Import section - FIXED: Use proper duplicate validation
         if (elements.importBtn) {
             elements.importBtn.addEventListener('click', function() {
                 if (!elements.fileInput) return;
@@ -2130,11 +2075,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         const processedData = smartImportData(jsonData);
                         console.log('🔄 Processed data:', processedData);
                         
-                        // Use the same duplicate validation as the main flow
                         const validationResults = validateImportedDataDuplicates(processedData);
                         console.log('✅ Duplicate validation completed:', validationResults);
                         
-                        // Show validation modal for imported data
                         showEnhancedImportValidationModal(validationResults, processedData)
                             .then(result => {
                                 switch (result.action) {
@@ -2164,7 +2107,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // 2. FILE UPLOAD FOR ADDING TO MAIN APPLICANTS (Upload New Applicant section)
         if (elements.uploadBrowseBtn && elements.uploadFileInput) {
             elements.uploadBrowseBtn.addEventListener('click', function() {
                 elements.uploadFileInput.click();
@@ -2211,11 +2153,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         const processedData = smartImportData(jsonData);
                         console.log('🔄 Processed applicant data:', processedData);
                         
-                        // Run validation for MAIN APPLICANTS
                         const validationResults = validateImportedDataDuplicates(processedData);
                         console.log('✅ Validation completed:', validationResults);
                         
-                        // Show validation modal for main applicants - FIXED: Add proper promise handling
                         showEnhancedImportValidationModal(validationResults, processedData)
                             .then(result => {
                                 console.log('Modal result:', result);
@@ -2252,7 +2192,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Reset buttons (keep existing functionality)
         if (elements.resetDataBtn) {
             elements.resetDataBtn.addEventListener('click', function() {
                 if (confirm('Are you sure you want to clear all imported data? This action cannot be undone.')) {
@@ -2278,23 +2217,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-    } // FIXED: Added missing closing brace for initializeFileUploads function
-
-    // Add these two new functions to handle the different destinations:
+    } 
 
     function proceedWithImportToImportedData(newApplicants) {
         try {
             const existingImportedData = JSON.parse(localStorage.getItem('importedData')) || [];
             const mergedData = [...existingImportedData, ...newApplicants];
             
-            // Save to imported data table
             localStorage.setItem('importedData', JSON.stringify(mergedData));
-            displayImportedData([]); // This will reload all imported data
+            displayImportedData([]); 
             
-            // Show success message
             showNotification(`Successfully imported ${newApplicants.length} applicant(s) to imported data table.`, 'success');
             
-            // Reset form
             if (elements.fileName) elements.fileName.value = '';
             if (elements.importBtn) elements.importBtn.disabled = true;
             if (elements.fileInput) elements.fileInput.value = '';
@@ -2310,14 +2244,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             const mergedData = [...savedApplicants, ...newApplicants];
             
-            // Save to main applicants
             saveMainApplicants(mergedData);
             displayMainApplicants(mergedData);
             
-            // Show success message
             showUploadNotification(`Successfully added ${newApplicants.length} applicant(s) to main applicant table.`, 'success');
             
-            // Reset form
             if (elements.uploadFileName) elements.uploadFileName.value = '';
             if (elements.addBtn) elements.addBtn.disabled = true;
             if (elements.uploadFileInput) elements.uploadFileInput.value = '';
@@ -2583,7 +2514,6 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         `;
         
-        // Add event listener for PDF export
         document.getElementById('export-pdf-btn').addEventListener('click', generateComprehensivePDFReport);
         document.getElementById('export-summary-btn').addEventListener('click', exportSummaryReport);
         document.getElementById('export-full-btn').addEventListener('click', exportReportsToExcel);
@@ -3010,7 +2940,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const specificProgram = applicant['SPECIFIC PROGRAM'] || 'No Specific Program';
                 const education = applicant['EDUC LEVEL'] || 'Not Specified';
                 
-                // SAFE course extraction with null checks
                 let course = 'No Course Specified';
                 if (applicant) {
                     course = applicant['COURSE'] || applicant['Course'] || applicant['course'] || 
@@ -3018,15 +2947,12 @@ document.addEventListener('DOMContentLoaded', function () {
                             applicant['DEGREE'] || 'No Course Specified';
                 }
                 
-                // Safe course categorization
                 const categorizedCourse = categorizeCourse(course);
                 stats.byCourse[categorizedCourse] = (stats.byCourse[categorizedCourse] || 0) + 1;
 
-                // Age processing with safety
                 const age = parseInt(applicant.AGE) || 0;
                 const gender = normalizeGender(applicant.SEX);
 
-                // Age group classification
                 if (age < 20) stats.byAgeGroup['Below 20']++;
                 else if (age >= 20 && age <= 29) stats.byAgeGroup['20-29']++;
                 else if (age >= 30 && age <= 39) stats.byAgeGroup['30-39']++;
@@ -3034,7 +2960,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 else if (age >= 50 && age <= 59) stats.byAgeGroup['50-59']++;
                 else if (age >= 60) stats.byAgeGroup['60 and above']++;
 
-                // Age pyramid with safety
                 let ageGroup;
                 if (age < 20) ageGroup = 'Below 20';
                 else if (age >= 20 && age <= 29) ageGroup = '20-29';
@@ -3051,7 +2976,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 
-                // Count categories
                 stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
                 stats.byStatus[status] = (stats.byStatus[status] || 0) + 1;
                 stats.bySpecificProgram[specificProgram] = (stats.bySpecificProgram[specificProgram] || 0) + 1;
@@ -3059,7 +2983,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 
             } catch (error) {
                 console.error(`Error processing applicant ${index}:`, error, applicant);
-                // Continue with next applicant instead of breaking
             }
         });
         
@@ -3095,15 +3018,12 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const gender = String(genderValue).trim().toLowerCase();
             
-            // Handle single letters
             if (gender === 'm' || gender === 'male') return 'male';
             if (gender === 'f' || gender === 'female') return 'female';
             
-            // Handle full words and variations
             if (gender.includes('male') && !gender.includes('female')) return 'male';
             if (gender.includes('female')) return 'female';
             
-            // Handle common abbreviations
             if (gender === 'm' || gender === 'm.') return 'male';
             if (gender === 'f' || gender === 'f.') return 'female';
             
@@ -3120,7 +3040,7 @@ document.addEventListener('DOMContentLoaded', function () {
             male: 0,
             female: 0,
             averageAge: 0,
-            unknown: 0 // track unknown genders
+            unknown: 0 
         };
         
         let totalAge = 0;
@@ -3135,7 +3055,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 stats.female++;
             } else {
                 stats.unknown++;
-                console.log('Unknown gender format:', applicant.SEX); // Debug logging
+                console.log('Unknown gender format:', applicant.SEX); 
             }
             
             const age = parseInt(applicant.AGE);
@@ -3376,7 +3296,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeLogoutButton() {
         console.log('Initializing logout button...');
         
-        // Method 1: Event delegation - listen for clicks on the document
         document.addEventListener('click', function(event) {
             if (event.target.id === 'logout-btn' || 
                 event.target.closest('#logout-btn') || 
@@ -3389,17 +3308,14 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // Method 2: Directly attach to any existing logout buttons
         const attachToExistingButtons = () => {
             const logoutButtons = document.querySelectorAll('#logout-btn, .logout-btn');
             console.log(`Found ${logoutButtons.length} logout button(s)`);
             
             logoutButtons.forEach(button => {
-                // Remove any existing listeners first
                 const newButton = button.cloneNode(true);
                 button.parentNode.replaceChild(newButton, button);
                 
-                // Add the event listener to the new button
                 newButton.addEventListener('click', function(e) {
                     console.log('Logout button clicked directly');
                     handleLogout();
@@ -3409,10 +3325,8 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         };
         
-        // Try immediately
         attachToExistingButtons();
         
-        // Try again after a short delay in case buttons are created dynamically
         setTimeout(attachToExistingButtons, 500);
         setTimeout(attachToExistingButtons, 1000);
     }
@@ -3420,13 +3334,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function handleLogout() {
         console.log('Logout initiated...');
         
-        // Clear all authentication data
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('currentUser');
         
         console.log('Authentication data cleared, redirecting to login...');
         
-        // Redirect to login page
         window.location.href = 'login.html';
     }
 
@@ -3435,7 +3347,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (currentUser) {
             const header = document.querySelector('header .header-content');
             if (header) {
-                // Remove existing user info if it exists
                 const existingUserInfo = header.querySelector('.user-info');
                 if (existingUserInfo) {
                     existingUserInfo.remove();
@@ -3451,15 +3362,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 `;
                 header.appendChild(userInfo);
 
-                // Initialize the logout button immediately after creating it
                 const logoutBtn = document.getElementById('logout-btn');
                 if (logoutBtn) {
                     console.log('New logout button created, adding event listener');
-                    // Remove any existing listeners first
                     const newLogoutBtn = logoutBtn.cloneNode(true);
                     logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
                     
-                    // Add the event listener to the new button
                     newLogoutBtn.addEventListener('click', handleLogout);
                 }
             }
@@ -3496,12 +3404,9 @@ document.addEventListener('DOMContentLoaded', function () {
         applicants.forEach((applicant, index) => {
             const row = document.createElement('tr');
             
-            // Create all table cells in the correct order
             const cells = [
-                // SRS ID
                 createTableCell(applicant['SRS ID'] || `APP-${index + 1}`, '', '10px', 'monospace'),
                 
-                // Personal Information
                 createTableCell(applicant['SURNAME'] || 'N/A'),
                 createTableCell(applicant['FIRST NAME'] || 'N/A'),
                 createTableCell(applicant['MIDDLE NAME'] || 'N/A'),
@@ -3513,7 +3418,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 createTableCell(applicant['MUNICIPALITY/CITY'] || 'N/A'),
                 createTableCell(applicant['PROVINCE'] || 'N/A'),
                 
-                // Personal Details
                 createTableCell(applicant['SEX'] || 'N/A', 'center'),
                 createTableCell(applicant['CIVIL STATUS'] || 'N/A'),
                 createTableCell(applicant['TIN'] || 'N/A'),
@@ -3522,19 +3426,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 createTableCell(applicant['PHILHEALTH No.'] || 'N/A'),
                 createTableCell(applicant['HEIGHT'] || 'N/A'),
                 
-                // Contact Information
                 createTableCell(applicant['EMAIL ADDRESS'] || 'N/A'),
                 createTableCell(applicant['LANDLINE NUMBER'] || 'N/A'),
                 createTableCell(applicant['CELLPHONE NUMBER'] || 'N/A'),
                 
-                // Additional Information
                 createTableCell(applicant['DISABILITY'] || 'N/A'),
                 createTableCell(applicant['EMPLOYMENT STATUS/TYPE'] || 'N/A'),
                 createTableCell(applicant['ARE YOU ACTIVELY LOOKING FOR WORK?'] || 'N/A'),
                 createTableCell(applicant['WILLING TO WORK IMMEDIATELY?'] || 'N/A'),
                 createTableCell(applicant['ARE YOU A 4PS BENEFICIARY?'] || 'N/A'),
                 
-                // Job Preference
                 createTableCell(applicant['PREFERRED OCCUPATION'] || 'N/A'),
                 createTableCell(applicant['PREFERRED WORK LOCATION'] || 'N/A'),
                 createTableCell(applicant['EXPECTED SALARY'] || 'N/A'),
@@ -3542,7 +3443,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 createTableCell(applicant['PASSPORT EXPIRY DATE'] || 'N/A', '', '10px'),
                 createTableCell(applicant['LANGUAGE'] || 'N/A'),
                 
-                // Education
                 createTableCell(applicant['ELEMENTARY'] || 'N/A'),
                 createTableCell(applicant['SECONDARY'] || 'N/A'),
                 createTableCell(applicant['TERTIARY'] || 'N/A'),
@@ -3550,27 +3450,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 createTableCell(applicant['TECHNICAL/VOCATIONAL AND OTHER TRAINING'] || 'N/A'),
                 createTableCell(applicant['ELIGIBILITY'] || 'N/A'),
                 
-                // Work & Skills
                 createTableCell(applicant['WORK EXPERIENCE'] || 'N/A'),
                 createTableCell(applicant['OTHER SKILLS'] || 'N/A'),
                 
-                // Program Information
                 createTableCell(applicant['PROGRAM CATEGORY'] || 'N/A'),
                 createTableCell(applicant['SPECIFIC PROGRAM'] || 'N/A'),
                 createTableCell(applicant['PROGRAM STATUS'] || 'N/A'),
                 
-                // ACTIONS COLUMN - This is where the 4 buttons should be
                 createActionsCell(applicant, index)
             ];
             
-            // Append all cells to the row
             cells.forEach(cell => row.appendChild(cell));
             
             tbody.appendChild(row);
         });
     }
 
-    // Helper function to create table cells
     function createTableCell(content, align = '', fontSize = '', fontFamily = '') {
         const cell = document.createElement('td');
         cell.textContent = content;
@@ -3586,7 +3481,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return cell;
     }
 
-    // Helper function to create the actions cell with all 4 buttons
     function createActionsCell(applicant, index) {
         const actionsCell = document.createElement('td');
         actionsCell.className = 'actions-cell';
@@ -3594,7 +3488,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const actionButtons = document.createElement('div');
         actionButtons.className = 'action-buttons';
 
-        // 1. View Button
         const viewBtn = document.createElement('button');
         viewBtn.className = 'view-btn';
         viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -3603,7 +3496,6 @@ document.addEventListener('DOMContentLoaded', function () {
             openViewModal(applicant);
         });
         
-        // 2. Edit Button
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-btn';
         editBtn.innerHTML = '<i class="fas fa-edit"></i>';
@@ -3612,7 +3504,6 @@ document.addEventListener('DOMContentLoaded', function () {
             openEditModal(applicant);
         });
         
-        // 3. Download Button
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
         downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
@@ -3621,7 +3512,6 @@ document.addEventListener('DOMContentLoaded', function () {
             downloadApplicantData(applicant);
         });
         
-        // 4. Delete Button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
@@ -3632,7 +3522,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // Add all buttons to the actions container
         actionButtons.appendChild(viewBtn);
         actionButtons.appendChild(editBtn);
         actionButtons.appendChild(downloadBtn);
@@ -3655,10 +3544,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function downloadApplicantData(applicant) {
         try {
-            // Create a clean copy with properly formatted names
             const exportApplicant = { ...applicant };
             
-            // Ensure full name is properly formatted
             if (!exportApplicant.NAME || exportApplicant.NAME === 'N/A') {
                 const lastName = exportApplicant['LAST NAME'] || '';
                 const firstName = exportApplicant['FIRST NAME'] || '';
@@ -3673,7 +3560,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Ensure individual name parts are included
             if (!exportApplicant['LAST NAME'] || exportApplicant['LAST NAME'] === 'N/A') {
                 exportApplicant['LAST NAME'] = extractLastName(exportApplicant.NAME);
             }
@@ -3726,7 +3612,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function displayImportedData(newData) {
         if (!elements.importedTable) return;
         
-        // Load existing imported data and merge with new data
         const existingData = JSON.parse(localStorage.getItem('importedData')) || [];
         const mergedData = [...existingData, ...newData];
         
@@ -3827,7 +3712,6 @@ document.addEventListener('DOMContentLoaded', function () {
             tbody.appendChild(row);
         });
         
-        // Save the merged data back to localStorage
         localStorage.setItem('importedData', JSON.stringify(mergedData));
     }
 
@@ -3882,7 +3766,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const exportData = savedApplicants.map(applicant => {
                 const exportApplicant = { ...applicant };
                 
-                // Ensure names are properly formatted for export
                 if (!exportApplicant.NAME || exportApplicant.NAME === 'N/A') {
                     const lastName = exportApplicant['LAST NAME'] || '';
                     const firstName = exportApplicant['FIRST NAME'] || '';
@@ -3936,7 +3819,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const importedData = JSON.parse(localStorage.getItem('importedData')) || [];
         importedData.splice(index, 1);
         localStorage.setItem('importedData', JSON.stringify(importedData));
-        displayImportedData([]); // Pass empty array to trigger reload of existing data
+        displayImportedData([]); 
         showNotification('Imported record deleted successfully!', 'success');
     }
 
@@ -3945,7 +3828,6 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('📊 Education levels:', stats.byEducation);
         console.log('📚 All courses:', stats.byCourse);
         
-        // More comprehensive college graduate detection
         const collegeGrads = calculateCollegeGraduates(stats.byEducation);
         
         console.log(`🎓 College graduates count: ${collegeGrads}`);
@@ -3954,7 +3836,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return '<p style="text-align: center; color: #666; margin: 10px 0;">No college graduates found in the data.</p>';
         }
         
-        // Get all courses with proper filtering
         const allCourses = Object.entries(stats.byCourse)
             .filter(([course, count]) => {
                 const isValidCourse = course && 
@@ -4016,11 +3897,9 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // Add this helper function to better detect college graduates
     function calculateCollegeGraduates(educationLevels) {
         let total = 0;
         
-        // Comprehensive list of education levels that indicate college graduation
         const collegeLevels = [
             'College Graduate', 'College', 'Bachelor', 'Bachelor\'s Degree',
             'BS', 'B.S.', 'AB', 'A.B.', 'B.A.', 'BA',
@@ -4032,13 +3911,11 @@ document.addEventListener('DOMContentLoaded', function () {
         Object.entries(educationLevels).forEach(([level, count]) => {
             const lowerLevel = level.toLowerCase();
             
-            // Check if this education level indicates college
             const isCollegeLevel = collegeLevels.some(collegeLevel => 
                 lowerLevel.includes(collegeLevel.toLowerCase()) || 
                 collegeLevel.toLowerCase().includes(lowerLevel)
             );
             
-            // Also check for common patterns
             const hasCollegeKeywords = 
                 lowerLevel.includes('college') ||
                 lowerLevel.includes('bachelor') ||
@@ -4137,7 +4014,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function findMatchingValue(record, possibleLabels) {
         if (!record) return null;
         
-        // First: Exact case-insensitive match
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase() === label.toLowerCase()) {
@@ -4146,7 +4022,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Second: Partial match (contains)
         for (const label of possibleLabels) {
             for (const recordKey in record) {
                 if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
@@ -4156,7 +4031,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Third: Remove spaces/special chars and match
         for (const label of possibleLabels) {
             const cleanLabel = label.toLowerCase().replace(/[\s_\-]/g, '');
             for (const recordKey in record) {
@@ -4167,7 +4041,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Fourth: Common field name variations
         const commonVariations = {
             'username': ['userid', 'login', 'emailaddress', 'e-mail'],
             'email': ['mail', 'electronicmail', 'contactinfo']
@@ -4351,7 +4224,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function checkImportedDuplicate(newApplicant, importedData) {
         const matches = [];
         
-        // Field mappings for imported data (since imported data might have different field names)
         const fieldMappings = {
             'NAME': ['NAME', 'Full Name', 'FULL NAME', 'full name', 'Complete Name', 'Applicant Name'],
             'BDATE': ['BDATE', 'Date of Birth', 'Birthday', 'BIRTH DATE', 'Birth Date', 'DOB'],
@@ -4360,7 +4232,6 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         
         for (const existingApp of importedData) {
-            // Extract values using field mappings for both new and existing applicants
             const newName = extractFieldValue(newApplicant, fieldMappings['NAME'])?.toLowerCase() || '';
             const existingName = extractFieldValue(existingApp, fieldMappings['NAME'])?.toLowerCase() || '';
             
@@ -4373,7 +4244,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const newEmail = extractFieldValue(newApplicant, fieldMappings['EMAIL'])?.toLowerCase() || '';
             const existingEmail = extractFieldValue(existingApp, fieldMappings['EMAIL'])?.toLowerCase() || '';
             
-            // Check for matches with better logic
             const nameMatch = newName && existingName && newName === existingName;
             const bdateMatch = newBdate && existingBdate && newBdate === existingBdate;
             const phoneMatch = newPhone && existingPhone && newPhone === existingPhone;
@@ -4381,7 +4251,6 @@ document.addEventListener('DOMContentLoaded', function () {
             
             const sameNameDifferentBday = nameMatch && !bdateMatch;
             
-            // Consider it a duplicate if we have strong matches
             if (nameMatch && (bdateMatch || phoneMatch || emailMatch)) {
                 const matchDetails = {
                     existingApplicant: existingApp,
@@ -4397,7 +4266,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (emailMatch) matchDetails.matchingFields.push('Email');
                 if (sameNameDifferentBday) matchDetails.matchingFields.push('Same Name, Different Birthday');
                 
-                // Compare other fields for differences
                 const fieldsToCompare = ['BARANGAY', 'CITY/MUNICIPALITY', 'PROGRAM CATEGORY'];
                 
                 fieldsToCompare.forEach(field => {
@@ -4413,7 +4281,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
                 
-                // Add birthday difference for same name cases
                 if (sameNameDifferentBday) {
                     matchDetails.differences.push({
                         field: 'Birthday',
@@ -4432,18 +4299,15 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // Helper function to extract field values using mappings
     function extractFieldValue(record, possibleLabels) {
         if (!record) return null;
         
-        // First try exact matches
         for (const label of possibleLabels) {
             if (record[label] && record[label] !== 'N/A') {
                 return record[label];
             }
         }
         
-        // Then try case-insensitive matches
         for (const recordKey in record) {
             for (const label of possibleLabels) {
                 if (recordKey.toLowerCase() === label.toLowerCase()) {
@@ -4452,7 +4316,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Then try partial matches
         for (const recordKey in record) {
             for (const label of possibleLabels) {
                 if (recordKey.toLowerCase().includes(label.toLowerCase()) || 
@@ -4486,7 +4349,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log(`\n🔍 Checking new applicant ${newIndex + 1}:`, newApp.NAME);
             let isDuplicate = false;
 
-            // Check against imported data (Name + Birthday only)
             importedData.forEach((importedApp, importedIndex) => {
                 if (isDuplicateByNameAndBirthday(newApp, importedApp)) {
                     console.log(`✅ Found duplicate in imported data: ${newApp.NAME} (${newApp.BDATE}) matches ${importedApp.NAME} (${importedApp.BDATE})`);
@@ -4499,7 +4361,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // Check against main applicants (Name + Birthday only)
             if (!isDuplicate) {
                 mainApplicants.forEach((mainApp, mainIndex) => {
                     if (isDuplicateByNameAndBirthday(newApp, mainApp)) {
@@ -4514,7 +4375,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            // If no duplicates found, add to unique
             if (!isDuplicate) {
                 console.log(`✅ No duplicates found for: ${newApp.NAME} (${newApp.BDATE})`);
                 duplicates.unique.push(newApp);
@@ -4528,11 +4388,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function isDuplicateByNameAndBirthday(app1, app2) {
         if (!app1 || !app2) return false;
 
-        // Get names - handle various field names
         const name1 = (app1.NAME || app1.name || app1['Full Name'] || '').toString().trim();
         const name2 = (app2.NAME || app2.name || app2['Full Name'] || '').toString().trim();
         
-        // Get birth dates
         const bdate1 = (app1.BDATE || app1.bdate || app1['Date of Birth'] || '').toString().trim();
         const bdate2 = (app2.BDATE || app2.bdate || app2['Date of Birth'] || '').toString().trim();
 
@@ -4541,18 +4399,15 @@ document.addEventListener('DOMContentLoaded', function () {
             bdate1, bdate2
         });
 
-        // Skip if either name is empty or "N/A"
         if (!name1 || name1 === 'N/A' || !name2 || name2 === 'N/A') {
             return false;
         }
 
-        // Rule 1: Exact name match + exact birthday match
         const nameMatch = name1.toLowerCase() === name2.toLowerCase();
         const bdateMatch = normalizeDate(bdate1) === normalizeDate(bdate2);
 
         console.log('🎯 Name match:', nameMatch, 'Birthday match:', bdateMatch);
 
-        // Only consider it a duplicate if BOTH name and birthday match
         if (nameMatch && bdateMatch) {
             console.log('🎯 Exact Name + Birthday match found');
             return true;
@@ -4566,7 +4421,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dateString || dateString === 'N/A') return '';
         
         try {
-            // Handle MM/DD/YYYY format (common in your system)
             if (dateString.includes('/')) {
                 const parts = dateString.split('/');
                 if (parts.length === 3) {
@@ -4577,7 +4431,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Handle YYYY-MM-DD format (from date inputs)
             if (dateString.includes('-')) {
                 const date = new Date(dateString);
                 if (!isNaN(date.getTime())) {
@@ -4585,7 +4438,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Return original if no specific format matched
             return dateString;
         } catch (error) {
             console.warn('Date normalization error:', error);
@@ -4596,15 +4448,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function areNamesSimilar(name1, name2) {
         if (name1 === name2) return true;
         
-        // Remove extra spaces and special characters
         const clean1 = name1.replace(/\s+/g, ' ').trim().toLowerCase();
         const clean2 = name2.replace(/\s+/g, ' ').trim().toLowerCase();
         
-        // Split into parts
         const parts1 = clean1.split(' ');
         const parts2 = clean2.split(' ');
         
-        // Check if they share significant name parts
         const significantParts1 = parts1.filter(part => part.length > 2);
         const significantParts2 = parts2.filter(part => part.length > 2);
         
@@ -4623,7 +4472,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dateString || dateString === 'N/A') return '';
         
         try {
-            // Handle MM/DD/YYYY format
             if (dateString.includes('/')) {
                 const parts = dateString.split('/');
                 if (parts.length === 3) {
@@ -4634,7 +4482,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
             
-            // Handle other date formats
             const date = new Date(dateString);
             if (!isNaN(date.getTime())) {
                 return date.toISOString().split('T')[0];
@@ -4649,7 +4496,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function normalizePhone(phone) {
         if (!phone || phone === 'N/A') return '';
         
-        // Remove all non-digit characters
         return phone.replace(/\D/g, '');
     }
 
@@ -4692,7 +4538,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         </div>
                     </div>`;
 
-            // Imported Data Duplicates Section
             if (validationResults.inImported.length > 0) {
                 message += `
                     <div style="margin-bottom: 25px;">
@@ -4730,7 +4575,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += `</div></div>`;
             }
 
-            // Main Database Duplicates Section
             if (validationResults.inMain.length > 0) {
                 message += `
                     <div style="margin-bottom: 25px;">
@@ -4768,7 +4612,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += `</div></div>`;
             }
 
-            // Unique Records Section
             if (validationResults.unique.length > 0) {
                 message += `
                     <div style="margin-bottom: 25px;">
@@ -4799,7 +4642,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 message += `</div></div></div>`;
             }
 
-            // Action Section
             message += `
                     <div style="background: #f5f5f5; padding: 15px; border-radius: 4px; margin-top: 20px;">
                         <p><strong>Import Options:</strong></p>
@@ -4836,7 +4678,6 @@ document.addEventListener('DOMContentLoaded', function () {
             modal.innerHTML = message;
             document.body.appendChild(modal);
 
-            // Event handlers
             document.getElementById('cancel-import').addEventListener('click', () => {
                 document.body.removeChild(modal);
                 resolve({ action: 'cancel' });
@@ -4864,7 +4705,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function createTestData() {
         console.log('🧪 Creating test data...');
         
-        // Create some test imported data
         const testImportedData = [
             {
                 'NAME': 'John Smith',
@@ -4884,11 +4724,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         ];
         
-        // Save to imported data
         localStorage.setItem('importedData', JSON.stringify(testImportedData));
         console.log('✅ Test imported data created');
         
-        // Create some test main applicants
         const testMainApplicants = [
             {
                 'NAME': 'Robert Johnson',
@@ -4900,7 +4738,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         ];
         
-        // Save to main applicants
         localStorage.setItem('mainApplicants', JSON.stringify(testMainApplicants));
         console.log('✅ Test main applicants created');
         
@@ -4910,51 +4747,40 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    // Function to open manual form with existing applicant data
     function openManualFormWithData(applicant) {
         if (!elements.manualModal) return;
         
-        // Close view modal first
         elements.viewModal.style.display = 'none';
         
-        // Open manual modal
         elements.manualModal.style.display = 'block';
         
-        // Update modal header for edit mode
         const modalHeader = elements.manualModal.querySelector('.modal-header h2');
         if (modalHeader) {
             modalHeader.textContent = 'Edit Applicant';
             modalHeader.style.color = '#ff9800';
         }
         
-        // Add edit mode class
         elements.manualModal.classList.add('manual-form-edit-mode');
         
-        // Store the applicant ID for updating
         currentEditId = applicant['SRS ID'] || applicant.ID;
         
-        // Populate the manual form with applicant data
         populateManualForm(applicant);
     }
 
-    // Function to populate manual form with data
     function populateManualForm(applicant) {
         if (!applicant) return;
         
         console.log('Populating manual form with data:', applicant);
         
-        // Personal Information Section
         document.getElementById('manual-surname').value = applicant['LAST NAME'] || '';
         document.getElementById('manual-first-name').value = applicant['FIRST NAME'] || '';
         document.getElementById('manual-middle-name').value = applicant['MIDDLE NAME'] || '';
         
-        // Suffix (extract from name if needed)
         const suffix = extractSuffix(applicant.NAME);
         if (suffix && document.getElementById('manual-suffix')) {
             document.getElementById('manual-suffix').value = suffix;
         }
         
-        // Date of Birth - convert format if needed
         if (applicant.BDATE && applicant.BDATE !== 'N/A') {
             const bdate = formatDateForInput(applicant.BDATE);
             document.getElementById('manual-bdate').value = bdate;
@@ -4962,13 +4788,11 @@ document.addEventListener('DOMContentLoaded', function () {
         
         document.getElementById('manual-place-birth').value = applicant['PLACE OF BIRTH'] || '';
         
-        // Address Information
         document.getElementById('manual-house-street').value = applicant['STREET ADDRESS'] || '';
         document.getElementById('manual-barangay').value = applicant.BARANGAY || '';
         document.getElementById('manual-city-municipality').value = applicant['CITY/MUNICIPALITY'] || '';
         document.getElementById('manual-province').value = applicant.PROVINCE || '';
         
-        // Personal Details
         setSelectValue('manual-sex', applicant.SEX);
         setSelectValue('manual-civil-status', applicant['CIVIL STATUS']);
         
@@ -4981,7 +4805,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('manual-landline').value = applicant.TELEPHONE || '';
         document.getElementById('manual-cellphone').value = applicant.CELLPHONE || '';
         
-        // Disability
         if (applicant.DISABILITY && applicant.DISABILITY !== 'N/A') {
             const disabilities = applicant.DISABILITY.split(',').map(d => d.trim());
             disabilities.forEach(disability => {
@@ -4989,7 +4812,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (checkbox) checkbox.checked = true;
             });
             
-            // Handle "Others" disability
             if (applicant.DISABILITY.includes('Others') && applicant['DISABILITY SPECIFY']) {
                 document.getElementById('manual-disability-others').checked = true;
                 document.getElementById('manual-disability-specify').style.display = 'block';
@@ -4997,10 +4819,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Employment Status
         setSelectValue('manual-emp-status', applicant['EMP. STATUS']);
         
-        // 4Ps
         if (applicant['4Ps'] && applicant['4Ps'] !== 'N/A') {
             const fourPsValue = applicant['4Ps'].toLowerCase() === 'yes' ? 'Yes' : 'No';
             document.querySelector(`input[name="manual-4ps"][value="${fourPsValue}"]`).checked = true;
@@ -5011,30 +4831,23 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // Job Preference Section
         document.getElementById('manual-pref-occupation1').value = applicant['PREFERRED POSITION'] || '';
         
-        // Expected Salary
         document.getElementById('manual-expected-salary').value = applicant['EXPECTED SALARY'] || '';
         
-        // Passport Information
         document.getElementById('manual-passport').value = applicant.PASSPORT || '';
         if (applicant['PASSPORT EXPIRY']) {
             document.getElementById('manual-passport-expiry').value = formatDateForInput(applicant['PASSPORT EXPIRY']);
         }
         
-        // Language Proficiency
         populateLanguageProficiency(applicant);
         
-        // Educational Background
         populateEducationalBackground(applicant);
         
-        // Program Information
         setSelectValue('manual-program-category', applicant['PROGRAM CATEGORY']);
         document.getElementById('manual-specific-program').value = applicant['SPECIFIC PROGRAM'] || '';
         setSelectValue('manual-program-status', applicant['PROGRAM STATUS']);
         
-        // Load photo if exists
         const photoId = applicant['SRS ID'] || applicant.ID;
         const savedPhoto = localStorage.getItem(`photo_${photoId}`);
         if (savedPhoto) {
@@ -5044,11 +4857,9 @@ document.addEventListener('DOMContentLoaded', function () {
             elements.manualRemovePhotoBtn.style.display = 'block';
         }
         
-        // Update form submission to handle edit instead of add
         updateManualFormForEdit(applicant);
     }
 
-    // Helper function to set select values
     function setSelectValue(selectId, value) {
         const select = document.getElementById(selectId);
         if (select && value && value !== 'N/A') {
@@ -5061,7 +4872,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Extract suffix from full name
     function extractSuffix(fullName) {
         if (!fullName) return '';
         const suffixes = ['Jr.', 'Sr.', 'II', 'III', 'IV'];
@@ -5070,10 +4880,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return suffixes.includes(lastPart) ? lastPart : '';
     }
 
-    // Populate language proficiency
     function populateLanguageProficiency(applicant) {
-        // This would need to be customized based on how you store language data
-        // For now, setting basic English and Filipino if skills indicate
         if (applicant.SKILLS && applicant.SKILLS.toLowerCase().includes('english')) {
             document.getElementById('manual-lang-english-read').checked = true;
             document.getElementById('manual-lang-english-write').checked = true;
@@ -5089,9 +4896,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Populate educational background
     function populateEducationalBackground(applicant) {
-        // Populate based on EDUC LEVEL and COURSE
         const educLevel = applicant['EDUC LEVEL'] || '';
         const course = applicant.COURSE || '';
         
@@ -5106,40 +4911,31 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Update manual form to handle edits instead of new entries
-    // Replace the updateManualFormForEdit function with this improved version
     function updateManualFormForEdit(applicant) {
-        // Remove ALL existing submit event listeners by cloning the form
         const newForm = elements.manualApplicantForm.cloneNode(true);
         elements.manualApplicantForm.parentNode.replaceChild(newForm, elements.manualApplicantForm);
         elements.manualApplicantForm = newForm;
         
-        // Re-initialize photo controls for the new form
         initializeManualPhotoControls();
         
-        // Add submit handler for editing
         elements.manualApplicantForm.addEventListener('submit', function(event) {
             event.preventDefault();
             updateApplicantFromManualForm(applicant);
         });
         
-        // Update the submit button text
         const submitBtn = elements.manualApplicantForm.querySelector('.save-btn');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Update Applicant';
-            submitBtn.type = 'button'; // Change to button to prevent form submission
+            submitBtn.type = 'button'; 
             submitBtn.onclick = function() {
                 updateApplicantFromManualForm(applicant);
             };
         }
         
-        // Remove required attributes temporarily to avoid validation issues
         removeTemporaryValidation();
     }
 
-    // Function to re-initialize photo controls after form clone
     function initializeManualPhotoControls() {
-        // Re-bind photo controls
         const manualUploadPhotoBtn = document.getElementById('manual-upload-photo-btn');
         const manualPhotoInput = document.getElementById('manual-photo-input');
         const manualRemovePhotoBtn = document.getElementById('manual-remove-photo-btn');
@@ -5178,7 +4974,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Remove temporary validation requirements
     function removeTemporaryValidation() {
         const requiredFields = elements.manualApplicantForm.querySelectorAll('[required]');
         requiredFields.forEach(field => {
@@ -5187,7 +4982,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Restore validation when going back to add mode
     function restoreValidation() {
         const fields = elements.manualApplicantForm.querySelectorAll('[data-was-required="true"]');
         fields.forEach(field => {
@@ -5196,22 +4990,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Function to update applicant from manual form
     function updateApplicantFromManualForm(originalApplicant) {
-        // Basic validation
-        if (!validateManualForm(true)) { // true for edit mode (less strict validation)
+        if (!validateManualForm(true)) { 
             return;
         }
         
         const formData = new FormData(elements.manualApplicantForm);
         const updatedApplicant = { ...originalApplicant };
         
-        // Process all form data
         const lastName = document.getElementById('manual-surname').value.trim() || '';
         const firstName = document.getElementById('manual-first-name').value.trim() || '';
         const middleName = document.getElementById('manual-middle-name').value.trim() || '';
         
-        // Update name fields
         if (lastName && firstName) {
             let fullName = `${lastName}, ${firstName}`;
             if (middleName) {
@@ -5224,17 +5014,14 @@ document.addEventListener('DOMContentLoaded', function () {
         updatedApplicant['FIRST NAME'] = firstName || 'N/A';
         updatedApplicant['MIDDLE NAME'] = middleName || 'N/A';
         
-        // Process other form fields - FIXED: Include all fields
         formData.forEach((value, key) => {
             const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
             
-            // Skip name fields we already processed
             if (!fieldName.includes('SURNAME') && !fieldName.includes('FIRST NAME') && !fieldName.includes('MIDDLE NAME')) {
                 updatedApplicant[fieldName] = value || 'N/A';
             }
         });
         
-        // Process specific fields
         if (updatedApplicant['BDATE']) {
             try {
                 const date = new Date(updatedApplicant['BDATE']);
@@ -5249,16 +5036,13 @@ document.addEventListener('DOMContentLoaded', function () {
             updatedApplicant['BDATE'] = 'N/A';
         }
         
-        // Address fields - FIXED: Get values directly from form
         updatedApplicant['STREET ADDRESS'] = document.getElementById('manual-house-street').value.trim() || 'N/A';
         updatedApplicant['BARANGAY'] = document.getElementById('manual-barangay').value.trim() || 'N/A';
         updatedApplicant['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality').value.trim() || 'N/A';
         updatedApplicant['PROVINCE'] = document.getElementById('manual-province').value.trim() || 'N/A';
         
-        // FIXED: Ensure email is properly captured
         updatedApplicant['EMAIL'] = document.getElementById('manual-email').value.trim() || 'N/A';
         
-        // Handle photo update
         const tempPhoto = localStorage.getItem('tempManualPhoto');
         if (tempPhoto) {
             const photoId = updatedApplicant['SRS ID'];
@@ -5267,13 +5051,11 @@ document.addEventListener('DOMContentLoaded', function () {
             updatedApplicant['PHOTO'] = tempPhoto;
         }
         
-        // Update timestamps
         updatedApplicant['DATE LAST MODIFIED'] = new Date().toLocaleString();
         updatedApplicant['LAST MODIFIED BY'] = localStorage.getItem('currentUser') || 'System';
         
         console.log('Updated applicant data:', updatedApplicant);
         
-        // Save updated applicant
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
         const updatedApplicants = savedApplicants.map(applicant => {
             if (applicant['SRS ID'] === updatedApplicant['SRS ID']) {
@@ -5285,15 +5067,12 @@ document.addEventListener('DOMContentLoaded', function () {
         saveMainApplicants(updatedApplicants);
         displayMainApplicants(updatedApplicants);
         
-        // Close modal and show success message
         elements.manualModal.style.display = 'none';
         showNotification('Applicant updated successfully!', 'success', elements.manualNotification);
         
-        // Reset form handler back to add mode
         resetManualFormToAddMode();
     }
 
-    // Add form validation function
     function validateManualForm(isEditMode = false) {
         const requiredFields = [
             'manual-surname',
@@ -5316,7 +5095,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     firstInvalidField = field;
                 }
                 
-                // Highlight missing field
                 field.style.borderColor = '#f44336';
                 setTimeout(() => {
                     if (field) field.style.borderColor = '';
@@ -5333,24 +5111,19 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
-    // Reset manual form back to add mode
     function resetManualFormToAddMode() {
-        // Restore validation requirements
         restoreValidation();
         
-        // Remove the form and replace with a fresh clone to clear all event listeners
         const newForm = elements.manualApplicantForm.cloneNode(true);
         elements.manualApplicantForm.parentNode.replaceChild(newForm, elements.manualApplicantForm);
         elements.manualApplicantForm = newForm;
         
-        // Re-initialize the form for add mode
         initializeManualFormControls();
         
-        // Update the submit button
         const submitBtn = elements.manualApplicantForm.querySelector('.save-btn');
         if (submitBtn) {
             submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> Add Applicant';
-            submitBtn.type = 'submit'; // Change back to submit
+            submitBtn.type = 'submit'; 
         }
     }
 
@@ -5358,13 +5131,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             console.log('Initializing manual form controls...');
             
-            // Check if elements exist before using them
             if (!elements.manualApplicantForm) {
                 console.warn('Manual applicant form not found');
                 return;
             }
 
-            // Initialize photo controls only if elements exist
             if (elements.manualUploadPhotoBtn && elements.manualPhotoInput) {
                 elements.manualUploadPhotoBtn.addEventListener('click', function() {
                     elements.manualPhotoInput.click();
@@ -5400,13 +5171,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
             
-            // Initialize dynamic form elements
             initializeDynamicFormElements();
             
-            // Initialize add entry buttons
             initializeAddEntryButtons();
             
-            // Add submit handler for adding new applicants
             elements.manualApplicantForm.addEventListener('submit', function(event) {
                 event.preventDefault();
                 console.log('Manual form submitted');
@@ -5422,14 +5190,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setDefaultManualFormValues() {
-        // Set default values for optional fields when in add mode
         const optionalFields = [
             'manual-street-address', 'manual-course', 'manual-disability',
             'manual-preferred-position', 'manual-skills', 'manual-work-experience',
             'manual-country', 'manual-latest-country', 'manual-remarks'
         ];
         
-        // Don't set defaults in edit mode, only when opening fresh for add
         if (!elements.manualModal.classList.contains('manual-form-edit-mode')) {
             optionalFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
@@ -5468,7 +5234,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const printWindow = window.open('', 'CPESO Comprehensive Program Report');
         const today = new Date().toLocaleDateString();
         
-        // Capture all visual elements
         const enhancedStats = generateEnhancedStatistics(programStats, employmentStats, demographicStats);
         const programPictograph = generateProgramPictograph(programStats);
         const educationTable = generateEducationTable(programStats);
@@ -6033,11 +5798,9 @@ document.addEventListener('DOMContentLoaded', function () {
         
         printWindow.document.close();
         
-        // Show notification
         showNotification('PDF report generated successfully! The print dialog will open shortly.', 'success');
     }
 
-    // Helper functions for PDF generation
     function generateCourseBreakdownHTML(stats) {
         const collegeGrads = (stats.byEducation['College Graduate'] || 0) + 
                             (stats.byEducation['College'] || 0) + 
@@ -6153,7 +5916,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'No Course Specified';
             }
             
-            // Ensure course is a string
             course = String(course).trim().toLowerCase();
             
             if (!course || course === 'no course specified' || course === 'n/a') {
@@ -6162,7 +5924,6 @@ document.addEventListener('DOMContentLoaded', function () {
             
             console.log('🔍 Processing course:', course);
             
-            // Information Technology & Computer-related
             if (course.includes('information technology') || course.includes(' it ') || 
                 course.includes('it,') || course.includes('computer science') || 
                 course.includes('comsci') || course.includes('comp sci') ||
@@ -6175,7 +5936,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Information Technology & Computer Science';
             }
             
-            // Business & Management
             if (course.includes('business administration') || course.includes('bussiness') || 
                 course.includes('bus adm') || course.includes('business management') || 
                 course.includes('bus management') || course.includes('marketing') ||
@@ -6187,7 +5947,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Business Administration & Management';
             }
             
-            // Education
             if (course.includes('education') || course.includes('educ') || 
                 course.includes('teacher') || course.includes('elementary education') || 
                 course.includes('secondary education') || course.includes('high school') ||
@@ -6198,7 +5957,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Education';
             }
             
-            // Engineering
             if (course.includes('engineering') || course.includes('engineer') || 
                 course.includes('eng\'g') || course.includes('civil engineering') || 
                 course.includes('civil eng') || course.includes('ce,') ||
@@ -6214,7 +5972,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Engineering';
             }
             
-            // Accounting & Finance
             if (course.includes('accounting') || course.includes('accountancy') || 
                 course.includes('bsa') || course.includes('finance') || 
                 course.includes('banking') || course.includes('financial') ||
@@ -6223,7 +5980,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Accounting & Finance';
             }
             
-            // Healthcare & Nursing
             if (course.includes('nursing') || course.includes('nurse') || 
                 course.includes('bsn') || course.includes('midwifery') || 
                 course.includes('midwife') || course.includes('mid') ||
@@ -6237,7 +5993,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Healthcare & Nursing';
             }
             
-            // Hospitality & Tourism
             if (course.includes('hotel') || course.includes('restaurant') || 
                 course.includes('hr') || course.includes('tourism') || 
                 course.includes('tourist') || course.includes('travel') ||
@@ -6247,14 +6002,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Hospitality & Tourism Management';
             }
             
-            // Maritime
             if (course.includes('marine') || course.includes('maritime') || 
                 course.includes('seaman') || course.includes('seafaring') || 
                 course.includes('seafarer') || course.includes('bsmt')) {
                 return 'Maritime Education';
             }
             
-            // Arts & Sciences
             if (course.includes('psychology') || course.includes('psych') || 
                 course.includes('bs psych') || course.includes('sociology') || 
                 course.includes('socio') || course.includes('bs socio') ||
@@ -6275,13 +6028,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Arts & Sciences';
             }
             
-            // Criminology
             if (course.includes('criminology') || course.includes('criminal justice') || 
                 course.includes('criminal') || course.includes('bs crim')) {
                 return 'Criminology';
             }
             
-            // Architecture & Design
             if (course.includes('architecture') || course.includes('architect') || 
                 course.includes('bs arch') || course.includes('interior design') || 
                 course.includes('interior') || course.includes('indesign') ||
@@ -6291,7 +6042,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Architecture & Design';
             }
             
-            // Agriculture
             if (course.includes('agriculture') || course.includes('agricultural') || 
                 course.includes('bsa') || course.includes('fishery') || 
                 course.includes('fisheries') || course.includes('bsf') ||
@@ -6301,7 +6051,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Agriculture';
             }
             
-            // Technical Vocational
             if (course.includes('automotive') || course.includes('auto') || 
                 course.includes('auto mech') || course.includes('welding') || 
                 course.includes('welder') || course.includes('weld') ||
@@ -6314,7 +6063,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return 'Technical Vocational';
             }
             
-            // Return original course if no category matches (with proper capitalization)
             return course.charAt(0).toUpperCase() + course.slice(1);
             
         } catch (error) {
@@ -6329,11 +6077,9 @@ document.addEventListener('DOMContentLoaded', function () {
         
         savedApplicants.forEach((applicant, index) => {
             try {
-                // Test course categorization
                 const course = applicant['COURSE'] || applicant['Course'] || 'No Course';
                 categorizeCourse(course);
                 
-                // Test gender normalization
                 normalizeGender(applicant.SEX);
                 
             } catch (error) {
@@ -6346,7 +6092,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initializeNavigation() {
-        // Tab navigation
         const navTabs = document.querySelectorAll('.nav-tab');
         const pageContents = document.querySelectorAll('.page-content');
         
@@ -6354,15 +6099,12 @@ document.addEventListener('DOMContentLoaded', function () {
             tab.addEventListener('click', function() {
                 const targetPage = this.getAttribute('data-page');
                 
-                // Remove active class from all tabs and contents
                 navTabs.forEach(t => t.classList.remove('active'));
                 pageContents.forEach(c => c.classList.remove('active'));
                 
-                // Add active class to current tab and content
                 this.classList.add('active');
                 document.getElementById(`${targetPage}-content`).classList.add('active');
                 
-                // Load data for the active page
                 loadPageData(targetPage);
             });
         });
@@ -6379,41 +6121,34 @@ document.addEventListener('DOMContentLoaded', function () {
                 loadMainApplicants();
                 break;
             case 'employers':
-                // Re-initialize employers when tab is clicked
                 setTimeout(() => {
                     initializeEmployers();
                     loadEmployers();
                 }, 100);
                 break;
             case 'vacancies':
-                // Re-initialize vacancies when tab is clicked
                 setTimeout(() => {
                     initializeVacancies();
                     loadVacancies();
                 }, 100);
                 break;
             case 'programs':
-                // Re-initialize programs when tab is clicked
                 setTimeout(() => {
                     initializePrograms();
                     loadPrograms();
                 }, 100);
                 break;
             case 'reports':
-                // Reports are generated on demand
                 break;
             case 'tools':
             case 'admin':
-                // Coming soon pages
                 break;
         }
     }
 
-    // Employers Management
     function initializeEmployers() {
         console.log('Initializing employers...');
         
-        // Employer search functionality
         const employerSearchBtn = document.getElementById('employer-search-btn');
         const employerClearSearchBtn = document.getElementById('employer-clear-search-btn');
         const employerSearchInput = document.getElementById('employer-search-input');
@@ -6436,7 +6171,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Add employer button - FIXED
         const addEmployerBtn = document.getElementById('add-employer-btn');
         if (addEmployerBtn) {
             addEmployerBtn.addEventListener('click', function() {
@@ -6448,7 +6182,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn('Add employer button not found');
         }
         
-        // Advanced filters button - FIXED
         const advancedFiltersBtn = document.getElementById('employer-advanced-filters-btn');
         const filtersPanel = document.getElementById('employer-advanced-filters-panel');
         
@@ -6462,7 +6195,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn('Employer advanced filters elements not found');
         }
         
-        // Apply and clear filters buttons
         const applyFiltersBtn = document.getElementById('apply-employer-filters-btn');
         const clearFiltersBtn = document.getElementById('clear-employer-filters-btn');
         
@@ -6474,19 +6206,16 @@ document.addEventListener('DOMContentLoaded', function () {
             clearFiltersBtn.addEventListener('click', clearEmployerFilters);
         }
         
-        // Export employers
         const exportEmployersBtn = document.getElementById('export-employers-btn');
         if (exportEmployersBtn) {
             exportEmployersBtn.addEventListener('click', exportEmployersToExcel);
         }
         
-        // Clear all employers
         const clearAllEmployersBtn = document.getElementById('clear-all-employers-btn');
         if (clearAllEmployersBtn) {
             clearAllEmployersBtn.addEventListener('click', clearAllEmployers);
         }
         
-        // File upload for employers - FIXED
         initializeEmployerFileUpload();
         
         console.log('Employers initialization complete');
@@ -6509,7 +6238,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (employers.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 21; // Adjust based on your table columns
+            cell.colSpan = 21; 
             cell.className = 'no-results';
             cell.textContent = 'No employers found';
             row.appendChild(cell);
@@ -6520,7 +6249,6 @@ document.addEventListener('DOMContentLoaded', function () {
         employers.forEach((employer, index) => {
             const row = document.createElement('tr');
             
-            // Create cells for each employer field
             const cells = [
                 createTableCell(employer['EMPLOYER ID'] || `EMP-${index + 1}`),
                 createTableCell(employer['COMPANY NAME'] || 'N/A'),
@@ -6557,7 +6285,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const actionButtons = document.createElement('div');
         actionButtons.className = 'action-buttons';
 
-        // View Button
         const viewBtn = document.createElement('button');
         viewBtn.className = 'view-btn';
         viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -6566,7 +6293,6 @@ document.addEventListener('DOMContentLoaded', function () {
             openViewEmployerModal(employer);
         });
         
-        // Edit Button
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-btn';
         editBtn.innerHTML = '<i class="fas fa-edit"></i>';
@@ -6575,7 +6301,6 @@ document.addEventListener('DOMContentLoaded', function () {
             openEditEmployerModal(employer);
         });
         
-        // Download Button - ADDED
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
         downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
@@ -6584,7 +6309,6 @@ document.addEventListener('DOMContentLoaded', function () {
             downloadEmployerData(employer);
         });
         
-        // Delete Button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
@@ -6595,7 +6319,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // Add all buttons to the actions container
         actionButtons.appendChild(viewBtn);
         actionButtons.appendChild(editBtn);
         actionButtons.appendChild(downloadBtn);
@@ -6605,7 +6328,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return actionsCell;
     }
 
-    // Add View Employer Modal Function
     function openViewEmployerModal(employer) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -6738,7 +6460,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Add Download Employer Data Function
     function downloadEmployerData(employer) {
         try {
             const worksheet = XLSX.utils.json_to_sheet([employer]);
@@ -6832,7 +6553,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Filter functions for employers
     function applyEmployerFilters() {
         showNotification('Employer filters applied', 'success');
     }
@@ -6841,7 +6561,6 @@ document.addEventListener('DOMContentLoaded', function () {
         showNotification('Employer filters cleared', 'info');
     }
 
-    // Fixed employer file upload function
     function initializeEmployerFileUpload() {
         console.log('Initializing employer file upload...');
         
@@ -6857,7 +6576,6 @@ document.addEventListener('DOMContentLoaded', function () {
             fileName: !!fileName
         });
         
-        // Browse button functionality - FIXED
         if (browseBtn && fileInput) {
             browseBtn.addEventListener('click', function() {
                 console.log('Employer browse button clicked');
@@ -6870,7 +6588,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!fileInput) console.warn('File input not found - ID: employer-upload-file-input');
         }
         
-        // File input change handler - FIXED
         if (fileInput && fileName) {
             fileInput.addEventListener('change', function() {
                 console.log('Employer file input changed');
@@ -6893,7 +6610,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Upload button functionality - FIXED
         if (uploadBtn) {
             uploadBtn.addEventListener('click', function() {
                 console.log('Employer upload button clicked');
@@ -6905,7 +6621,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 const file = fileInput.files[0];
                 
-                // Check if it's an Excel file
                 if (!file.name.match(/\.(xlsx|xls)$/)) {
                     showNotification('Please select an Excel file (.xlsx or .xls).', 'error');
                     return;
@@ -6938,7 +6653,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         
                         showNotification(`Successfully imported ${processedData.length} employers`, 'success');
                         
-                        // Reset file input
                         if (fileInput) fileInput.value = '';
                         if (fileName) fileName.value = '';
                         if (uploadBtn) {
@@ -6993,7 +6707,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Add employer modal function
     function openAddEmployerModal() {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -7078,7 +6791,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         document.body.appendChild(modal);
         
-        // Event handlers
         const closeBtn = modal.querySelector('.close');
         const cancelBtn = modal.querySelector('#cancel-employer');
         const form = modal.querySelector('#addEmployerForm');
@@ -7136,7 +6848,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeVacancies() {
         console.log('Initializing vacancies...');
         
-        // Vacancy search functionality
         const vacancySearchBtn = document.getElementById('vacancy-search-btn');
         const vacancyClearSearchBtn = document.getElementById('vacancy-clear-search-btn');
         const vacancySearchInput = document.getElementById('vacancy-search-input');
@@ -7153,7 +6864,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Add vacancy button - FIXED
         const addVacancyBtn = document.getElementById('add-vacancy-btn');
         if (addVacancyBtn) {
             addVacancyBtn.addEventListener('click', function() {
@@ -7162,7 +6872,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Advanced filters button - FIXED
         const advancedFiltersBtn = document.getElementById('vacancy-advanced-filters-btn');
         const filtersPanel = document.getElementById('vacancy-advanced-filters-panel');
         
@@ -7173,7 +6882,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // Apply and clear filters buttons
         const applyFiltersBtn = document.getElementById('apply-vacancy-filters-btn');
         const clearFiltersBtn = document.getElementById('clear-vacancy-filters-btn');
         
@@ -7184,19 +6892,16 @@ document.addEventListener('DOMContentLoaded', function () {
             clearFiltersBtn.addEventListener('click', clearVacancyFilters);
         }
         
-        // Export vacancies
         const exportVacanciesBtn = document.getElementById('export-vacancies-btn');
         if (exportVacanciesBtn) {
             exportVacanciesBtn.addEventListener('click', exportVacanciesToExcel);
         }
         
-        // Clear all vacancies
         const clearAllVacanciesBtn = document.getElementById('clear-all-vacancies-btn');
         if (clearAllVacanciesBtn) {
             clearAllVacanciesBtn.addEventListener('click', clearAllVacancies);
         }
         
-        // File upload for vacancies - FIXED
         initializeVacancyFileUpload();
         
         console.log('Vacancies initialization complete');
@@ -7219,7 +6924,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (vacancies.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 20; // Adjust based on your table columns
+            cell.colSpan = 20; 
             cell.className = 'no-results';
             cell.textContent = 'No vacancies found';
             row.appendChild(cell);
@@ -7230,7 +6935,6 @@ document.addEventListener('DOMContentLoaded', function () {
         vacancies.forEach((vacancy, index) => {
             const row = document.createElement('tr');
             
-            // Create cells for each vacancy field
             const cells = [
                 createTableCell(vacancy['VACANCY ID'] || `VAC-${index + 1}`),
                 createTableCell(vacancy['JOB TITLE'] || 'N/A'),
@@ -7275,7 +6979,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const actionButtons = document.createElement('div');
         actionButtons.className = 'action-buttons';
 
-        // View Button
         const viewBtn = document.createElement('button');
         viewBtn.className = 'view-btn';
         viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -7284,7 +6987,6 @@ document.addEventListener('DOMContentLoaded', function () {
             openViewVacancyModal(vacancy);
         });
         
-        // Edit Button
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-btn';
         editBtn.innerHTML = '<i class="fas fa-edit"></i>';
@@ -7293,7 +6995,6 @@ document.addEventListener('DOMContentLoaded', function () {
             openEditVacancyModal(vacancy);
         });
         
-        // Download Button - ADDED
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
         downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
@@ -7302,7 +7003,6 @@ document.addEventListener('DOMContentLoaded', function () {
             downloadVacancyData(vacancy);
         });
         
-        // Delete Button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
@@ -7322,7 +7022,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return actionsCell;
     }
 
-    // Add Download Vacancy Data Function
     function downloadVacancyData(vacancy) {
         try {
             const worksheet = XLSX.utils.json_to_sheet([vacancy]);
@@ -7448,7 +7147,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         document.body.appendChild(modal);
         
-        // Event handlers
         const closeBtn = modal.querySelector('.close');
         const cancelBtn = modal.querySelector('#cancel-vacancy');
         const form = modal.querySelector('#addVacancyForm');
@@ -7654,7 +7352,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Fixed vacancy file upload function
 function initializeVacancyFileUpload() {
     console.log('Initializing vacancy file upload...');
     
@@ -7663,7 +7360,6 @@ function initializeVacancyFileUpload() {
     const browseBtn = document.getElementById('vacancy-browse-btn');
     const fileName = document.getElementById('vacancy-upload-file-name');
     
-    // Browse button functionality
     if (browseBtn && fileInput) {
         browseBtn.addEventListener('click', function() {
             console.log('Vacancy browse button clicked');
@@ -7671,7 +7367,6 @@ function initializeVacancyFileUpload() {
         });
     }
     
-    // File input change handler
     if (fileInput && fileName) {
         fileInput.addEventListener('change', function() {
             console.log('Vacancy file input changed');
@@ -7693,7 +7388,6 @@ function initializeVacancyFileUpload() {
         });
     }
     
-    // Upload button functionality
     if (uploadBtn) {
         uploadBtn.addEventListener('click', function() {
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
@@ -7732,7 +7426,6 @@ function initializeVacancyFileUpload() {
                     
                     showNotification(`Successfully imported ${processedData.length} vacancies`, 'success');
                     
-                    // Reset file input
                     if (fileInput) fileInput.value = '';
                     if (fileName) fileName.value = '';
                     if (uploadBtn) {
@@ -7756,7 +7449,6 @@ function initializeVacancyFileUpload() {
     }
 }
 
-// Fixed program file upload function
 function initializeProgramFileUpload() {
     console.log('Initializing program file upload...');
     
@@ -7765,7 +7457,6 @@ function initializeProgramFileUpload() {
     const browseBtn = document.getElementById('program-browse-btn');
     const fileName = document.getElementById('program-upload-file-name');
     
-    // Browse button functionality
     if (browseBtn && fileInput) {
         browseBtn.addEventListener('click', function() {
             console.log('Program browse button clicked');
@@ -7773,7 +7464,6 @@ function initializeProgramFileUpload() {
         });
     }
     
-    // File input change handler
     if (fileInput && fileName) {
         fileInput.addEventListener('change', function() {
             console.log('Program file input changed');
@@ -7795,7 +7485,6 @@ function initializeProgramFileUpload() {
         });
     }
     
-    // Upload button functionality
     if (uploadBtn) {
         uploadBtn.addEventListener('click', function() {
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
@@ -7835,7 +7524,6 @@ function initializeProgramFileUpload() {
                     
                     showNotification(`Successfully imported ${processedData.length} programs`, 'success');
                     
-                    // Reset file input
                     if (fileInput) fileInput.value = '';
                     if (fileName) fileName.value = '';
                     if (uploadBtn) {
@@ -7903,20 +7591,16 @@ function initializeProgramFileUpload() {
     }
 
     function applyVacancyFilters() {
-        // Implementation for vacancy filters
         showNotification('Vacancy filters applied', 'success');
     }
 
     function clearVacancyFilters() {
-        // Implementation for clearing vacancy filters
         showNotification('Vacancy filters cleared', 'info');
     }
 
-    // Programs Management
     function initializePrograms() {
         console.log('Initializing programs...');
         
-        // Program search functionality
         const programSearchBtn = document.getElementById('program-search-btn');
         const programClearSearchBtn = document.getElementById('program-clear-search-btn');
         const programSearchInput = document.getElementById('program-search-input');
@@ -7933,7 +7617,6 @@ function initializeProgramFileUpload() {
             });
         }
         
-        // Add program button - FIXED
         const addProgramBtn = document.getElementById('add-program-btn');
         if (addProgramBtn) {
             addProgramBtn.addEventListener('click', function() {
@@ -7942,7 +7625,6 @@ function initializeProgramFileUpload() {
             });
         }
         
-        // Advanced filters button - FIXED
         const advancedFiltersBtn = document.getElementById('program-advanced-filters-btn');
         const filtersPanel = document.getElementById('program-advanced-filters-panel');
         
@@ -7953,7 +7635,6 @@ function initializeProgramFileUpload() {
             });
         }
         
-        // Apply and clear filters buttons
         const applyFiltersBtn = document.getElementById('apply-program-filters-btn');
         const clearFiltersBtn = document.getElementById('clear-program-filters-btn');
         
@@ -7964,19 +7645,16 @@ function initializeProgramFileUpload() {
             clearFiltersBtn.addEventListener('click', clearProgramFilters);
         }
         
-        // Export programs
         const exportProgramsBtn = document.getElementById('export-programs-btn');
         if (exportProgramsBtn) {
             exportProgramsBtn.addEventListener('click', exportProgramsToExcel);
         }
         
-        // Clear all programs
         const clearAllProgramsBtn = document.getElementById('clear-all-programs-btn');
         if (clearAllProgramsBtn) {
             clearAllProgramsBtn.addEventListener('click', clearAllPrograms);
         }
         
-        // File upload for programs - FIXED
         initializeProgramFileUpload();
         
         console.log('Programs initialization complete');
@@ -7999,7 +7677,7 @@ function initializeProgramFileUpload() {
         if (programs.length === 0) {
             const row = document.createElement('tr');
             const cell = document.createElement('td');
-            cell.colSpan = 21; // Adjust based on your table columns
+            cell.colSpan = 21; 
             cell.className = 'no-results';
             cell.textContent = 'No programs found';
             row.appendChild(cell);
@@ -8010,7 +7688,6 @@ function initializeProgramFileUpload() {
         programs.forEach((program, index) => {
             const row = document.createElement('tr');
             
-            // Create cells for each program field
             const cells = [
                 createTableCell(program['PROGRAM ID'] || `PROG-${index + 1}`),
                 createTableCell(program['PROGRAM NAME'] || 'N/A'),
@@ -8059,7 +7736,6 @@ function initializeProgramFileUpload() {
         const actionButtons = document.createElement('div');
         actionButtons.className = 'action-buttons';
 
-        // View Button
         const viewBtn = document.createElement('button');
         viewBtn.className = 'view-btn';
         viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
@@ -8068,7 +7744,6 @@ function initializeProgramFileUpload() {
             openViewProgramModal(program);
         });
         
-        // Edit Button
         const editBtn = document.createElement('button');
         editBtn.className = 'edit-btn';
         editBtn.innerHTML = '<i class="fas fa-edit"></i>';
@@ -8077,7 +7752,6 @@ function initializeProgramFileUpload() {
             openEditProgramModal(program);
         });
         
-        // Download Button - ADDED
         const downloadBtn = document.createElement('button');
         downloadBtn.className = 'download-btn';
         downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
@@ -8086,7 +7760,6 @@ function initializeProgramFileUpload() {
             downloadProgramData(program);
         });
         
-        // Delete Button
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'delete-btn';
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
@@ -8106,7 +7779,6 @@ function initializeProgramFileUpload() {
         return actionsCell;
     }
 
-    // Add Download Program Data Function
     function downloadProgramData(program) {
         try {
             const worksheet = XLSX.utils.json_to_sheet([program]);
@@ -8271,7 +7943,6 @@ function initializeProgramFileUpload() {
         
         document.body.appendChild(modal);
         
-        // Event handlers
         const closeBtn = modal.querySelector('.close');
         const cancelBtn = modal.querySelector('#cancel-program');
         const form = modal.querySelector('#addProgramForm');
@@ -8452,7 +8123,6 @@ function initializeProgramFileUpload() {
         
         document.body.appendChild(modal);
         
-        // Event handlers
         const closeBtn = modal.querySelector('.close');
         const cancelBtn = modal.querySelector('#cancel-edit-program');
         const form = modal.querySelector('#editProgramForm');
@@ -8748,7 +8418,6 @@ function initializeProgramFileUpload() {
                         
                         showNotification(`Successfully imported ${processedData.length} programs`, 'success');
                         
-                        // Reset file input
                         fileInput.value = '';
                         document.getElementById('program-upload-file-name').value = '';
                         uploadBtn.disabled = true;
@@ -8890,14 +8559,12 @@ function initializeProgramFileUpload() {
         const totalBudget = programs.reduce((sum, p) => sum + parseFloat(p['BUDGET ALLOCATED'] || 0), 0);
         const totalParticipants = programs.reduce((sum, p) => sum + parseInt(p['PARTICIPANT COUNT'] || 0), 0);
         
-        // Update stats cards
         updateStatCard('total-programs-count', totalPrograms);
         updateStatCard('active-programs-count', activePrograms);
         updateStatCard('completed-programs-count', completedPrograms);
         updateStatCard('total-budget-allocated', '₱' + totalBudget.toLocaleString('en-PH'));
         updateStatCard('total-participants-count', totalParticipants);
         
-        // Update category distribution
         updateProgramCategoryDistribution(programs);
     }
 
@@ -8914,7 +8581,6 @@ function initializeProgramFileUpload() {
         console.log('Program Category Distribution:', categoryCount);
     }
 
-    // Initialize programs when document is ready
     document.addEventListener('DOMContentLoaded', function() {
         initializePrograms();
         loadPrograms();
@@ -8923,19 +8589,16 @@ function initializeProgramFileUpload() {
 
     function clearStorageSpace() {
         try {
-            // Check current storage usage
             let totalSize = 0;
             for (let key in localStorage) {
                 if (localStorage.hasOwnProperty(key)) {
-                    totalSize += localStorage[key].length * 2; // Approximate size in bytes
+                    totalSize += localStorage[key].length * 2; 
                 }
             }
             console.log(`Current storage usage: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
 
-            // Clear imported data first (usually the largest)
             localStorage.removeItem('importedData');
             
-            // Optionally clear other temporary data
             const tempKeys = [];
             for (let key in localStorage) {
                 if (key.startsWith('temp') || key.startsWith('photo_')) {
@@ -8955,13 +8618,11 @@ function initializeProgramFileUpload() {
 
     function loadDashboardStats() {
         console.log('Loading dashboard stats...');
-        // This will be implemented when you add the dashboard functionality
         const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
         const employers = JSON.parse(localStorage.getItem('employers')) || [];
         const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
         const programs = JSON.parse(localStorage.getItem('programs')) || [];
         
-        // Update quick stats
         updateQuickStats(savedApplicants.length, employers.length, vacancies.length);
     }
 
@@ -8983,11 +8644,8 @@ function initializeProgramFileUpload() {
         }
     }
 
-    // Add this to your initializeApp() function
     function initializeGlobalEventHandlers() {
-        // Use event delegation for all modal buttons
         document.addEventListener('click', function(event) {
-            // Add Employer button
             if (event.target.matches('#add-employer-btn, #add-employer-btn *')) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -8996,7 +8654,6 @@ function initializeProgramFileUpload() {
                 return;
             }
             
-            // Add Vacancy button
             if (event.target.matches('#add-vacancy-btn, #add-vacancy-btn *')) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -9005,7 +8662,6 @@ function initializeProgramFileUpload() {
                 return;
             }
             
-            // Add Program button
             if (event.target.matches('#add-program-btn, #add-program-btn *')) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -9014,7 +8670,6 @@ function initializeProgramFileUpload() {
                 return;
             }
             
-            // Advanced filters buttons
             if (event.target.matches('#employer-advanced-filters-btn, #employer-advanced-filters-btn *')) {
                 event.preventDefault();
                 event.stopPropagation();
