@@ -2428,22 +2428,56 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initializeReporting() {
-        if (elements.generateReportBtn) {
-            elements.generateReportBtn.addEventListener('click', generateProgramReports);
+        // Find the correct button IDs from your HTML
+        const generateReportBtn = document.getElementById('generate-comprehensive-report-btn');
+        const exportReportBtn = document.getElementById('export-comprehensive-report-btn');
+        const exportPdfBtn = document.getElementById('export-pdf-report-btn');
+        
+        console.log('Initializing report buttons...');
+        console.log('Generate report button found:', !!generateReportBtn);
+        console.log('Export report button found:', !!exportReportBtn);
+        console.log('Export PDF button found:', !!exportPdfBtn);
+        
+        if (generateReportBtn) {
+            generateReportBtn.addEventListener('click', generateProgramReports);
+            console.log('Generate report button initialized');
+        } else {
+            console.warn('Generate report button not found!');
         }
         
-        if (elements.exportReportBtn) {
-            elements.exportReportBtn.addEventListener('click', exportReportsToExcel);
+        if (exportReportBtn) {
+            exportReportBtn.addEventListener('click', exportReportsToExcel);
+            console.log('Export report button initialized');
         }
+        
+        if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', generateComprehensivePDFReport);
+            console.log('Export PDF button initialized');
+        }
+        
+        // Initialize report tabs
+        initializeReportTabs();
+    }
+
+    function initializeReportTabs() {
+        const reportTabs = document.querySelectorAll('.report-tab');
+        reportTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const reportType = this.getAttribute('data-report');
+                activateReportTab(reportType);
+            });
+        });
     }
 
     function generateProgramReports() {
-        const reportsContainer = document.getElementById('program-reports');
+        console.log('Generating program reports...');
         
-        if (!reportsContainer) return;
+        // Find the reports section - using applicants-report as the main container
+        const reportsContainer = document.getElementById('applicants-report');
         
-        if (reportsContainer.style.display === 'block') {
-            reportsContainer.style.display = 'none';
+        if (!reportsContainer) {
+            console.error('Reports container not found!');
+            showNotification('Reports container not found. Please refresh the page.', 'error');
             return;
         }
         
@@ -2451,76 +2485,144 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (savedApplicants.length === 0) {
             reportsContainer.innerHTML = '<p class="no-results">No applicant data available for reporting.</p>';
-            reportsContainer.style.display = 'block';
+            showNotification('No data available for reports', 'info');
             return;
         }
         
-        const programStats = calculateProgramStatistics(savedApplicants);
-        const employmentStats = calculateEmploymentStatistics(savedApplicants);
-        const demographicStats = calculateDemographicStatistics(savedApplicants);
+        console.log(`Processing ${savedApplicants.length} applicants for reports`);
         
-        reportsContainer.innerHTML = `
-            <div class="visual-report-section">
-                <h3><i class="fas fa-chart-line"></i> Executive Summary</h3>
-                ${generateEnhancedStatistics(programStats, employmentStats, demographicStats)}
-            </div>
+        try {
+            const programStats = calculateProgramStatistics(savedApplicants);
+            const employmentStats = calculateEmploymentStatistics(savedApplicants);
+            const demographicStats = calculateDemographicStatistics(savedApplicants);
             
-            <div class="visual-report-section">
-                <h3><i class="fas fa-users"></i> Program Enrollment Overview</h3>
-                ${generateProgramPictograph(programStats)}
-            </div>
+            reportsContainer.innerHTML = `
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-chart-line"></i> Executive Summary</h3>
+                    ${generateEnhancedStatistics(programStats, employmentStats, demographicStats)}
+                </div>
+                
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-users"></i> Program Enrollment Overview</h3>
+                    ${generateProgramPictograph(programStats)}
+                </div>
+                
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-graduation-cap"></i> Educational Attainment</h3>
+                    ${generateEducationTable(programStats)}
+                    ${generateExpandableCourseStats(programStats)}
+                </div>
+                
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-user-friends"></i> Gender Distribution</h3>
+                    ${generateGenderFigures(demographicStats)}
+                </div>
+                
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-chart-pie"></i> Program Category Breakdown</h3>
+                    ${generateProgramPieChart(programStats)}
+                </div>
+                
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-briefcase"></i> Employment Status</h3>
+                    ${generateEmploymentComparison(employmentStats)}
+                </div>
+                
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-chart-bar"></i> Age Demographics</h3>
+                    ${generateAgePyramid(programStats)}
+                </div>
+                
+                <div class="visual-report-section">
+                    <h3><i class="fas fa-tasks"></i> Program Status Progress</h3>
+                    ${generateProgramProgress(programStats)}
+                </div>
+                
+                <div class="report-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button id="export-pdf-report" class="pdf-export-btn">
+                        <i class="fas fa-file-pdf"></i> Export Comprehensive PDF Report
+                    </button>
+                    <button id="export-summary-report" class="action-btn" style="background: #4caf50;">
+                        <i class="fas fa-file-excel"></i> Export Summary Report
+                    </button>
+                    <button id="export-full-report" class="action-btn" style="background: #2196f3;">
+                        <i class="fas fa-file-excel"></i> Export Full Data
+                    </button>
+                </div>
+            `;
             
-            <div class="visual-report-section">
-                <h3><i class="fas fa-graduation-cap"></i> Educational Attainment</h3>
-                ${generateEducationTable(programStats)}
-                ${generateExpandableCourseStats(programStats)}
-            </div>
+            // Initialize event listeners for the buttons
+            initializeReportButtons();
             
-            <div class="visual-report-section">
-                <h3><i class="fas fa-user-friends"></i> Gender Distribution</h3>
-                ${generateGenderFigures(demographicStats)}
-            </div>
+            // Activate the applicants tab
+            activateReportTab('applicants');
             
-            <div class="visual-report-section">
-                <h3><i class="fas fa-chart-pie"></i> Program Category Breakdown</h3>
-                ${generateProgramPieChart(programStats)}
-            </div>
+            showNotification('Reports generated successfully!', 'success');
             
-            <div class="visual-report-section">
-                <h3><i class="fas fa-briefcase"></i> Employment Status</h3>
-                ${generateEmploymentComparison(employmentStats)}
-            </div>
-            
-            <div class="visual-report-section">
-                <h3><i class="fas fa-chart-bar"></i> Age Demographics</h3>
-                ${generateAgePyramid(programStats)}
-            </div>
-            
-            <div class="visual-report-section">
-                <h3><i class="fas fa-tasks"></i> Program Status Progress</h3>
-                ${generateProgramProgress(programStats)}
-            </div>
-            
-            <div class="report-actions" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <button id="export-pdf-btn" class="pdf-export-btn">
-                    <i class="fas fa-file-pdf"></i> Export Comprehensive PDF Report
-                </button>
-                <button id="export-summary-btn" class="action-btn" style="background: #4caf50;">
-                    <i class="fas fa-file-excel"></i> Export Summary Report
-                </button>
-                <button id="export-full-btn" class="action-btn" style="background: #2196f3;">
-                    <i class="fas fa-file-excel"></i> Export Full Data
-                </button>
-            </div>
-        `;
+        } catch (error) {
+            console.error('Error generating reports:', error);
+            reportsContainer.innerHTML = `
+                <div class="error-message">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Error Generating Reports</h3>
+                    <p>There was an error generating the reports: ${error.message}</p>
+                    <p>Please try again or contact support.</p>
+                </div>
+            `;
+            showNotification('Error generating reports: ' + error.message, 'error');
+        }
+    }
+
+    // Helper function to activate report tab
+    function activateReportTab(tabName) {
+        // Remove active class from all tabs
+        document.querySelectorAll('.report-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
         
-        document.getElementById('export-pdf-btn').addEventListener('click', generateComprehensivePDFReport);
-        document.getElementById('export-summary-btn').addEventListener('click', exportSummaryReport);
-        document.getElementById('export-full-btn').addEventListener('click', exportReportsToExcel);
+        // Hide all report sections
+        document.querySelectorAll('.report-section').forEach(section => {
+            section.classList.remove('active');
+        });
         
-        initializeExpandableSections();
-        debugDataIssues();
-        reportsContainer.style.display = 'block';
+        // Activate selected tab
+        const activeTab = document.querySelector(`.report-tab[data-report="${tabName}"]`);
+        if (activeTab) {
+            activeTab.classList.add('active');
+        }
+        
+        // Show selected report section
+        const activeSection = document.getElementById(`${tabName}-report`);
+        if (activeSection) {
+            activeSection.classList.add('active');
+        }
+    }
+
+
+    // Add this helper function to initialize report buttons
+    function initializeReportButtons() {
+        // PDF Export Button
+        const pdfBtn = document.getElementById('export-pdf-btn');
+        if (pdfBtn) {
+            pdfBtn.addEventListener('click', generateComprehensivePDFReport);
+        } else {
+            console.warn('PDF export button not found');
+        }
+        
+        // Summary Export Button
+        const summaryBtn = document.getElementById('export-summary-btn');
+        if (summaryBtn) {
+            summaryBtn.addEventListener('click', exportSummaryReport);
+        } else {
+            console.warn('Summary export button not found');
+        }
+        
+        // Full Export Button
+        const fullBtn = document.getElementById('export-full-btn');
+        if (fullBtn) {
+            fullBtn.addEventListener('click', exportReportsToExcel);
+        } else {
+            console.warn('Full export button not found');
+        }
     }
 
     function generateProgramPictograph(stats) {
@@ -6153,6 +6255,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeEmployerForm();
         initializeEmployerFilters();
         initializeEmployerFileUpload();
+        initializeEmployerSort();
         
         const employerSearchBtn = document.getElementById('employer-search-btn');
         const employerClearSearchBtn = document.getElementById('employer-clear-search-btn');
@@ -6226,6 +6329,38 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Employers initialization complete');
     }
 
+    function initializeEmployerSort() {
+        const sortSelect = document.getElementById('employer-sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', function() {
+                sortEmployers(this.value);
+            });
+        }
+    }
+
+    function sortEmployers(sortBy) {
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        
+        const sortedEmployers = [...employers].sort((a, b) => {
+            switch (sortBy) {
+                case 'name':
+                    return (a['COMPANY NAME'] || '').localeCompare(b['COMPANY NAME'] || '');
+                case 'name-desc':
+                    return (b['COMPANY NAME'] || '').localeCompare(a['COMPANY NAME'] || '');
+                case 'date':
+                    return new Date(b['REGISTRATION DATE'] || 0) - new Date(a['REGISTRATION DATE'] || 0);
+                case 'date-oldest':
+                    return new Date(a['REGISTRATION DATE'] || 0) - new Date(b['REGISTRATION DATE'] || 0);
+                case 'employees':
+                    return (parseInt(b['NUMBER OF EMPLOYEES']) || 0) - (parseInt(a['NUMBER OF EMPLOYEES']) || 0);
+                default:
+                    return 0;
+            }
+        });
+        
+        displayEmployers(sortedEmployers);
+    }
+
     function loadEmployers() {
         const employers = JSON.parse(localStorage.getItem('employers')) || [];
         displayEmployers(employers);
@@ -6243,34 +6378,92 @@ document.addEventListener('DOMContentLoaded', function () {
         
         if (employers.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="8" class="no-results">No employers found</td>`;
+            row.innerHTML = `<td colspan="21" class="no-results">No employers found</td>`;
             tbody.appendChild(row);
             return;
         }
         
         employers.forEach((employer, index) => {
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${employer.companyName || 'N/A'}</td>
-                <td>${employer.industry || 'N/A'}</td>
-                <td>${employer.contactPerson || 'N/A'}</td>
-                <td>${employer.email || 'N/A'}</td>
-                <td>${employer.phone || 'N/A'}</td>
-                <td>${employer.vacanciesCount || 0}</td>
-                <td>${employer.status || 'Active'}</td>
-                <td class="actions-cell">
-                    <div class="action-buttons">
-                        <button class="edit-btn" onclick="editEmployer('${employer.id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="delete-btn" onclick="deleteEmployer('${employer.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            `;
+            
+            // Create table cells for each field
+            const cells = [
+                createTableCell(employer['EMPLOYER ID'] || `EMP-${index + 1}`),
+                createTableCell(employer['COMPANY NAME'] || 'N/A'),
+                createTableCell(employer['COMPANY TYPE'] || 'N/A'),
+                createTableCell(employer['INDUSTRY'] || 'N/A'),
+                createTableCell(employer['CONTACT PERSON'] || 'N/A'),
+                createTableCell(employer['CONTACT POSITION'] || 'N/A'),
+                createTableCell(employer['EMAIL'] || 'N/A'),
+                createTableCell(employer['PHONE'] || 'N/A'),
+                createTableCell(employer['ADDRESS'] || 'N/A'),
+                createTableCell(employer['BARANGAY'] || 'N/A'),
+                createTableCell(employer['CITY/MUNICIPALITY'] || 'N/A'),
+                createTableCell(employer['PROVINCE'] || 'N/A'),
+                createTableCell(employer['BUSINESS PERMIT NO.'] || 'N/A'),
+                createTableCell(employer['BUSINESS PERMIT EXPIRY'] || 'N/A'),
+                createTableCell(employer['NUMBER OF EMPLOYEES'] || 'N/A'),
+                createTableCell(employer['YEAR ESTABLISHED'] || 'N/A'),
+                createTableCell(employer['WEBSITE'] || 'N/A'),
+                createStatusCell(employer['STATUS'] || 'Active'),
+                createTableCell(employer['REGISTRATION DATE'] || 'N/A'),
+                createTableCell(employer['LAST ACTIVE'] || 'N/A'),
+                createEmployerActionsCell(employer, index)
+            ];
+            
+            cells.forEach(cell => row.appendChild(cell));
             tbody.appendChild(row);
         });
+    }
+
+    function createEmployerActionsCell(employer, index) {
+        const actionsCell = document.createElement('td');
+        actionsCell.className = 'actions-cell';
+        
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'action-buttons';
+
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'view-btn';
+        viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        viewBtn.title = 'View Employer Details';
+        viewBtn.addEventListener('click', function() {
+            openViewEmployerModal(employer);
+        });
+        
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i>';
+        editBtn.title = 'Edit Employer';
+        editBtn.addEventListener('click', function() {
+            editEmployer(employer['EMPLOYER ID'] || employer.id);
+        });
+        
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'download-btn';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+        downloadBtn.title = 'Download Employer Data';
+        downloadBtn.addEventListener('click', function() {
+            downloadEmployerData(employer);
+        });
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        deleteBtn.title = 'Delete Employer';
+        deleteBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this employer?')) {
+                deleteEmployer(employer['EMPLOYER ID'] || employer.id);
+            }
+        });
+        
+        actionButtons.appendChild(viewBtn);
+        actionButtons.appendChild(editBtn);
+        actionButtons.appendChild(downloadBtn);
+        actionButtons.appendChild(deleteBtn);
+        
+        actionsCell.appendChild(actionButtons);
+        return actionsCell;
     }
 
     function initializeEmployerForm() {
@@ -6664,7 +6857,32 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function applyEmployerFilters() {
-        showNotification('Employer filters applied', 'success');
+        const companyType = document.getElementById('filter-employer-type')?.value || '';
+        const industry = document.getElementById('filter-employer-industry')?.value || '';
+        const status = document.getElementById('filter-employer-status')?.value || '';
+        
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        
+        const filteredEmployers = employers.filter(employer => {
+            let matches = true;
+            
+            if (companyType && employer['COMPANY TYPE'] !== companyType) {
+                matches = false;
+            }
+            
+            if (industry && !(employer['INDUSTRY'] || '').toLowerCase().includes(industry.toLowerCase())) {
+                matches = false;
+            }
+            
+            if (status && employer['STATUS'] !== status) {
+                matches = false;
+            }
+            
+            return matches;
+        });
+        
+        displayEmployers(filteredEmployers);
+        showNotification(`Found ${filteredEmployers.length} employer(s)`, 'success');
     }
 
     function clearEmployerFilters() {
@@ -6792,29 +7010,128 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function processEmployerData(jsonData) {
         return jsonData.map((record, index) => {
+            // Map field names properly
             return {
                 'EMPLOYER ID': generateUniqueId('EMP'),
-                'COMPANY NAME': record['COMPANY NAME'] || record['Company Name'] || 'N/A',
-                'COMPANY TYPE': record['COMPANY TYPE'] || record['Company Type'] || 'N/A',
-                'INDUSTRY': record['INDUSTRY'] || record['Industry'] || 'N/A',
-                'CONTACT PERSON': record['CONTACT PERSON'] || record['Contact Person'] || 'N/A',
-                'CONTACT POSITION': record['CONTACT POSITION'] || record['Contact Position'] || 'N/A',
-                'EMAIL': record['EMAIL'] || record['Email'] || 'N/A',
-                'PHONE': record['PHONE'] || record['Phone'] || 'N/A',
-                'ADDRESS': record['ADDRESS'] || record['Address'] || 'N/A',
-                'BARANGAY': record['BARANGAY'] || record['Barangay'] || 'N/A',
-                'CITY/MUNICIPALITY': record['CITY/MUNICIPALITY'] || record['City/Municipality'] || 'N/A',
-                'PROVINCE': record['PROVINCE'] || record['Province'] || 'N/A',
-                'BUSINESS PERMIT NO.': record['BUSINESS PERMIT NO.'] || record['Business Permit No.'] || 'N/A',
+                'COMPANY NAME': record['COMPANY NAME'] || record['Company Name'] || record['company'] || record['Company'] || 'N/A',
+                'COMPANY TYPE': record['COMPANY TYPE'] || record['Company Type'] || record['type'] || 'Private',
+                'INDUSTRY': record['INDUSTRY'] || record['Industry'] || record['industry'] || 'N/A',
+                'CONTACT PERSON': record['CONTACT PERSON'] || record['Contact Person'] || record['contact'] || 'N/A',
+                'CONTACT POSITION': record['CONTACT POSITION'] || record['Contact Position'] || record['position'] || 'N/A',
+                'EMAIL': record['EMAIL'] || record['Email'] || record['email'] || 'N/A',
+                'PHONE': record['PHONE'] || record['Phone'] || record['phone'] || record['Contact No'] || 'N/A',
+                'ADDRESS': record['ADDRESS'] || record['Address'] || record['address'] || 'N/A',
+                'BARANGAY': record['BARANGAY'] || record['Barangay'] || record['barangay'] || 'N/A',
+                'CITY/MUNICIPALITY': record['CITY/MUNICIPALITY'] || record['City/Municipality'] || record['city'] || 'N/A',
+                'PROVINCE': record['PROVINCE'] || record['Province'] || record['province'] || 'N/A',
+                'BUSINESS PERMIT NO.': record['BUSINESS PERMIT NO.'] || record['Business Permit No.'] || record['permit'] || 'N/A',
                 'BUSINESS PERMIT EXPIRY': record['BUSINESS PERMIT EXPIRY'] || record['Business Permit Expiry'] || 'N/A',
-                'NUMBER OF EMPLOYEES': record['NUMBER OF EMPLOYEES'] || record['Number of Employees'] || 'N/A',
-                'YEAR ESTABLISHED': record['YEAR ESTABLISHED'] || record['Year Established'] || 'N/A',
-                'WEBSITE': record['WEBSITE'] || record['Website'] || 'N/A',
+                'NUMBER OF EMPLOYEES': record['NUMBER OF EMPLOYEES'] || record['Number of Employees'] || record['employees'] || 'N/A',
+                'YEAR ESTABLISHED': record['YEAR ESTABLISHED'] || record['Year Established'] || record['year'] || 'N/A',
+                'WEBSITE': record['WEBSITE'] || record['Website'] || record['website'] || 'N/A',
                 'STATUS': record['STATUS'] || record['Status'] || 'Active',
                 'REGISTRATION DATE': new Date().toLocaleDateString(),
                 'LAST ACTIVE': new Date().toLocaleDateString()
             };
         });
+    }
+
+    function editEmployer(employerId) {
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        const employer = employers.find(emp => emp['EMPLOYER ID'] === employerId || emp.id === employerId);
+        
+        if (employer) {
+            openEditEmployerModal(employer);
+        } else {
+            showNotification('Employer not found!', 'error');
+        }
+    }
+
+    function openEditEmployerModal(employer) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2>Edit Employer</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <form id="editEmployerForm" data-employer-id="${employer['EMPLOYER ID']}">
+                    <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="edit-employer-company-name">Company Name *</label>
+                                <input type="text" id="edit-employer-company-name" name="company-name" value="${employer['COMPANY NAME'] || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-employer-company-type">Company Type</label>
+                                <select id="edit-employer-company-type" name="company-type">
+                                    <option value="Private" ${employer['COMPANY TYPE'] === 'Private' ? 'selected' : ''}>Private</option>
+                                    <option value="Government" ${employer['COMPANY TYPE'] === 'Government' ? 'selected' : ''}>Government</option>
+                                    <option value="NGO" ${employer['COMPANY TYPE'] === 'NGO' ? 'selected' : ''}>NGO</option>
+                                    <option value="International" ${employer['COMPANY TYPE'] === 'International' ? 'selected' : ''}>International</option>
+                                </select>
+                            </div>
+                            <!-- Add more fields similarly -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="cancel-btn" id="cancel-edit-employer">Cancel</button>
+                        <button type="submit" class="save-btn">Update Employer</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        const closeBtn = modal.querySelector('.close');
+        const cancelBtn = modal.querySelector('#cancel-edit-employer');
+        const form = modal.querySelector('#editEmployerForm');
+        
+        closeBtn.addEventListener('click', () => document.body.removeChild(modal));
+        cancelBtn.addEventListener('click', () => document.body.removeChild(modal));
+        
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            updateEmployer(employer['EMPLOYER ID']);
+            document.body.removeChild(modal);
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                document.body.removeChild(modal);
+            }
+        });
+    }
+
+    function updateEmployer(employerId) {
+        const form = document.querySelector('#editEmployerForm');
+        if (!form) return;
+        
+        const formData = new FormData(form);
+        const updatedEmployer = {
+            'EMPLOYER ID': employerId,
+            'COMPANY NAME': formData.get('company-name'),
+            'COMPANY TYPE': formData.get('company-type') || 'Private',
+            // Add all other fields
+            'LAST MODIFIED': new Date().toLocaleString()
+        };
+        
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        const employerIndex = employers.findIndex(emp => emp['EMPLOYER ID'] === employerId);
+        
+        if (employerIndex !== -1) {
+            employers[employerIndex] = { ...employers[employerIndex], ...updatedEmployer };
+            localStorage.setItem('employers', JSON.stringify(employers));
+            displayEmployers(employers);
+            showNotification('Employer updated successfully!', 'success');
+        } else {
+            showNotification('Employer not found!', 'error');
+        }
     }
 
     function openAddEmployerModal() {
@@ -8809,6 +9126,119 @@ function initializeProgramFileUpload() {
             panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
         }
     }
+
+    function createReportContainerIfMissing() {
+        let reportsContainer = document.getElementById('program-reports');
+        if (!reportsContainer) {
+            console.log('Creating missing reports container...');
+            reportsContainer = document.createElement('div');
+            reportsContainer.id = 'program-reports';
+            reportsContainer.style.display = 'none';
+            
+            // Find where to insert it - look for the reports content area
+            const reportsContent = document.getElementById('reports-content');
+            if (reportsContent) {
+                reportsContent.appendChild(reportsContainer);
+            } else {
+                // Fallback - append to body
+                document.body.appendChild(reportsContainer);
+            }
+        }
+        return reportsContainer;
+    }
+
+    // Update generateProgramReports to use this helper
+    // Change the first line of generateProgramReports to:
+    // const reportsContainer = createReportContainerIfMissing();
+
+    function updateDashboardStats() {
+        const applicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+        const employers = JSON.parse(localStorage.getItem('employers')) || [];
+        const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
+        const programs = JSON.parse(localStorage.getItem('programs')) || [];
+        
+        // Update quick stats
+        document.getElementById('report-total-applicants').textContent = applicants.length;
+        document.getElementById('report-total-employers').textContent = employers.length;
+        document.getElementById('report-active-vacancies').textContent = vacancies.length;
+        document.getElementById('report-active-programs').textContent = programs.length;
+        
+        // Update main dashboard stats too
+        updateQuickStats(applicants.length, employers.length, vacancies.length);
+    }
+
+    // Call this when loading the reports page
+    function loadPageData(page) {
+        console.log('Loading page:', page);
+        
+        switch(page) {
+            case 'dashboard':
+                loadDashboardStats();
+                break;
+            case 'applicants':
+                loadMainApplicants();
+                break;
+            case 'employers':
+                setTimeout(() => {
+                    initializeEmployers();
+                    loadEmployers();
+                }, 100);
+                break;
+            case 'vacancies':
+                setTimeout(() => {
+                    initializeVacancies();
+                    loadVacancies();
+                }, 100);
+                break;
+            case 'programs':
+                setTimeout(() => {
+                    initializePrograms();
+                    loadPrograms();
+                }, 100);
+                break;
+            case 'reports':
+                // Initialize reports when page loads
+                setTimeout(() => {
+                    initializeReporting();
+                    updateDashboardStats();
+                }, 100);
+                break;
+            case 'tools':
+            case 'admin':
+                break;
+        }
+    }
+
+    function testReportsSetup() {
+        console.log('=== Testing Reports Setup ===');
+        
+        // Check all required elements
+        const requiredElements = [
+            'generate-comprehensive-report-btn',
+            'export-comprehensive-report-btn',
+            'export-pdf-report-btn',
+            'applicants-report',
+            'employers-report',
+            'vacancies-report',
+            'programs-report',
+            'matches-report'
+        ];
+        
+        requiredElements.forEach(id => {
+            const element = document.getElementById(id);
+            console.log(`${id}: ${element ? 'FOUND' : 'NOT FOUND'}`);
+        });
+        
+        // Check localStorage data
+        console.log('Applicants in storage:', JSON.parse(localStorage.getItem('mainApplicants') || '[]').length);
+        console.log('Employers in storage:', JSON.parse(localStorage.getItem('employers') || '[]').length);
+        console.log('Vacancies in storage:', JSON.parse(localStorage.getItem('vacancies') || '[]').length);
+        console.log('Programs in storage:', JSON.parse(localStorage.getItem('programs') || '[]').length);
+        
+        console.log('=== End Test ===');
+    }
+
+    // Call this from browser console when needed
 
     initializeApp();
 });
