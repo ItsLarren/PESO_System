@@ -3335,3 +3335,50 @@ input[type="date"]:after {
     color: #4caf50;
     font-weight: bold;
 }
+
+/* 
+===========================================================
+ FERNANDINO EMPLOYMENT INFORMATION SYSTEM (FEIS)
+===========================================================
+ Developer: Engr. Yumul Larren Joy D., Computer Engineer
+ Version: 2.0
+ Copyright © 2024 Engr. Yumul Larren Joy D. All Rights Reserved.
+ Licensed to: City Government of San Fernando, Pampanga
+ System Type: Employment Information Database System
+===========================================================
+*/
+
+/* System Watermark */
+body::after {
+    content: "FEIS v2.0 © 2025 Engr. Yumul Larren Joy D.";
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: #333;
+    color: #fff;
+    padding: 2px 8px;
+    font-size: 10px;
+    opacity: 0.7;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 3px 0 0 0;
+    font-family: monospace;
+}
+
+/* Print Watermark */
+@media print {
+    body::before {
+        content: "FEIS - Engr. Yumul Larren Joy D.";
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-45deg);
+        font-size: 40px;
+        opacity: 0.1;
+        color: #000;
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+        font-weight: bold;
+    }
+}

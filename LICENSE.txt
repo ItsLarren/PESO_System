@@ -1,0 +1,25 @@
+SOFTWARE LICENSE AGREEMENT
+For Fernandino Employment Information System (FEIS)
+
+1. OWNERSHIP
+   This software is the intellectual property of Engr. Yumul Larren Joy D.
+   Copyright © 2025 Engr. Yumul Larren Joy D. All Rights Reserved.
+
+2. GRANT OF LICENSE
+   Licensed for use by City Government of San Fernando, Pampanga only.
+   Does NOT transfer ownership or copyright.
+
+3. RESTRICTIONS
+   - Cannot remove developer credits
+   - Cannot modify source code without written permission
+   - Cannot redistribute or resell
+   - Cannot use for other municipalities without new license
+
+4. LEGAL ACTION
+   Violation may result in legal action under:
+   - Intellectual Property Code of the Philippines (RA 8293)
+   - Cybercrime Prevention Act (RA 10175)
+
+CONTACT:
+Engr. Yumul Larren Joy D., Computer Engineer
+09357338243
