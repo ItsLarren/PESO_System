@@ -114,22 +114,18 @@
 
     <script src="scripts/utilities.js"></script>
     <script>
-        // Display current user
         const currentUser = localStorage.getItem('currentUser') || 'User';
         document.getElementById('current-user').textContent = currentUser;
 
-        // Load dashboard statistics
         function loadDashboardStats() {
             try {
                 const applicants = JSON.parse(localStorage.getItem('mainApplicants') || '[]');
                 const zeroApplicants = JSON.parse(localStorage.getItem('zeroUnemploymentApplicants') || '[]');
                 
-                // Update counts
                 document.getElementById('total-applicants').textContent = applicants.length;
                 document.getElementById('feis-applicants').textContent = applicants.length;
                 document.getElementById('zero-applicants').textContent = zeroApplicants.length;
                 
-                // Calculate employment stats
                 const employed = applicants.filter(app => 
                     (app['EMP. STATUS'] || '').toString().toLowerCase().includes('employ') && 
                     !(app['EMP. STATUS'] || '').toString().toLowerCase().includes('unemploy')
@@ -142,7 +138,6 @@
                 document.getElementById('employed-count').textContent = employed;
                 document.getElementById('unemployed-count').textContent = unemployed;
                 
-                // Count unique programs
                 const programs = new Set();
                 applicants.forEach(app => {
                     const program = app['PROGRAM CATEGORY'];
@@ -155,7 +150,6 @@
             }
         }
 
-        // System navigation functions
         function openZeroUnemployment() {
             window.location.href = 'zero-unemployment.html';
         }
@@ -164,22 +158,18 @@
             window.location.href = 'index.html';
         }
 
-        // Logout function
         document.getElementById('logout-btn').addEventListener('click', function() {
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('currentUser');
             window.location.href = 'login.html';
         });
 
-        // Check authentication
         if (localStorage.getItem('isLoggedIn') !== 'true') {
             window.location.href = 'login.html';
         } else {
-            // Load statistics when page loads
             loadDashboardStats();
         }
 
-        // Auto-refresh stats every 30 seconds
         setInterval(loadDashboardStats, 30000);
     </script>
 </body>

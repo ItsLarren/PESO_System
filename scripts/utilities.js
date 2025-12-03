@@ -1,4 +1,3 @@
-// Enhanced Utilities for CPESO System
 class CPESOUtilities {
     static debounce(func, wait, immediate) {
         let timeout;
@@ -87,7 +86,6 @@ class CPESOUtilities {
     }
 }
 
-// Enhanced Data Manager
 class DataManager {
     constructor() {
         this.backupKey = 'cpeso_backup';
@@ -106,7 +104,6 @@ class DataManager {
             const backups = JSON.parse(localStorage.getItem(this.backupKey) || '[]');
             backups.unshift(backup);
 
-            // Keep only recent backups
             if (backups.length > this.maxBackups) {
                 backups.splice(this.maxBackups);
             }
@@ -148,7 +145,6 @@ class DataManager {
     }
 }
 
-// Enhanced Error Handler
 class ErrorHandler {
     static init() {
         window.addEventListener('error', this.handleGlobalError.bind(this));
@@ -166,11 +162,9 @@ class ErrorHandler {
     }
 
     static showErrorNotification(message) {
-        // Use existing notification system
         if (typeof showNotification === 'function') {
             showNotification(message, 'error');
         } else {
-            // Fallback notification
             const notification = document.createElement('div');
             notification.style.cssText = `
                 position: fixed;
@@ -195,14 +189,11 @@ class ErrorHandler {
     }
 }
 
-// Enhanced Error Handler with Home Dashboard support
 class ErrorHandler {
     static init() {
-        // Remove any existing error handlers to prevent duplicates
         window.removeEventListener('error', this.handleGlobalError);
         window.removeEventListener('unhandledrejection', this.handlePromiseRejection);
         
-        // Add new error handlers
         window.addEventListener('error', this.handleGlobalError.bind(this));
         window.addEventListener('unhandledrejection', this.handlePromiseRejection.bind(this));
         
@@ -218,7 +209,6 @@ class ErrorHandler {
             colno: event.colno
         });
         
-        // Don't show notification for null errors (usually harmless)
         if (event.error !== null && event.message !== 'null') {
             this.showErrorNotification('An unexpected error occurred');
         }
@@ -228,18 +218,15 @@ class ErrorHandler {
         console.error('Unhandled promise rejection:', event.reason);
         this.showErrorNotification('An operation failed');
         
-        // Prevent the default handling (optional)
         event.preventDefault();
     }
 
     static showErrorNotification(message) {
-        // Use available notification systems
         if (window.homeDashboard && typeof window.homeDashboard.showNotification === 'function') {
             window.homeDashboard.showNotification(message, 'error');
         } else if (typeof showNotification === 'function') {
             showNotification(message, 'error');
         } else {
-            // Fallback notification
             this.showFallbackNotification(message);
         }
     }
@@ -269,5 +256,4 @@ class ErrorHandler {
     }
 }
 
-// Initialize error handling
 ErrorHandler.init();

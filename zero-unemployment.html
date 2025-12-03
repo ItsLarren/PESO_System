@@ -22,7 +22,6 @@
     </header>
 
     <div class="container">
-        <!-- Back to FEIS button -->
         <button class="back-btn" onclick="goToFEIS()">
             <i class="fas fa-arrow-left"></i> Back to FEIS Main Page                                                                                
         </button>
@@ -33,7 +32,6 @@
                 <p><strong>Specialized program focused on achieving zero unemployment through targeted interventions and employment generation.</strong></p>
             </div>
             
-            <!-- Same search and filter components as FEIS -->
             <div class="search-container">
                 <input type="text" id="search-input" class="search-input" placeholder="Search Zero Unemployment applicants...">
                 <button class="search-btn" id="search-btn">
@@ -44,7 +42,6 @@
                 </button>
             </div>
 
-            <!-- Same table structure as FEIS but filtered for Zero Unemployment -->
             <div class="table-container">
                 <table class="applicant-table" id="zero-unemployment-table">
                     <thead>
@@ -78,7 +75,6 @@
             </div>
         </div>
 
-        <!-- Same modals as FEIS but for Zero Unemployment -->
         <div class="card">
             <h2>Add New Zero Unemployment Applicant</h2>
             <div class="import-section">
@@ -89,7 +85,6 @@
         </div>
     </div>
 
-    <!-- Same modals as FEIS -->
     <div id="viewModal" class="modal">
         <!-- Same view modal content as FEIS -->
     </div>
@@ -103,25 +98,19 @@
     </div>
 
     <script>
-        // Zero Unemployment Project specific JavaScript
         const ZERO_UNEMPLOYMENT_STORAGE_KEY = 'zeroUnemploymentApplicants';
         
-        // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
-            // Check authentication
             if (localStorage.getItem('isLoggedIn') !== 'true') {
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Display current user
             const currentUser = localStorage.getItem('currentUser') || 'User';
             document.getElementById('current-user').textContent = currentUser;
 
-            // Load and display Zero Unemployment applicants
             loadZeroUnemploymentApplicants();
 
-            // Initialize event listeners
             initializeZeroUnemploymentEvents();
         });
 
@@ -169,7 +158,6 @@
                     row.appendChild(cell);
                 });
                 
-                // Actions cell
                 const actionsCell = document.createElement('td');
                 actionsCell.className = 'actions-cell';
                 actionsCell.innerHTML = `
@@ -189,7 +177,6 @@
                     </div>
                 `;
                 
-                // Add event listeners
                 const viewBtn = actionsCell.querySelector('.view-btn');
                 const editBtn = actionsCell.querySelector('.edit-btn');
                 const deleteBtn = actionsCell.querySelector('.delete-btn');
@@ -206,28 +193,23 @@
         }
 
         function initializeZeroUnemploymentEvents() {
-            // Add manual applicant button
             document.getElementById('add-manual-zero-btn').addEventListener('click', function() {
-                openManualModal(true); // true indicates Zero Unemployment context
+                openManualModal(true); 
             });
 
-            // Export button
             document.getElementById('export-zero-applicants-btn').addEventListener('click', exportZeroApplicantsToExcel);
 
-            // Search functionality
             document.getElementById('search-btn').addEventListener('click', searchZeroApplicants);
             document.getElementById('clear-search-btn').addEventListener('click', clearZeroSearch);
         }
 
         function openManualModal(isZeroUnemployment = false) {
-            // Your existing manual modal code, but set program category to "Zero Unemployment"
             const manualModal = document.getElementById('manualModal');
             if (manualModal) {
-                // Set program category to Zero Unemployment
                 const programCategorySelect = document.getElementById('manual-program-category');
                 if (programCategorySelect && isZeroUnemployment) {
                     programCategorySelect.value = 'Zero Unemployment';
-                    programCategorySelect.disabled = true; // Lock it for Zero Unemployment
+                    programCategorySelect.disabled = true;
                 }
                 
                 manualModal.style.display = 'block';
@@ -252,7 +234,6 @@
                 return;
             }
             
-            // Your existing export code, but for Zero Unemployment data
             const exportData = zeroApplicants.map(applicant => ({
                 'SRS ID': applicant['SRS ID'] || '',
                 'Last Name': applicant['LAST NAME'] || '',
@@ -277,7 +258,6 @@
         }
 
         function searchZeroApplicants() {
-            // Your existing search functionality adapted for Zero Unemployment
             const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
             const zeroApplicants = JSON.parse(localStorage.getItem(ZERO_UNEMPLOYMENT_STORAGE_KEY)) || [];
             
@@ -309,9 +289,7 @@
             window.location.href = 'login.html';
         }
 
-        // Utility function for notifications
         function showNotification(message, type) {
-            // Your existing notification code
             console.log(`${type.toUpperCase()}: ${message}`);
         }
     </script>

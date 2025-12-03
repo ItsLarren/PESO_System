@@ -564,11 +564,7 @@ document.addEventListener('DOMContentLoaded', function () {
             email: document.getElementById('manual-email').value,
             landline: document.getElementById('manual-landline').value,
             cellphone: document.getElementById('manual-cellphone').value,
-            // ... continue for all other fields
         };
-        
-        // Process the form data and add to applicants array
-        // ... existing code ...
         
         document.getElementById('manualModal').style.display = 'none';
         document.getElementById('manualApplicantForm').reset();
@@ -926,8 +922,8 @@ document.addEventListener('DOMContentLoaded', function () {
         matches.forEach(match => {
             const rows = tbody.querySelectorAll('tr');
             rows.forEach(row => {
-                const nameCell = row.querySelector('td:nth-child(2)'); // Now column 2 (was 5)
-                const bdateCell = row.querySelector('td:nth-child(3)'); // Now column 3 (was 6)
+                const nameCell = row.querySelector('td:nth-child(2)'); 
+                const bdateCell = row.querySelector('td:nth-child(3)'); 
                 
                 if (nameCell && nameCell.textContent.trim().toLowerCase() === match.existingApplicant.NAME.toLowerCase()) {
                     row.classList.add('duplicate-highlight');
@@ -2428,7 +2424,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function initializeReporting() {
-        // Find the correct button IDs from your HTML
         const generateReportBtn = document.getElementById('generate-comprehensive-report-btn');
         const exportReportBtn = document.getElementById('export-comprehensive-report-btn');
         const exportPdfBtn = document.getElementById('export-pdf-report-btn');
@@ -2455,7 +2450,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('Export PDF button initialized');
         }
         
-        // Initialize report tabs
         initializeReportTabs();
     }
 
@@ -2472,7 +2466,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function generateProgramReports() {
         console.log('Generating program reports...');
         
-        // Find the reports section - using applicants-report as the main container
         const reportsContainer = document.getElementById('applicants-report');
         
         if (!reportsContainer) {
@@ -2551,10 +2544,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
             
-            // Initialize event listeners for the buttons
             initializeReportButtons();
             
-            // Activate the applicants tab
             activateReportTab('applicants');
             
             showNotification('Reports generated successfully!', 'success');
@@ -2572,25 +2563,20 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Helper function to activate report tab
     function activateReportTab(tabName) {
-        // Remove active class from all tabs
         document.querySelectorAll('.report-tab').forEach(tab => {
             tab.classList.remove('active');
         });
         
-        // Hide all report sections
         document.querySelectorAll('.report-section').forEach(section => {
             section.classList.remove('active');
         });
         
-        // Activate selected tab
         const activeTab = document.querySelector(`.report-tab[data-report="${tabName}"]`);
         if (activeTab) {
             activeTab.classList.add('active');
         }
         
-        // Show selected report section
         const activeSection = document.getElementById(`${tabName}-report`);
         if (activeSection) {
             activeSection.classList.add('active');
@@ -2598,9 +2584,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // Add this helper function to initialize report buttons
     function initializeReportButtons() {
-        // PDF Export Button
         const pdfBtn = document.getElementById('export-pdf-btn');
         if (pdfBtn) {
             pdfBtn.addEventListener('click', generateComprehensivePDFReport);
@@ -2608,7 +2592,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn('PDF export button not found');
         }
         
-        // Summary Export Button
         const summaryBtn = document.getElementById('export-summary-btn');
         if (summaryBtn) {
             summaryBtn.addEventListener('click', exportSummaryReport);
@@ -2616,7 +2599,6 @@ document.addEventListener('DOMContentLoaded', function () {
             console.warn('Summary export button not found');
         }
         
-        // Full Export Button
         const fullBtn = document.getElementById('export-full-btn');
         if (fullBtn) {
             fullBtn.addEventListener('click', exportReportsToExcel);
@@ -5879,7 +5861,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 
                 <script>
-                    // Load Font Awesome for icons
                     const faLink = document.createElement('link');
                     faLink.rel = 'stylesheet';
                     faLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
@@ -6386,7 +6367,7 @@ document.addEventListener('DOMContentLoaded', function () {
         employers.forEach((employer, index) => {
             const row = document.createElement('tr');
             
-            // Create table cells for each field
+
             const cells = [
                 createTableCell(employer['EMPLOYER ID'] || `EMP-${index + 1}`),
                 createTableCell(employer['COMPANY NAME'] || 'N/A'),
@@ -6511,11 +6492,9 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!modal || !form) return;
         
         if (employer) {
-            // Edit mode
             title.textContent = 'Edit Employer';
             populateEmployerForm(employer);
         } else {
-            // Add mode
             title.textContent = 'Add New Employer';
             form.reset();
         }
@@ -6540,7 +6519,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('employer-website').value = employer.website || '';
         document.getElementById('employer-status').value = employer.status || 'Active';
         
-        // Store the employer ID for update
         document.getElementById('employer-form').dataset.employerId = employer.id;
     }
 
@@ -6565,13 +6543,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const employers = JSON.parse(localStorage.getItem('employers')) || [];
         
         if (form.dataset.employerId) {
-            // Update existing employer
             const index = employers.findIndex(emp => emp.id === employerId);
             if (index !== -1) {
                 employers[index] = { ...employers[index], ...employerData };
             }
         } else {
-            // Add new employer
             employers.push(employerData);
         }
         
@@ -6894,7 +6870,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         const uploadBtn = document.getElementById('employer-add-btn');
         const fileInput = document.getElementById('employer-upload-file-input');
-        const browseBtn = document.getElementById('employer-upload-browse-btn'); // Fixed ID
+        const browseBtn = document.getElementById('employer-upload-browse-btn'); 
         const fileName = document.getElementById('employer-upload-file-name');
         
         console.log('Employer upload elements:', {
@@ -7010,7 +6986,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function processEmployerData(jsonData) {
         return jsonData.map((record, index) => {
-            // Map field names properly
             return {
                 'EMPLOYER ID': generateUniqueId('EMP'),
                 'COMPANY NAME': record['COMPANY NAME'] || record['Company Name'] || record['company'] || record['Company'] || 'N/A',
@@ -7117,7 +7092,6 @@ document.addEventListener('DOMContentLoaded', function () {
             'EMPLOYER ID': employerId,
             'COMPANY NAME': formData.get('company-name'),
             'COMPANY TYPE': formData.get('company-type') || 'Private',
-            // Add all other fields
             'LAST MODIFIED': new Date().toLocaleString()
         };
         
@@ -9135,21 +9109,15 @@ function initializeProgramFileUpload() {
             reportsContainer.id = 'program-reports';
             reportsContainer.style.display = 'none';
             
-            // Find where to insert it - look for the reports content area
             const reportsContent = document.getElementById('reports-content');
             if (reportsContent) {
                 reportsContent.appendChild(reportsContainer);
             } else {
-                // Fallback - append to body
                 document.body.appendChild(reportsContainer);
             }
         }
         return reportsContainer;
     }
-
-    // Update generateProgramReports to use this helper
-    // Change the first line of generateProgramReports to:
-    // const reportsContainer = createReportContainerIfMissing();
 
     function updateDashboardStats() {
         const applicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
@@ -9157,17 +9125,14 @@ function initializeProgramFileUpload() {
         const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
         const programs = JSON.parse(localStorage.getItem('programs')) || [];
         
-        // Update quick stats
         document.getElementById('report-total-applicants').textContent = applicants.length;
         document.getElementById('report-total-employers').textContent = employers.length;
         document.getElementById('report-active-vacancies').textContent = vacancies.length;
         document.getElementById('report-active-programs').textContent = programs.length;
         
-        // Update main dashboard stats too
         updateQuickStats(applicants.length, employers.length, vacancies.length);
     }
 
-    // Call this when loading the reports page
     function loadPageData(page) {
         console.log('Loading page:', page);
         
@@ -9197,7 +9162,6 @@ function initializeProgramFileUpload() {
                 }, 100);
                 break;
             case 'reports':
-                // Initialize reports when page loads
                 setTimeout(() => {
                     initializeReporting();
                     updateDashboardStats();
@@ -9212,7 +9176,6 @@ function initializeProgramFileUpload() {
     function testReportsSetup() {
         console.log('=== Testing Reports Setup ===');
         
-        // Check all required elements
         const requiredElements = [
             'generate-comprehensive-report-btn',
             'export-comprehensive-report-btn',
@@ -9229,7 +9192,6 @@ function initializeProgramFileUpload() {
             console.log(`${id}: ${element ? 'FOUND' : 'NOT FOUND'}`);
         });
         
-        // Check localStorage data
         console.log('Applicants in storage:', JSON.parse(localStorage.getItem('mainApplicants') || '[]').length);
         console.log('Employers in storage:', JSON.parse(localStorage.getItem('employers') || '[]').length);
         console.log('Vacancies in storage:', JSON.parse(localStorage.getItem('vacancies') || '[]').length);
@@ -9237,8 +9199,6 @@ function initializeProgramFileUpload() {
         
         console.log('=== End Test ===');
     }
-
-    // Call this from browser console when needed
 
     initializeApp();
 });

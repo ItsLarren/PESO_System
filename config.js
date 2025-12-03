@@ -1,4 +1,3 @@
-// config.js
 const CONFIG = {
     table: {
         pageSize: 50,

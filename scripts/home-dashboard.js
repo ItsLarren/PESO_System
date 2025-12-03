@@ -1,11 +1,9 @@
-// Home Dashboard JavaScript
 document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeDashboard();
     initializeFilterTabs();
 });
 
-// Navigation System
 function initializeNavigation() {
     const navTabs = document.querySelectorAll('.nav-tab');
     const pageContents = document.querySelectorAll('.page-content');
@@ -14,11 +12,9 @@ function initializeNavigation() {
         tab.addEventListener('click', function() {
             const targetPage = this.getAttribute('data-page');
             
-            // Update active tab
             navTabs.forEach(t => t.classList.remove('active'));
             this.classList.add('active');
             
-            // Show target page
             pageContents.forEach(content => {
                 content.classList.remove('active');
                 if (content.id === `${targetPage}-content`) {
@@ -26,13 +22,11 @@ function initializeNavigation() {
                 }
             });
             
-            // Load data for the page if needed
             loadPageData(targetPage);
         });
     });
 }
 
-// Dashboard initialization
 function initializeDashboard() {
     loadDashboardStats();
     loadRecentActivity();
@@ -44,28 +38,23 @@ function loadDashboardStats() {
     const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
     const programs = JSON.parse(localStorage.getItem('programs')) || [];
     
-    // Update quick stats
     document.getElementById('quick-applicants').textContent = applicants.length;
     document.getElementById('quick-employers').textContent = employers.length;
     document.getElementById('quick-vacancies').textContent = vacancies.length;
     
-    // Update local stats
     document.getElementById('total-applicants').textContent = applicants.length;
     document.getElementById('total-employers').textContent = employers.length;
     document.getElementById('active-vacancies').textContent = vacancies.length;
     document.getElementById('job-matches').textContent = calculateJobMatches(applicants, vacancies);
     
-    // Update detailed stats
     updateDetailedStats(applicants, employers);
 }
 
 function calculateJobMatches(applicants, vacancies) {
-    // Simple matching logic - you can make this more sophisticated
     return Math.min(applicants.length, vacancies.length);
 }
 
 function updateDetailedStats(applicants, employers) {
-    // Calculate additional statistics
     const employedCount = applicants.filter(app => 
         app['EMP. STATUS'] && app['EMP. STATUS'].toLowerCase().includes('employed')
     ).length;
@@ -82,7 +71,6 @@ function updateDetailedStats(applicants, employers) {
         return regMonth === currentMonth;
     }).length;
     
-    // Update DOM elements
     document.getElementById('new-applicants-month').textContent = newThisMonth;
     document.getElementById('employed-applicants').textContent = employedCount;
     document.getElementById('unemployed-applicants').textContent = unemployedCount;
@@ -90,7 +78,6 @@ function updateDetailedStats(applicants, employers) {
 
 }
 
-// Calculate new applicants this month
 function calculateNewThisMonth(applicants) {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
@@ -104,7 +91,6 @@ function calculateNewThisMonth(applicants) {
     }).length;
 }
 
-// Load recent activity
 function loadRecentActivity() {
     const activities = [
         { action: 'New applicant registered', time: '2 hours ago', user: 'System' },
@@ -127,7 +113,6 @@ function loadRecentActivity() {
     }
 }
 
-// Initialize filter tabs
 function initializeFilterTabs() {
     const filterTabs = document.querySelectorAll('.filter-tab');
     
@@ -140,13 +125,11 @@ function initializeFilterTabs() {
             tabs.forEach(t => t.classList.remove('active'));
             this.classList.add('active');
             
-            // Apply filter to table
             filterTable(container, filter);
         });
     });
 }
 
-// Filter table based on selected tab
 function filterTable(container, filter) {
     const table = container.querySelector('table');
     if (!table) return;
@@ -158,29 +141,23 @@ function filterTable(container, filter) {
         let showRow = true;
         
         if (filter === 'employed') {
-            // Filter for employed applicants
-            const statusCell = row.querySelector('td:nth-child(23)'); // Adjust index based on your table structure
+            const statusCell = row.querySelector('td:nth-child(23)'); 
             if (statusCell && !statusCell.textContent.toLowerCase().includes('employed')) {
                 showRow = false;
             }
         } else if (filter === 'unemployed') {
-            // Filter for unemployed applicants
             const statusCell = row.querySelector('td:nth-child(23)');
             if (statusCell && !statusCell.textContent.toLowerCase().includes('unemployed')) {
                 showRow = false;
             }
-        }
-        // Add more filter conditions as needed
-        
+        }        
         row.style.display = showRow ? '' : 'none';
     });
 }
 
-// Load page-specific data
 function loadPageData(page) {
     switch(page) {
         case 'applicants':
-            // Your existing applicant loading logic
             break;
         case 'employers':
             loadEmployersData();
@@ -197,7 +174,6 @@ function loadPageData(page) {
     }
 }
 
-// Navigation function for quick actions
 function navigateToPage(page) {
     const tab = document.querySelector(`.nav-tab[data-page="${page}"]`);
     if (tab) {
@@ -205,67 +181,55 @@ function navigateToPage(page) {
     }
 }
 
-// Zero Unemployment Tab functionality
 document.addEventListener('DOMContentLoaded', function() {
     const zeroUnemploymentTab = document.getElementById('zero-unemployment-tab');
     if (zeroUnemploymentTab) {
         zeroUnemploymentTab.addEventListener('click', function() {
-            // Implement zero unemployment filtering logic
             filterZeroUnemploymentApplicants();
         });
     }
 });
 
 function filterZeroUnemploymentApplicants() {
-    // Implement your zero unemployment filtering logic here
     const applicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
     
-    // Example: Filter applicants who are part of zero unemployment programs
     const zeroUnemploymentApplicants = applicants.filter(applicant => 
         applicant['PROGRAM CATEGORY'] && 
         applicant['PROGRAM CATEGORY'].includes('Zero Unemployment')
     );
     
-    // Update the table display
     displayFilteredApplicants(zeroUnemploymentApplicants);
 }
 
-// Load employers data
 function loadEmployersData() {
     const employers = JSON.parse(localStorage.getItem('employers')) || [];
     displayEmployersTable(employers);
 }
 
-// Load vacancies data
 function loadVacanciesData() {
     const vacancies = JSON.parse(localStorage.getItem('vacancies')) || [];
     displayVacanciesTable(vacancies);
 }
 
-// Load programs data
 function loadProgramsData() {
     const programs = JSON.parse(localStorage.getItem('programs')) || [];
     displayProgramsTable(programs);
 }
 
-// Display functions for each module (you'll need to implement these)
 function displayEmployersTable(employers) {
     const tbody = document.querySelector('#employers-table tbody');
     if (!tbody) return;
     
-    // Implementation similar to your applicant table display
 }
 
 function displayVacanciesTable(vacancies) {
     const tbody = document.querySelector('#vacancies-table tbody');
     if (!tbody) return;
     
-    // Implementation similar to your applicant table display
 }
 
 function displayProgramsTable(programs) {
     const tbody = document.querySelector('#programs-table tbody');
     if (!tbody) return;
     
-    // Implementation similar to your applicant table display
 }

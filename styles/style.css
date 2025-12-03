@@ -3232,7 +3232,6 @@ input[type="date"]:after {
     padding: 4px 6px;
 }
 
-/* Report Tabs */
 .report-tabs {
     display: flex;
     gap: 5px;
@@ -3274,7 +3273,6 @@ input[type="date"]:after {
     display: block;
 }
 
-/* Report Sections Styling */
 .visual-report-section {
     background: white;
     padding: 20px;
@@ -3290,7 +3288,6 @@ input[type="date"]:after {
     border-bottom: 2px solid #e3f2fd;
 }
 
-/* Enhanced Statistics */
 .enhanced-stats-container {
     margin: 20px 0;
 }
