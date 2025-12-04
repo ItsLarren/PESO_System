@@ -730,7 +730,11 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
             
+            console.log('🔍 Duplicate check - Existing applicants:', savedApplicants.length);
+            
+            // If there are no existing applicants, return no matches immediately
             if (savedApplicants.length === 0) {
+                console.log('✅ No existing applicants - no duplicates possible');
                 return {
                     hasMatches: false,
                     matches: []
@@ -741,26 +745,40 @@ document.addEventListener('DOMContentLoaded', function () {
             const newName = (applicantData.NAME || '').toString().toLowerCase().trim();
             const newBdate = (applicantData.BDATE || '').toString().trim();
 
-            if (!newName || newName === 'n/a') {
+            // If the new applicant has no valid name, skip duplicate check
+            if (!newName || newName === 'n/a' || newName === '' || newName === 'null') {
+                console.log('⚠️ New applicant has no valid name - skipping duplicate check');
                 return {
                     hasMatches: false,
                     matches: []
                 };
             }
 
+            console.log('🔍 Checking new applicant:', { name: newName, bdate: newBdate });
+
             for (const existingApp of savedApplicants) {
                 const existingName = (existingApp.NAME || '').toString().toLowerCase().trim();
                 const existingBdate = (existingApp.BDATE || '').toString().trim();
 
-                if (!existingName || existingName === 'n/a') {
+                // Skip if existing applicant has no valid name
+                if (!existingName || existingName === 'n/a' || existingName === '' || existingName === 'null') {
                     continue;
                 }
+
+                console.log('🔍 Comparing with existing:', { 
+                    existingName, 
+                    existingBdate,
+                    nameMatch: newName === existingName,
+                    bdateMatch: newBdate === existingBdate
+                });
 
                 const nameMatch = newName === existingName;
                 const bdateMatch = newBdate && existingBdate && 
                                 newBdate === existingBdate &&
                                 newBdate !== 'N/A' && 
-                                existingBdate !== 'N/A';
+                                existingBdate !== 'N/A' &&
+                                newBdate !== '' && 
+                                existingBdate !== '';
 
                 if (nameMatch && bdateMatch) {
                     console.log('🔴 STRICT DUPLICATE FOUND:', {
@@ -777,17 +795,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         sameNameDifferentBday: false
                     });
                 }
-                else if (nameMatch) {
-                    console.log('🟡 SAME NAME, DIFFERENT BIRTHDAY:', {
+                else if (nameMatch && !bdateMatch) {
+                    console.log('🟡 SAME NAME, DIFFERENT BIRTHDAY (Not a duplicate):', {
                         newName,
                         newBdate,
                         existingName,
                         existingBdate
                     });
+                    // This is not considered a duplicate - just same name but different birthday
                 }
             }
 
-            console.log('🔍 Duplicate check result:', {
+            console.log('📋 Duplicate check result:', {
                 totalApplicants: savedApplicants.length,
                 matchesFound: matches.length,
                 newApplicant: { name: newName, bdate: newBdate }
@@ -798,12 +817,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 matches: matches
             };
         } catch (error) {
-            console.error('Error in duplicate check:', error);
+            console.error('❌ Error in duplicate check:', error);
             return {
                 hasMatches: false,
                 matches: []
             };
         }
+    }
+
+    function normalizeDateForComparison(dateString) {
+        if (!dateString || dateString === 'N/A') return '';
+        
+        try {
+            // Handle different date formats
+            if (dateString.includes('/')) {
+                const parts = dateString.split('/');
+                if (parts.length === 3) {
+                    const month = parts[0].padStart(2, '0');
+                    const day = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    return `${year}-${month}-${day}`;
+                }
+            }
+            
+            // Try to parse as Date
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+        } catch (error) {
+            console.warn('Date normalization error:', error);
+        }
+        
+        return dateString;
+    }
+
+    function normalizePhone(phone) {
+        if (!phone || phone === 'N/A') return '';
+        // Remove all non-digit characters
+        return phone.replace(/\D/g, '');
     }
 
     function showDuplicateConfirmation(applicantData, matches) {
@@ -953,6 +1005,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         window.hasScrolledToHighlight = false;
     }
+    
 
     function addManualApplicant() {
         try {
@@ -961,10 +1014,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = new FormData(elements.manualApplicantForm);
             const applicantData = {};
             
+            // Get basic name information
             const lastName = document.getElementById('manual-surname')?.value.trim() || '';
             const firstName = document.getElementById('manual-first-name')?.value.trim() || '';
             const middleName = document.getElementById('manual-middle-name')?.value.trim() || '';
             
+            // Build full name
             if (lastName && firstName) {
                 let fullName = `${lastName}, ${firstName}`;
                 if (middleName) {
@@ -979,39 +1034,125 @@ document.addEventListener('DOMContentLoaded', function () {
             applicantData['FIRST NAME'] = firstName || 'N/A';
             applicantData['MIDDLE NAME'] = middleName || 'N/A';
             
-            formData.forEach((value, key) => {
-                if (!key.startsWith('manual-surname') && !key.startsWith('manual-first-name') && 
-                    !key.startsWith('manual-middle-name') && !key.startsWith('manual-name')) {
-                    const fieldName = key.replace('manual-', '').toUpperCase().replace(/-/g, ' ');
-                    applicantData[fieldName] = value || 'N/A';
-                }
-            });
-            
+            // Process all form fields systematically
             applicantData['SRS ID'] = generateUniqueId();
             
-            if (applicantData['BDATE']) {
-                try {
-                    const date = new Date(applicantData['BDATE']);
-                    if (!isNaN(date.getTime())) {
-                        applicantData['BDATE'] = `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}/${date.getFullYear()}`;
-                    }
-                } catch (error) {
-                    console.warn('Date parsing error:', error);
-                    applicantData['BDATE'] = 'N/A';
-                }
-            } else {
-                applicantData['BDATE'] = 'N/A';
+            // Personal Information
+            applicantData['DATE OF BIRTH'] = document.getElementById('manual-bdate')?.value || 'N/A';
+            applicantData['PLACE OF BIRTH'] = document.getElementById('manual-place-birth')?.value.trim() || 'N/A';
+            applicantData['SEX'] = document.getElementById('manual-sex')?.value || 'N/A';
+            applicantData['CIVIL STATUS'] = document.getElementById('manual-civil-status')?.value || 'N/A';
+            applicantData['TIN'] = document.getElementById('manual-tin')?.value.trim() || 'N/A';
+            applicantData['GSIS/SSS NO.'] = document.getElementById('manual-gsis-sss')?.value.trim() || 'N/A';
+            applicantData['PAGIBIG NO.'] = document.getElementById('manual-pagibig')?.value.trim() || 'N/A';
+            applicantData['PHILHEALTH NO.'] = document.getElementById('manual-philhealth')?.value.trim() || 'N/A';
+            applicantData['HEIGHT'] = document.getElementById('manual-height')?.value || 'N/A';
+            
+            // Address Information
+            applicantData['HOUSE NO./STREET/VILLAGE'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
+            applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
+            applicantData['MUNICIPALITY/CITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
+            applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
+            
+            // Contact Information
+            applicantData['EMAIL ADDRESS'] = document.getElementById('manual-email')?.value.trim() || 'N/A';
+            applicantData['LANDLINE NUMBER'] = document.getElementById('manual-landline')?.value.trim() || 'N/A';
+            applicantData['CELLPHONE NUMBER'] = document.getElementById('manual-cellphone')?.value.trim() || 'N/A';
+            
+            // Disability Information
+            const disabilityCheckboxes = document.querySelectorAll('input[name="manual-disability"]:checked');
+            const disabilities = Array.from(disabilityCheckboxes).map(cb => cb.value);
+            applicantData['DISABILITY'] = disabilities.length > 0 ? disabilities.join(', ') : 'N/A';
+            
+            // Employment Information
+            applicantData['EMPLOYMENT STATUS/TYPE'] = document.getElementById('manual-emp-status')?.value || 'N/A';
+            
+            // Actively looking for work
+            const lookingWorkRadio = document.querySelector('input[name="manual-looking-work"]:checked');
+            applicantData['ARE YOU ACTIVELY LOOKING FOR WORK?'] = lookingWorkRadio?.value || 'N/A';
+            if (lookingWorkRadio?.value === 'Yes') {
+                applicantData['ARE YOU ACTIVELY LOOKING FOR WORK?'] += ` - ${document.getElementById('manual-looking-work-duration')?.value || ''}`;
             }
             
+            // Willing to work immediately
+            const workImmediatelyRadio = document.querySelector('input[name="manual-work-immediately"]:checked');
+            applicantData['WILLING TO WORK IMMEDIATELY?'] = workImmediatelyRadio?.value || 'N/A';
+            if (workImmediatelyRadio?.value === 'No') {
+                applicantData['WILLING TO WORK IMMEDIATELY?'] += ` - ${document.getElementById('manual-work-immediately-when')?.value || ''}`;
+            }
+            
+            // 4Ps Beneficiary
+            const fourPsRadio = document.querySelector('input[name="manual-4ps"]:checked');
+            applicantData['ARE YOU A 4PS BENEFICIARY?'] = fourPsRadio?.value || 'N/A';
+            if (fourPsRadio?.value === 'Yes') {
+                applicantData['ARE YOU A 4PS BENEFICIARY?'] += ` - ID: ${document.getElementById('manual-4ps-id')?.value || ''}`;
+            }
+            
+            // Job Preference
+            applicantData['PREFERRED OCCUPATION'] = document.getElementById('manual-pref-occupation1')?.value.trim() || 'N/A';
+            
+            // Preferred Work Location
+            const workLocationRadio = document.querySelector('input[name="manual-work-location"]:checked');
+            if (workLocationRadio?.value === 'Local') {
+                const locations = [
+                    document.getElementById('manual-work-location-local1')?.value,
+                    document.getElementById('manual-work-location-local2')?.value,
+                    document.getElementById('manual-work-location-local3')?.value
+                ].filter(loc => loc).join(', ');
+                applicantData['PREFERRED WORK LOCATION'] = locations || 'N/A';
+            } else if (workLocationRadio?.value === 'Overseas') {
+                const locations = [
+                    document.getElementById('manual-work-location-overseas1')?.value,
+                    document.getElementById('manual-work-location-overseas2')?.value,
+                    document.getElementById('manual-work-location-overseas3')?.value
+                ].filter(loc => loc).join(', ');
+                applicantData['PREFERRED WORK LOCATION'] = locations || 'N/A';
+            } else {
+                applicantData['PREFERRED WORK LOCATION'] = 'N/A';
+            }
+            
+            applicantData['EXPECTED SALARY'] = document.getElementById('manual-expected-salary')?.value.trim() || 'N/A';
+            applicantData['PASSPORT NO.'] = document.getElementById('manual-passport')?.value.trim() || 'N/A';
+            applicantData['PASSPORT EXPIRY DATE'] = document.getElementById('manual-passport-expiry')?.value || 'N/A';
+            
+            // Language Proficiency
+            const languages = [];
+            if (document.getElementById('manual-lang-english-read')?.checked) languages.push('English');
+            if (document.getElementById('manual-lang-filipino-read')?.checked) languages.push('Filipino');
+            const otherLang = document.getElementById('manual-lang-other-name')?.value;
+            if (otherLang) languages.push(otherLang);
+            applicantData['LANGUAGE'] = languages.length > 0 ? languages.join(', ') : 'N/A';
+            
+            // Educational Background
+            applicantData['ELEMENTARY'] = document.getElementById('manual-edu-elem-school')?.value.trim() || 'N/A';
+            applicantData['SECONDARY'] = document.getElementById('manual-edu-secondary-school')?.value.trim() || 'N/A';
+            applicantData['TERTIARY'] = document.getElementById('manual-edu-tertiary-school')?.value.trim() || 'N/A';
+            applicantData['GRADUATE STUDIES'] = document.getElementById('manual-edu-graduate-school')?.value.trim() || 'N/A';
+            
+            // Technical/Vocational Training
+            applicantData['TECHNICAL/VOCATIONAL AND OTHER TRAINING'] = document.getElementById('manual-training-course1')?.value.trim() || 'N/A';
+            
+            // Eligibility
+            applicantData['ELIGIBILITY'] = document.getElementById('manual-eligibility1')?.value.trim() || 'N/A';
+            
+            // Work Experience
+            applicantData['WORK EXPERIENCE'] = document.getElementById('manual-work-company1')?.value.trim() || 'N/A';
+            
+            // Other Skills
+            const skillCheckboxes = document.querySelectorAll('input[name="manual-skill"]:checked');
+            const skills = Array.from(skillCheckboxes).map(cb => cb.value);
+            applicantData['OTHER SKILLS'] = skills.length > 0 ? skills.join(', ') : 'N/A';
+            
+            // Program Information
+            applicantData['PROGRAM CATEGORY'] = document.getElementById('manual-program-category')?.value || 'N/A';
+            applicantData['SPECIFIC PROGRAM'] = document.getElementById('manual-specific-program')?.value.trim() || 'N/A';
+            applicantData['PROGRAM STATUS'] = document.getElementById('manual-program-status')?.value || 'N/A';
+            
+            // System Information
             applicantData['REG. DATE'] = new Date().toLocaleDateString();
             applicantData['DATE CREATED'] = new Date().toLocaleString();
             applicantData['DATE LAST MODIFIED'] = new Date().toLocaleString();
             applicantData['CREATED BY'] = localStorage.getItem('currentUser') || 'Manual Entry';
-            
-            applicantData['STREET ADDRESS'] = document.getElementById('manual-house-street')?.value.trim() || 'N/A';
-            applicantData['BARANGAY'] = document.getElementById('manual-barangay')?.value.trim() || 'N/A';
-            applicantData['CITY/MUNICIPALITY'] = document.getElementById('manual-city-municipality')?.value.trim() || 'N/A';
-            applicantData['PROVINCE'] = document.getElementById('manual-province')?.value.trim() || 'N/A';
 
             console.log('📝 New applicant data:', applicantData);
 
@@ -1030,16 +1171,82 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         
                         console.log('✅ User confirmed to add anyway');
-                        proceedWithAddingApplicant(applicantData);
+                        // DIRECTLY add to storage without calling proceedWithAddingApplicant
+                        addApplicantToStorage(applicantData);
                     });
             } else {
                 console.log('✅ No duplicates found, proceeding with addition');
-                proceedWithAddingApplicant(applicantData);
+                // DIRECTLY add to storage without calling proceedWithAddingApplicant
+                addApplicantToStorage(applicantData);
             }
         } catch (error) {
-            console.error('❌ Error in addManualApplicant:', error);
+            console.error('Error in addManualApplicant:', error);
             showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
         }
+    }
+
+    // In addApplicantToStorage() function, make sure it's not being called twice
+    function addApplicantToStorage(applicantData) {
+        try {
+            console.log('🔄 Adding applicant to storage...');
+            
+            // Handle photo
+            const tempPhoto = localStorage.getItem('tempManualPhoto');
+            if (tempPhoto) {
+                const photoId = applicantData['SRS ID'];
+                localStorage.setItem(`photo_${photoId}`, tempPhoto);
+                localStorage.removeItem('tempManualPhoto');
+                applicantData['PHOTO'] = tempPhoto;
+            }
+            
+            // Get current applicants and add new one
+            const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            console.log('📊 Before addition - applicants count:', savedApplicants.length);
+            
+            // CHECK for duplicate in storage before adding
+            const isAlreadyInStorage = savedApplicants.some(app => 
+                app['SRS ID'] === applicantData['SRS ID'] || 
+                app.NAME === applicantData.NAME
+            );
+            
+            if (isAlreadyInStorage) {
+                console.warn('⚠️ Applicant already in storage, not adding duplicate');
+                showNotification('Applicant already exists in database!', 'error');
+                return;
+            }
+            
+            savedApplicants.push(applicantData);
+            saveMainApplicants(savedApplicants);
+            
+            // Verify save worked
+            const verifyApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
+            console.log('✅ After addition - applicants count:', verifyApplicants.length);
+            
+            displayMainApplicants(verifyApplicants);
+            removeHighlights();
+            
+            // Remove sync calls if they're also causing duplication
+            // syncManager.addPendingChange({
+            //     type: 'add_applicant',
+            //     data: applicantData
+            // });
+            
+            closeManualModal();
+            
+            // Show success prompt
+            showProgramSuccessPrompt(applicantData);
+            
+        } catch (error) {
+            console.error('❌ Error adding applicant to storage:', error);
+            showNotification('Error adding applicant: ' + error.message, 'error', elements.manualNotification);
+        }
+    }
+
+    // REMOVE the old proceedWithAddingApplicant function or update it to prevent duplication
+    function proceedWithAddingApplicant(applicantData) {
+        console.warn('⚠️ proceedWithAddingApplicant should not be called for manual additions');
+        // This function should only be used for imported data, not manual additions
+        addApplicantToStorage(applicantData);
     }
 
     function proceedWithAddingApplicant(applicantData) {
@@ -1058,14 +1265,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 applicantData['PHOTO'] = tempPhoto;
             }
             
+            // Standardize data one more time before saving
+            const standardizedData = standardizeFieldNames(applicantData);
+            
             const savedApplicants = JSON.parse(localStorage.getItem('mainApplicants')) || [];
-            savedApplicants.push(applicantData);
+            savedApplicants.push(standardizedData);
             saveMainApplicants(savedApplicants);
             
+            // Use standardized data for display
             displayMainApplicants(savedApplicants);
             removeHighlights();
             closeManualModal();
-            showProgramSuccessPrompt(applicantData);
+            showProgramSuccessPrompt(standardizedData);
             
         } catch (error) {
             console.error('Error adding applicant:', error);
@@ -3488,45 +3699,62 @@ document.addEventListener('DOMContentLoaded', function () {
         applicants.forEach((applicant, index) => {
             const row = document.createElement('tr');
             
+            // Get the actual values from the applicant object - using the same field names as in addManualApplicant()
+            const lastName = applicant['LAST NAME'] || applicant['SURNAME'] || 'N/A';
+            const firstName = applicant['FIRST NAME'] || applicant['GIVEN NAME'] || 'N/A';
+            const middleName = applicant['MIDDLE NAME'] || applicant['MIDDLE NAME'] || 'N/A';
+            const suffix = extractSuffix(applicant.NAME) || 'N/A';
+            
             const cells = [
+                // ID
                 createTableCell(applicant['SRS ID'] || `APP-${index + 1}`, '', '10px', 'monospace'),
                 
-                createTableCell(applicant['SURNAME'] || 'N/A'),
-                createTableCell(applicant['FIRST NAME'] || 'N/A'),
-                createTableCell(applicant['MIDDLE NAME'] || 'N/A'),
-                createTableCell(applicant['SUFFIX'] || 'N/A'),
-                createTableCell(applicant['DATE OF BIRTH'] || 'N/A', '', '10px'),
+                // Name parts - using the actual field names
+                createTableCell(lastName),
+                createTableCell(firstName),
+                createTableCell(middleName),
+                createTableCell(suffix),
+                
+                // Personal Information
+                createTableCell(applicant['DATE OF BIRTH'] || applicant['BDATE'] || 'N/A', '', '10px'),
                 createTableCell(applicant['PLACE OF BIRTH'] || 'N/A'),
-                createTableCell(applicant['HOUSE NO./STREET/VILLAGE'] || 'N/A'),
+                
+                // Address
+                createTableCell(applicant['HOUSE NO./STREET/VILLAGE'] || applicant['STREET ADDRESS'] || 'N/A'),
                 createTableCell(applicant['BARANGAY'] || 'N/A'),
-                createTableCell(applicant['MUNICIPALITY/CITY'] || 'N/A'),
+                createTableCell(applicant['MUNICIPALITY/CITY'] || applicant['CITY/MUNICIPALITY'] || 'N/A'),
                 createTableCell(applicant['PROVINCE'] || 'N/A'),
                 
-                createTableCell(applicant['SEX'] || 'N/A', 'center'),
+                // Personal details
+                createTableCell(applicant['SEX'] || applicant['GENDER'] || 'N/A', 'center'),
                 createTableCell(applicant['CIVIL STATUS'] || 'N/A'),
                 createTableCell(applicant['TIN'] || 'N/A'),
-                createTableCell(applicant['GSIS/SSS No.'] || 'N/A'),
-                createTableCell(applicant['PAGIBIG No.'] || 'N/A'),
-                createTableCell(applicant['PHILHEALTH No.'] || 'N/A'),
+                createTableCell(applicant['GSIS/SSS NO.'] || 'N/A'),
+                createTableCell(applicant['PAGIBIG NO.'] || 'N/A'),
+                createTableCell(applicant['PHILHEALTH NO.'] || 'N/A'),
                 createTableCell(applicant['HEIGHT'] || 'N/A'),
                 
-                createTableCell(applicant['EMAIL ADDRESS'] || 'N/A'),
-                createTableCell(applicant['LANDLINE NUMBER'] || 'N/A'),
-                createTableCell(applicant['CELLPHONE NUMBER'] || 'N/A'),
+                // Contact Information
+                createTableCell(applicant['EMAIL ADDRESS'] || applicant['EMAIL'] || 'N/A'),
+                createTableCell(applicant['LANDLINE NUMBER'] || applicant['TELEPHONE'] || 'N/A'),
+                createTableCell(applicant['CELLPHONE NUMBER'] || applicant['CELLPHONE'] || 'N/A'),
                 
+                // Disability & Employment
                 createTableCell(applicant['DISABILITY'] || 'N/A'),
-                createTableCell(applicant['EMPLOYMENT STATUS/TYPE'] || 'N/A'),
+                createTableCell(applicant['EMPLOYMENT STATUS/TYPE'] || applicant['EMP. STATUS'] || 'N/A'),
                 createTableCell(applicant['ARE YOU ACTIVELY LOOKING FOR WORK?'] || 'N/A'),
                 createTableCell(applicant['WILLING TO WORK IMMEDIATELY?'] || 'N/A'),
                 createTableCell(applicant['ARE YOU A 4PS BENEFICIARY?'] || 'N/A'),
                 
-                createTableCell(applicant['PREFERRED OCCUPATION'] || 'N/A'),
+                // Job Preferences
+                createTableCell(applicant['PREFERRED OCCUPATION'] || applicant['PREFERRED POSITION'] || 'N/A'),
                 createTableCell(applicant['PREFERRED WORK LOCATION'] || 'N/A'),
                 createTableCell(applicant['EXPECTED SALARY'] || 'N/A'),
                 createTableCell(applicant['PASSPORT NO.'] || 'N/A'),
                 createTableCell(applicant['PASSPORT EXPIRY DATE'] || 'N/A', '', '10px'),
                 createTableCell(applicant['LANGUAGE'] || 'N/A'),
                 
+                // Education
                 createTableCell(applicant['ELEMENTARY'] || 'N/A'),
                 createTableCell(applicant['SECONDARY'] || 'N/A'),
                 createTableCell(applicant['TERTIARY'] || 'N/A'),
@@ -3534,13 +3762,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 createTableCell(applicant['TECHNICAL/VOCATIONAL AND OTHER TRAINING'] || 'N/A'),
                 createTableCell(applicant['ELIGIBILITY'] || 'N/A'),
                 
+                // Work & Skills
                 createTableCell(applicant['WORK EXPERIENCE'] || 'N/A'),
-                createTableCell(applicant['OTHER SKILLS'] || 'N/A'),
+                createTableCell(applicant['OTHER SKILLS'] || applicant['SKILLS'] || 'N/A'),
                 
+                // Program Information
                 createTableCell(applicant['PROGRAM CATEGORY'] || 'N/A'),
                 createTableCell(applicant['SPECIFIC PROGRAM'] || 'N/A'),
                 createTableCell(applicant['PROGRAM STATUS'] || 'N/A'),
                 
+                // Actions
                 createActionsCell(applicant, index)
             ];
             
@@ -4222,15 +4453,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (jsonData.length === 0) {
             return [];
         }
-        jsonData.forEach((record, index) => {
-            console.log(`Record ${index} course fields:`, {
-                'COURSE': record.COURSE,
-                'Course': record.Course,
-                'course': record.course,
-                'COURSE/DEGREE': record['COURSE/DEGREE'],
-                'All keys': Object.keys(record)
-            });
-        });
         
         const processedData = jsonData.map((record, index) => {
             const processedRecord = {};
@@ -4261,7 +4483,8 @@ document.addEventListener('DOMContentLoaded', function () {
             processedRecord['CREATED BY'] = 'System Import';
             processedRecord['LAST MODIFIED BY'] = 'System Import';
             
-            return processedRecord;
+            // Standardize the imported data
+            return standardizeFieldNames(processedRecord);
         });
         
         return processedData;
@@ -9372,6 +9595,75 @@ function initializeProgramFileUpload() {
             devToolsOpen = false;
         }
     }, 1000);
+
+    function standardizeFieldNames(applicantData) {
+        // Create a standardized object with consistent field names
+        const standardized = {};
+        
+        // Map from various field names to standardized ones
+        const fieldMappings = {
+            // Name fields
+            'LAST NAME': ['LAST NAME', 'SURNAME', 'Last Name', 'Surname'],
+            'FIRST NAME': ['FIRST NAME', 'FIRSTNAME', 'First Name', 'Given Name'],
+            'MIDDLE NAME': ['MIDDLE NAME', 'MIDDLENAME', 'Middle Name'],
+            'NAME': ['NAME', 'Full Name', 'COMPLETE NAME'],
+            
+            // Contact fields
+            'EMAIL': ['EMAIL', 'EMAIL ADDRESS', 'Email', 'Email Address'],
+            'CELLPHONE': ['CELLPHONE', 'CELLPHONE NUMBER', 'Cellphone', 'Mobile'],
+            'TELEPHONE': ['TELEPHONE', 'LANDLINE NUMBER', 'Telephone', 'Landline'],
+            
+            // Address fields
+            'STREET ADDRESS': ['STREET ADDRESS', 'HOUSE NO./STREET/VILLAGE', 'Street Address'],
+            'CITY/MUNICIPALITY': ['CITY/MUNICIPALITY', 'MUNICIPALITY/CITY', 'City/Municipality'],
+            'BARANGAY': ['BARANGAY', 'Barangay'],
+            'PROVINCE': ['PROVINCE', 'Province'],
+            
+            // Program fields
+            'PROGRAM CATEGORY': ['PROGRAM CATEGORY', 'Program Category'],
+            'SPECIFIC PROGRAM': ['SPECIFIC PROGRAM', 'Specific Program'],
+            'PROGRAM STATUS': ['PROGRAM STATUS', 'Program Status'],
+            
+            // Employment fields
+            'EMP. STATUS': ['EMP. STATUS', 'EMPLOYMENT STATUS/TYPE', 'Employment Status'],
+            
+            // Other fields
+            'EDUC LEVEL': ['EDUC LEVEL', 'Educational Level'],
+            'COURSE': ['COURSE', 'Course'],
+            'SKILLS': ['SKILLS', 'OTHER SKILLS', 'Skills'],
+            'WORK EXPERIENCE': ['WORK EXPERIENCE', 'Work Experience'],
+            'BDATE': ['BDATE', 'DATE OF BIRTH', 'Birth Date'],
+            'AGE': ['AGE', 'Age'],
+            'SEX': ['SEX', 'GENDER', 'Sex'],
+            'CIVIL STATUS': ['CIVIL STATUS', 'Civil Status']
+        };
+        
+        // Apply mappings
+        Object.keys(fieldMappings).forEach(standardField => {
+            const possibleFields = fieldMappings[standardField];
+            
+            for (const field of possibleFields) {
+                if (applicantData[field] !== undefined && applicantData[field] !== 'N/A' && applicantData[field] !== '') {
+                    standardized[standardField] = applicantData[field];
+                    break;
+                }
+            }
+            
+            // If not found, use the standard field if it exists
+            if (!standardized[standardField] && applicantData[standardField] !== undefined) {
+                standardized[standardField] = applicantData[standardField];
+            }
+        });
+        
+        // Copy all other fields
+        Object.keys(applicantData).forEach(key => {
+            if (!standardized[key] && applicantData[key] !== undefined) {
+                standardized[key] = applicantData[key];
+            }
+        });
+        
+        return standardized;
+    }
 
     initializeApp();
 });
